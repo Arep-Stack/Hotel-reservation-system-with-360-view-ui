@@ -5,17 +5,10 @@ import { useNavigate } from 'react-router-dom';
 
 import './Navbar.css';
 
-const nav = ['Home', 'Reservation', 'About', 'Login', 'Sign Up'];
+const nav = ['Home', 'Reservation', 'About', 'Login', 'SignUp'];
 
 function Navbar() {
   const [activePage, setActivePage] = useState('Home');
-
-  useEffect(() => {
-    const url = window.location.pathname.split('/');
-    const path = url[url.length - 1];
-
-    setActivePage(path ? path : 'Home');
-  }, []);
 
   const navigator = useNavigate();
   const navigate = (page) => {
@@ -28,15 +21,23 @@ function Navbar() {
     }
   };
 
+  useEffect(() => {
+    const url = window.location.pathname.split('/');
+    const path = url[url.length - 1];
+
+    setActivePage(path ? path : 'Home');
+  }, [navigator]);
+
   const navMenu = nav.map((nav) => (
     <>
       {nav === 'Login' && <hr />}
       <Button
         key={nav}
         onClick={() => navigate(nav)}
+        color="themeColors"
         variant={activePage === nav ? 'filled' : 'outline'}
       >
-        {nav}
+        {nav === 'SignUp' ? 'Sign Up' : nav}
       </Button>
     </>
   ));
@@ -49,7 +50,9 @@ function Navbar() {
           mr="md"
           src="https://cdn-icons-png.flaticon.com/512/887/887345.png"
         />
-        <Text size="lg">Felrey Resort and Pavilion</Text>
+        <Text color="themeColors" size="xl" fw="bold">
+          Felrey Resort and Pavilion
+        </Text>
       </Flex>
       <Flex gap={10}>{navMenu}</Flex>
     </Paper>

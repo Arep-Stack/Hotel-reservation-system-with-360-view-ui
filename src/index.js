@@ -7,19 +7,20 @@ import '@mantine/core/styles.css';
 import App from './App';
 
 const themeColors = [
-  '#e9fbef',
-  '#dcf0e3',
-  '#bcdec7',
-  '#99c9a9',
-  '#7bb990',
-  '#68af7f',
-  '#5daa76',
-  '#4c9465',
-  '#408557',
-  '#307349',
+  '#E8F5E9',
+  '#C8E6C9',
+  '#A5D6A7',
+  '#81C784',
+  '#66BB6A',
+  '#4CAF50',
+  '#43A047',
+  '#388E3C',
+  '#2E7D32',
+  '#1B5E20',
 ];
 
 const theme = createTheme({
+  fontFamily: 'Poppins, sans-serif',
   colors: {
     themeColors,
   },

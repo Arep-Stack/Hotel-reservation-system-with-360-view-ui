@@ -31,6 +31,7 @@
 
 .reservation-box:hover .label {
   letter-spacing: 10px;
+  color: #dcf0e3;
 }
 
 .reservation-box .label {
@@ -40,7 +41,7 @@
   background: transparent;
   background-color: transparent;
   text-align: center;
-  color: white;
+  color: #7bb990;
   text-shadow:
     0 1px 0 #333,
     0 2px 0 #363636,

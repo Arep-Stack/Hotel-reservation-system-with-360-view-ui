@@ -1,0 +1,24 @@
+.login-with-email-text {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 1;
+  text-align: center;
+  background-color: white;
+  color: gray;
+  font-size: 14px;
+  padding-inline: 5px;
+}
+
+.login-with-email-line {
+  position: absolute;
+  height: 2px;
+  width: 100%;
+  border: 1px solid gray;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: -1;
+  opacity: 0.3;
+}

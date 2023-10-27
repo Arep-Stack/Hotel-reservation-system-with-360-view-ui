@@ -1,19 +1,64 @@
+import { useNavigate } from 'react-router-dom';
+
+import heroBgImg from '../../assets/home/heroImg.png';
 import './Home.css';
 
-import { Container, Image } from '@mantine/core';
+import { Box, Button, Container, Flex, Image, Text } from '@mantine/core';
+import { IconArrowBadgeRightFilled } from '@tabler/icons-react';
 
 function Home() {
+  const navigate = useNavigate();
+
   return (
     <div style={{ width: '100vw', height: '100vh' }}>
-      <Image
-        className="home-img"
-        src="https://images.pexels.com/photos/338504/pexels-photo-338504.jpeg"
-      />
-      <Container fluid h="100vh" pt={80} px="lg"></Container>
+      <Image className="home-img" src={heroBgImg} />
+      <Container fluid h="100vh" pt={90} px="lg">
+        <Flex
+          c="white"
+          h="100%"
+          w="100%"
+          direction="column"
+          justify="center"
+          align="center"
+        >
+          <Box>
+            <Text
+              className="home-hero-text"
+              size="3.5rem"
+              tt="uppercase"
+              lts="10px"
+              mb="md"
+            >
+              Welcome to
+            </Text>
+
+            <Text
+              className="home-hero-text title"
+              size="5.5rem"
+              lts="5px"
+              mt="md"
+            >
+              Felrey Resort and Pavilion
+            </Text>
+          </Box>
+
+          <Button
+            onClick={() => navigate('/Reservation')}
+            tt="uppercase"
+            size="lg"
+            color="themeColors"
+            variant="filled"
+            lts="5px"
+            mt="3rem"
+            style={{ wordSpacing: '10px' }}
+            rightSection={<IconArrowBadgeRightFilled />}
+          >
+            Book now
+          </Button>
+        </Flex>
+      </Container>
     </div>
   );
 }
 
 export default Home;
-
-//https://images.unsplash.com/photo-1561501900-3701fa6a0864?auto=format&fit=crop&q=80&w=1000&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8bHV4dXJ5JTIwaG90ZWx8ZW58MHx8MHx8fDA%3D
