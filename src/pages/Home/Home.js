@@ -1,63 +1,117 @@
 import { useNavigate } from 'react-router-dom';
 
-import heroBgImg from '../../assets/home/heroImg.png';
-import './Home.css';
-
-import { Box, Button, Container, Flex, Image, Text } from '@mantine/core';
+import {
+  Box,
+  Button,
+  Container,
+  Flex,
+  Group,
+  Image,
+  Loader,
+  Text,
+} from '@mantine/core';
 import { IconArrowBadgeRightFilled } from '@tabler/icons-react';
+
+import './Home.css';
+import { GoogleMapEmbed } from './GoogleMapEmbed';
 
 function Home() {
   const navigate = useNavigate();
 
   return (
-    <div style={{ width: '100vw', height: '100vh' }}>
-      <Image className="home-img" src={heroBgImg} />
-      <Container fluid h="100vh" pt={90} px="lg">
-        <Flex
-          c="white"
-          h="100%"
+    <Container size="xl" mih="100vh" px="lg">
+      <Flex h="100vh" align="center" justify="center" direction="column">
+        <Text className="home-hero-text">Felrey</Text>
+        <Text mb="xl" fw={900} size="5rem" c="darkGreen">
+          Resort and Pavilion
+        </Text>
+        <Text mb="xl" size="3rem">
+          Discover Great Deals Today!
+        </Text>
+        <Button
+          fw="normal"
+          rightSection={<IconArrowBadgeRightFilled />}
           w="100%"
-          direction="column"
-          justify="center"
-          align="center"
+          maw="400px"
+          size="xl"
+          color="#006400"
+          onClick={() => navigate('/Reservation')}
         >
-          <Box>
-            <Text
-              className="home-hero-text"
-              size="3.5rem"
-              tt="uppercase"
-              lts="10px"
-              mb="md"
-            >
-              Welcome to
-            </Text>
+          Book Now
+        </Button>
+      </Flex>
+      <Flex h="100vh" align="center" direction="column" pos="relative">
+        <Text color="darkGreen" size="3rem" align="center" mb="lg">
+          We are on Google Maps!
+        </Text>
 
-            <Text
-              className="home-hero-text title"
-              size="5.5rem"
-              lts="5px"
-              mt="md"
-            >
-              Felrey Resort and Pavilion
-            </Text>
-          </Box>
-
-          <Button
-            onClick={() => navigate('/Reservation')}
-            tt="uppercase"
-            size="lg"
-            color="themeColors"
-            variant="filled"
-            lts="5px"
-            mt="3rem"
-            style={{ wordSpacing: '10px' }}
-            rightSection={<IconArrowBadgeRightFilled />}
+        <Box w="100%" pos="relative">
+          <Flex
+            direction="column"
+            align="center"
+            style={{
+              position: 'absolute',
+              top: '50%',
+              left: '50%',
+              transform: 'translate(-50%, -50%)',
+              zIndex: -1,
+            }}
           >
-            Book now
-          </Button>
+            <Loader color="darkGreen" />
+            <Text>Loading Google Maps...</Text>
+          </Flex>
+
+          <GoogleMapEmbed />
+        </Box>
+
+        <Text align="center" my="lg">
+          Also available:
+        </Text>
+
+        <Flex w="100%" maw="700px" justify="space-between">
+          <Flex
+            w="100%"
+            direction="column"
+            align="center"
+            p="md"
+            mx="sm"
+            style={{
+              borderRadius: '30px',
+              boxShadow: 'rgba(0, 0, 0, 0.35) 0px 5px 15px',
+            }}
+          >
+            <Image
+              h="75px"
+              w="75px"
+              src="https://cdn.iconscout.com/icon/free/png-256/free-waze-1-722645.png"
+            />
+            <Text align="center">Waze</Text>
+          </Flex>
+          <Flex
+            w="100%"
+            direction="column"
+            align="center"
+            p="md"
+            mx="sm"
+            style={{
+              borderRadius: '30px',
+              boxShadow: 'rgba(0, 0, 0, 0.35) 0px 5px 15px',
+            }}
+          >
+            <Group align="center">
+              <Image
+                h="50"
+                src="https://cdn.iconscout.com/icon/free/png-256/free-apple-881-722676.png"
+              />
+              <Text ml={-20} size="4rem">
+                Maps
+              </Text>
+            </Group>
+            <Text align="center">Apple Maps</Text>
+          </Flex>
         </Flex>
-      </Container>
-    </div>
+      </Flex>
+    </Container>
   );
 }
 

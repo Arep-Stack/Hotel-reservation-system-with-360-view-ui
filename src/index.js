@@ -7,16 +7,16 @@ import '@mantine/core/styles.css';
 import App from './App';
 
 const themeColors = [
-  '#E8F5E9',
-  '#C8E6C9',
-  '#A5D6A7',
-  '#81C784',
-  '#66BB6A',
-  '#4CAF50',
-  '#43A047',
-  '#388E3C',
-  '#2E7D32',
-  '#1B5E20',
+  '#f2f8f2',
+  '#e3ede3',
+  '#c4dac4',
+  '#a1c6a1',
+  '#84b584',
+  '#72ab71',
+  '#68a767',
+  '#579156',
+  '#4c814b',
+  '#3e703e',
 ];
 
 const theme = createTheme({

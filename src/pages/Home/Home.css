@@ -1,34 +1,13 @@
-.home-img {
-  width: 100vw;
-  height: 100vh;
-  position: absolute;
-  top: 0;
-  left: 0;
-  z-index: -1;
-  filter: brightness(65%);
-}
-
 .home-hero-text {
+  text-transform: uppercase;
+  font-size: 15rem;
+  font-weight: 800;
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  font-family: 'Steelfish Rg', 'helvetica neue', helvetica, arial, sans-serif;
+  background-image: url('https://c.wallhere.com/photos/1a/f6/house_trees_grass_style_comfort-635185.jpg!d');
   text-align: center;
-  text-shadow:
-    0 1px 0 #333,
-    0 2px 0 #363636,
-    0 3px 0 #444,
-    0 4px 0 #464646,
-    0 5px 0 #555,
-    0 6px 1px rgba(0, 0, 0, 0.1),
-    0 0 5px rgba(0, 0, 0, 0.1),
-    0 1px 3px rgba(0, 0, 0, 0.3),
-    0 3px 5px rgba(0, 0, 0, 0.2),
-    0 5px 10px rgba(0, 0, 0, 0.25),
-    0 10px 10px rgba(0, 0, 0, 0.2),
-    0 20px 20px rgba(0, 0, 0, 0.15);
-}
-
-.home-hero-text.title {
-  text-shadow:
-    10px 10px 25px rgba(13, 102, 13, 0.8),
-    -10px 10px 25px rgba(13, 102, 13, 0.8),
-    -10px -10px 25px rgba(13, 102, 13, 0.8),
-    10px -10px 25px rgba(13, 102, 13, 0.8);
+  background-repeat: no-repeat;
+  background-size: cover;
 }

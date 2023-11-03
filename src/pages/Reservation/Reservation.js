@@ -8,55 +8,10 @@ import { Box, Button, Container, Flex, Image, Text } from '@mantine/core';
 
 import { IconSquareRoundedArrowRightFilled } from '@tabler/icons-react';
 
-const serviceData = [
-  {
-    id: 1,
-    type: 'Standard Room',
-    price: '₱ 1,000.00',
-    persons: '2',
-    amenities: ['own bathroom', 'veranda', 'aircon', 'heater', 'beer'],
-    image:
-      'https://www.usatoday.com/gcdn/-mm-/05b227ad5b8ad4e9dcb53af4f31d7fbdb7fa901b/c=0-64-2119-1259/local/-/media/USATODAY/USATODAY/2014/08/13/1407953244000-177513283.jpg?width=660&height=373&fit=crop&format=pjpg&auto=webp',
-  },
-  {
-    id: 2,
-    type: 'Deluxe Room',
-    price: '₱ 1,500.00',
-    persons: '3',
-    amenities: ['own bathroom', 'veranda', 'aircon', 'heater', 'beer'],
-    image:
-      'https://cf.bstatic.com/xdata/images/hotel/max1024x768/463156637.jpg?k=5d913fb55963d82c13fe5960117723b5d57007e15e813be871395bf090418f2f&o=&hp=1',
-  },
-  {
-    id: 3,
-    type: "Queen's Room",
-    price: '₱ 2,000.00',
-    persons: '4',
-    amenities: ['own bathroom', 'veranda', 'aircon', 'heater', 'beer'],
-    image:
-      'https://cf.bstatic.com/xdata/images/hotel/max1024x768/350221564.jpg?k=3774292ba5fc25ba8bfb1cef7ef90c3309a8294f44762bfd876f005519bfad84&o=&hp=1',
-  },
-  {
-    id: 4,
-    type: "King's Room",
-    price: '₱ 2,500.00',
-    persons: '5',
-    amenities: ['own bathroom', 'veranda', 'aircon', 'heater', 'beer'],
-    image:
-      'https://www.kabayanhotel.com.ph/wp-content/uploads/2022/12/Suite-1-jpg.webp',
-  },
-  {
-    id: 5,
-    type: 'Presedential Suite',
-    price: '₱ 3,000.00',
-    persons: '6',
-    amenities: ['own bathroom', 'veranda', 'aircon', 'heater', 'beer'],
-    image:
-      'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcShZ1EV0KKacHtZlGe03ANzb3scVhpa8PFoUg&usqp=CAU',
-  },
-];
+import serviceData from './data.json';
 
 const Reservation = () => {
+  console.log(serviceData);
   const [activeAmenity, setActiveAmenity] = useState('');
 
   const handleClickService = (service) => {
@@ -64,7 +19,7 @@ const Reservation = () => {
   };
 
   return (
-    <Container fluid h="100vh" pt={90} px="lg">
+    <Container fluid pt={90} px="lg">
       <Flex
         w="100%"
         align="center"

@@ -10,8 +10,6 @@ import {
 } from '@mantine/core';
 import { Icon360, IconBuildingSkyscraper } from '@tabler/icons-react';
 
-import './ServiceCard.css';
-
 function ServiceCard({ serviceCard }) {
   const services = serviceCard?.map((service) => {
     return (
@@ -25,7 +23,7 @@ function ServiceCard({ serviceCard }) {
           />
         </Box>
 
-        <Box p="10px 15px">
+        <Box px="lg">
           <Flex
             justify="space-between"
             align="center"
@@ -38,17 +36,13 @@ function ServiceCard({ serviceCard }) {
               <Text size="xl" fw={900} c="themeColors">
                 {service.type}
               </Text>
-              <Text size="md" mt="-5">
+              <Text size="md" mt="-3">
                 Up to {service.persons} person
               </Text>
             </div>
 
             <div>
-              <Badge
-                size="lg"
-                variant="gradient"
-                gradient={{ from: '#5daa76', to: '#307349', deg: 90 }}
-              >
+              <Badge size="lg" variant="light" c="themeColors">
                 {service.price}
               </Badge>
             </div>

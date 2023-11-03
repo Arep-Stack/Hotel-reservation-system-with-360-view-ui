@@ -11,8 +11,8 @@ import {
 function SignUp() {
   return (
     <Container
-      fluid
-      h="100vh"
+      size="xl"
+      mih="100vh"
       pt={90}
       px="lg"
       style={{ display: 'Grid', placeItems: 'center' }}

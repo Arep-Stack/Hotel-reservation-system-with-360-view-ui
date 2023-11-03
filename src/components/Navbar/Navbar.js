@@ -3,8 +3,6 @@ import React, { useEffect, useState } from 'react';
 
 import { useNavigate } from 'react-router-dom';
 
-import './Navbar.css';
-
 const nav = ['Home', 'Reservation', 'About', 'Login', 'SignUp'];
 
 function Navbar() {
@@ -43,18 +41,35 @@ function Navbar() {
   ));
 
   return (
-    <Paper className="nav" shadow="md">
-      <Flex align="center">
-        <Image
-          h="40px"
-          mr="md"
-          src="https://cdn-icons-png.flaticon.com/512/887/887345.png"
-        />
-        <Text color="themeColors" size="xl" fw="bold">
-          Felrey Resort and Pavilion
-        </Text>
+    <Paper
+      withBorder
+      w="100%"
+      h="80px"
+      px="xl"
+      py="lg"
+      pos="fixed"
+      top={0}
+      shadow="md"
+      style={{
+        boxShadow: '0 16px 30px rgba(0, 0, 0, 0.1)',
+        backdropFilter: 'blur(0.8px)',
+        '-webkit-backdrop-filter': 'blur(0.8px)',
+        zIndex: 1000,
+      }}
+    >
+      <Flex align="center" justify="space-between">
+        <Flex align="center">
+          <Image
+            h="40px"
+            mr="md"
+            src="https://cdn-icons-png.flaticon.com/512/887/887345.png"
+          />
+          <Text color="themeColors" size="xl" fw="bold">
+            Felrey Resort and Pavilion
+          </Text>
+        </Flex>
+        <Flex gap={10}>{navMenu}</Flex>
       </Flex>
-      <Flex gap={10}>{navMenu}</Flex>
     </Paper>
   );
 }
