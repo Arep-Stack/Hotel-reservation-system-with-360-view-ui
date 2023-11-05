@@ -6,7 +6,7 @@ import about from './data.json';
 
 function About() {
   return (
-    <Container size="xl" mih="100vh" pt={90} px="lg" pb="mb">
+    <Container size="xl" mih="100vh" pt={90} px="lg">
       <Flex w="100%" mb="lg" justify="space-between" align="center">
         <Text size="5rem">{about.tagline}</Text>
         <Image
@@ -68,12 +68,12 @@ function About() {
       <Box
         pos="relative"
         p="lg"
+        mb="lg"
         style={{
           borderRadius: '30px',
           boxShadow:
             '0px 0px 5px 1px rgba(85,179,111,1), 0px 1px 4px 0px rgba(0,0,0,0.11)',
         }}
-        mb="lg"
       >
         <Image
           h="350px"
@@ -91,6 +91,8 @@ function About() {
         </Text>
         <Text>{about.drives}</Text>
       </Box>
+
+      <Flex></Flex>
     </Container>
   );
 }

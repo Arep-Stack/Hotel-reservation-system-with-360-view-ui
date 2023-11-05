@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 
 import { useNavigate } from 'react-router-dom';
 
-const nav = ['Home', 'Reservation', 'About', 'Login', 'SignUp'];
+const nav = ['Home', 'Services', 'About', 'Login', 'SignUp'];
 
 function Navbar() {
   const [activePage, setActivePage] = useState('Home');
@@ -21,7 +21,8 @@ function Navbar() {
 
   useEffect(() => {
     const url = window.location.pathname.split('/');
-    const path = url[url.length - 1];
+
+    const path = url.length > 2 ? url[url.length - 2] : url[url.length - 1];
 
     setActivePage(path ? path : 'Home');
   }, [navigator]);
@@ -33,7 +34,7 @@ function Navbar() {
         key={nav}
         onClick={() => navigate(nav)}
         color="themeColors"
-        variant={activePage === nav ? 'filled' : 'outline'}
+        variant={activePage.includes(nav) ? 'filled' : 'outline'}
       >
         {nav === 'SignUp' ? 'Sign Up' : nav}
       </Button>
@@ -53,7 +54,7 @@ function Navbar() {
       style={{
         boxShadow: '0 16px 30px rgba(0, 0, 0, 0.1)',
         backdropFilter: 'blur(0.8px)',
-        '-webkit-backdrop-filter': 'blur(0.8px)',
+        WebkitBackdropFilter: 'blur(0.8px)',
         zIndex: 1000,
       }}
     >

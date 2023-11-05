@@ -1,3 +1,5 @@
+import camelCase from 'camelcase';
+
 import {
   Box,
   Button,
@@ -7,6 +9,16 @@ import {
   Text,
   TextInput,
 } from '@mantine/core';
+
+const signInInputs = [
+  'First name',
+  'Last name',
+  'Phone',
+  'Address',
+  'Email',
+  'Password',
+  'Confirm Password',
+];
 
 function SignUp() {
   return (
@@ -27,40 +39,21 @@ function SignUp() {
         </Text>
 
         <Box mb="sm">
-          <Text component="label" htmlFor="firstName" size="sm" fw={500}>
-            First name
-          </Text>
-          <TextInput placeholder="First name" id="firstName" mb="2px" />
-
-          <Text component="label" htmlFor="lastName" size="sm" fw={500}>
-            Last name
-          </Text>
-          <TextInput placeholder="Last Name" id="lastName" mb="2px" />
-
-          <Text component="label" htmlFor="phone" size="sm" fw={500}>
-            Phone
-          </Text>
-          <TextInput placeholder="Phone" id="phone" mb="2px" />
-
-          <Text component="label" htmlFor="address" size="sm" fw={500}>
-            Address
-          </Text>
-          <TextInput placeholder="Address" id="address" mb="2px" />
-
-          <Text component="label" htmlFor="email" size="sm" fw={500}>
-            Email
-          </Text>
-          <TextInput placeholder="Email" id="emai" mb="2px" />
-
-          <Text component="label" htmlFor="password" size="sm" fw={500}>
-            Password
-          </Text>
-          <PasswordInput placeholder="Password" id="password" mb="2px" />
-
-          <Text component="label" htmlFor="confirmPassword" size="sm" fw={500}>
-            Confirm Password
-          </Text>
-          <PasswordInput placeholder="Confirm Password" id="confimPassword" />
+          {signInInputs.map((input) => {
+            const c = camelCase(input);
+            return (
+              <>
+                <Text key={c} component="label" htmlFor={c} size="sm" fw={500}>
+                  {input}
+                </Text>
+                {c.toLowerCase().includes('password') ? (
+                  <PasswordInput placeholder={input} id={c} mb="2px" />
+                ) : (
+                  <TextInput placeholder={input} id={c} mb="2px" />
+                )}
+              </>
+            );
+          })}
         </Box>
 
         <Button mt="lg" fullWidth color="themeColors">

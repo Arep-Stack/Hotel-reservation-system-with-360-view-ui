@@ -1,9 +1,10 @@
-.reservation-box {
+.service-choice-box {
   border-radius: 10px;
   background-color: gray;
   width: 100%;
   max-width: 500px;
-  height: calc(100vh - 200px);
+  height: calc(100vh - 250px);
+  min-height: 600px;
   display: grid;
   place-items: center;
   position: relative;
@@ -12,7 +13,7 @@
   cursor: pointer;
 }
 
-.reservation-box-img {
+.service-choice-box-bg-img {
   transition: all 300ms ease;
   position: absolute;
   top: 0;
@@ -23,21 +24,22 @@
   filter: grayscale(0.6);
 }
 
-.reservation-box:hover .reservation-box-img {
+.service-choice-box:hover .service-choice-box-bg-img {
   transform: scale(1);
   opacity: 0.7;
   filter: grayscale(0);
 }
 
-.reservation-box:hover .label {
+.service-choice-box:hover .service-choice-box-label {
   letter-spacing: 10px;
   color: #dcf0e3;
 }
 
-.reservation-box .label {
+.service-choice-box .service-choice-box-label {
   transition: all 300ms ease;
   z-index: 1;
-  font-size: 5rem;
+  font-size: 4rem;
+  text-transform: uppercase;
   background: transparent;
   background-color: transparent;
   text-align: center;
