@@ -1,7 +1,7 @@
-import { Button, Flex, Image, Paper, Text } from '@mantine/core';
+import { useNavigate } from 'react-router-dom';
 import React, { useEffect, useState } from 'react';
 
-import { useNavigate } from 'react-router-dom';
+import { Button, Flex, Image, Paper, Text } from '@mantine/core';
 
 const nav = ['Home', 'Services', 'About', 'Login', 'SignUp'];
 
@@ -20,6 +20,8 @@ function Navbar() {
   };
 
   useEffect(() => {
+    window.scrollTo(0, 0);
+
     const url = window.location.pathname.split('/');
 
     const path = url.length > 2 ? url[url.length - 2] : url[url.length - 1];

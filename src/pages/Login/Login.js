@@ -1,4 +1,7 @@
+import { GoogleButton } from './GoogleButton/GoogleButton';
+
 import './Login.css';
+
 import {
   Box,
   Button,
@@ -8,7 +11,6 @@ import {
   Text,
   TextInput,
 } from '@mantine/core';
-import { GoogleButton } from './GoogleButton/GoogleButton';
 
 function Login() {
   return (

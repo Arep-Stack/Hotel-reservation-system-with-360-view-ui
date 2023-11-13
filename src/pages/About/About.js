@@ -1,8 +1,8 @@
 import React from 'react';
 
-import { Box, Container, Flex, Image, Text } from '@mantine/core';
-
 import about from './data.json';
+
+import { Box, Container, Flex, Image, Text } from '@mantine/core';
 
 function About() {
   return (
@@ -86,7 +86,7 @@ function About() {
           }}
           src="https://cdn3d.iconscout.com/3d/premium/thumb/beach-cooler-9061355-7342115.png"
         />
-        <Text size="3.5rem" mb="lg">
+        <Text size="2rem" mb="lg" fw={600}>
           It's you, who drives us
         </Text>
         <Text>{about.drives}</Text>

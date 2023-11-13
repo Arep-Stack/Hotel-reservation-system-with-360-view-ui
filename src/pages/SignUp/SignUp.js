@@ -42,8 +42,8 @@ function SignUp() {
           {signInInputs.map((input) => {
             const c = camelCase(input);
             return (
-              <>
-                <Text key={c} component="label" htmlFor={c} size="sm" fw={500}>
+              <div key={c}>
+                <Text component="label" htmlFor={c} size="sm" fw={500}>
                   {input}
                 </Text>
                 {c.toLowerCase().includes('password') ? (
@@ -51,7 +51,7 @@ function SignUp() {
                 ) : (
                   <TextInput placeholder={input} id={c} mb="2px" />
                 )}
-              </>
+              </div>
             );
           })}
         </Box>
