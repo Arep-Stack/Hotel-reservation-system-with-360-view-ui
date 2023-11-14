@@ -1,26 +1,118 @@
+import { useState } from 'react';
+
+import axios from 'axios';
 import camelCase from 'camelcase';
+
+import { useForm } from '@mantine/form';
 
 import {
   Box,
   Button,
   Container,
   Flex,
+  Paper,
   PasswordInput,
   Text,
   TextInput,
 } from '@mantine/core';
 
 const signInInputs = [
-  'First name',
-  'Last name',
-  'Phone',
-  'Address',
-  'Email',
-  'Password',
-  'Confirm Password',
+  {
+    name: 'First name',
+    required: true,
+  },
+  {
+    name: 'Last name',
+    required: true,
+  },
+  {
+    name: 'Phone',
+  },
+  {
+    name: 'Address',
+  },
+  {
+    name: 'Email',
+    required: true,
+  },
+  {
+    name: 'Password',
+    required: true,
+  },
+  {
+    name: 'Confirm Password',
+    required: true,
+  },
 ];
 
 function SignUp() {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [serviceStatus, setServiceStatus] = useState(null);
+
+  const form = useForm({
+    initialValues: {
+      firstName: '',
+      lastName: '',
+      phone: '',
+      address: '',
+      email: '',
+      password: '',
+      confirmPassword: '',
+    },
+
+    validate: {
+      firstName: (value) =>
+        value && value.trim() !== '' ? null : 'First name is required',
+      lastName: (value) =>
+        value && value.trim() !== '' ? null : 'Last name is required',
+      email: (value) =>
+        /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value) ? null : 'Invalid email',
+      password: (value) =>
+        value.length > 7 ? null : 'Password must be at least 8 characters',
+      confirmPassword: (value, values) =>
+        value === values.password ? null : 'Passwords did not match',
+    },
+  });
+
+  const handleSubmit = ({
+    FIRSTNAME,
+    LASTNAME,
+    PHONE_NUMBER,
+    ADDRESS,
+    EMAIL,
+    PASSWORD,
+  }) => {
+    setIsSubmitting(true);
+    setServiceStatus(null);
+
+    axios({
+      method: 'POST',
+      url: '/api/users/register',
+      withCredentials: false,
+      data: {
+        FIRSTNAME,
+        LASTNAME,
+        PHONE_NUMBER,
+        ADDRESS,
+        EMAIL,
+        PASSWORD,
+      },
+    })
+      .then(({ data, status }) => {
+        setServiceStatus({
+          message: data?.message,
+          status,
+        });
+      })
+      .catch(({ response }) => {
+        setServiceStatus({
+          message: response?.data?.message,
+          status: response?.status,
+        });
+      })
+      .finally(() => setIsSubmitting(false));
+  };
+
   return (
     <Container
       size="xl"
@@ -38,27 +130,78 @@ function SignUp() {
           Hello there! Let's get started.
         </Text>
 
-        <Box mb="sm">
-          {signInInputs.map((input) => {
-            const c = camelCase(input);
-            return (
-              <div key={c}>
-                <Text component="label" htmlFor={c} size="sm" fw={500}>
-                  {input}
-                </Text>
-                {c.toLowerCase().includes('password') ? (
-                  <PasswordInput placeholder={input} id={c} mb="2px" />
-                ) : (
-                  <TextInput placeholder={input} id={c} mb="2px" />
-                )}
-              </div>
-            );
-          })}
-        </Box>
+        <Paper
+          withBorder
+          display={serviceStatus ? 'block' : 'none'}
+          p="sm"
+          mb="lg"
+          mih="50px"
+          w="100%"
+          style={{
+            borderColor: String(serviceStatus?.status).startsWith('2')
+              ? 'darkgreen'
+              : 'crimson',
+          }}
+        >
+          <Text
+            c={
+              String(serviceStatus?.status).startsWith('2')
+                ? 'darkGreen'
+                : 'red'
+            }
+          >
+            {serviceStatus?.message}
+          </Text>
+        </Paper>
 
-        <Button mt="lg" fullWidth color="themeColors">
-          Sign Up
-        </Button>
+        <form
+          onSubmit={form.onSubmit((values) =>
+            handleSubmit({
+              FIRSTNAME: values.firstName,
+              LASTNAME: values.lastName,
+              PHONE_NUMBER: values.phone,
+              ADDRESS: values.address,
+              EMAIL: values.email,
+              PASSWORD: values.password,
+            }),
+          )}
+        >
+          <Box mb="sm">
+            {signInInputs.map((input) => {
+              const c = camelCase(input.name);
+              return (
+                <div key={c} style={{ marginBottom: 5 }}>
+                  {c.toLowerCase().includes('password') ? (
+                    <PasswordInput
+                      withAsterisk={input.required}
+                      label={input.name}
+                      placeholder={input.name}
+                      {...form.getInputProps(c.trim())}
+                    />
+                  ) : (
+                    <TextInput
+                      withAsterisk={input.required}
+                      label={input.name}
+                      placeholder={input.name}
+                      {...form.getInputProps(c.trim())}
+                    />
+                  )}
+                </div>
+              );
+            })}
+          </Box>
+
+          <Button
+            fullWidth
+            loading={isSubmitting}
+            type="submit"
+            mt="lg"
+            mih="36px"
+            color="themeColors"
+          >
+            Sign Up
+          </Button>
+        </form>
 
         <Text mt="md" size="sm" ta="center">
           Have an account already? <a href="/Login">Login</a>
