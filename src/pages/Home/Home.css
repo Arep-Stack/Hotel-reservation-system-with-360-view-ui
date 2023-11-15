@@ -1,8 +1,13 @@
-.home-img {
-  width: 100vw;
-  height: 100vh;
-  position: absolute;
-  top: 0;
-  left: 0;
-  z-index: -1;
+.home-hero-text {
+  text-transform: uppercase;
+  font-size: 15rem;
+  font-weight: 800;
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  font-family: 'Steelfish Rg', 'helvetica neue', helvetica, arial, sans-serif;
+  background-image: url('https://c.wallhere.com/photos/1a/f6/house_trees_grass_style_comfort-635185.jpg!d');
+  text-align: center;
+  background-repeat: no-repeat;
+  background-size: cover;
 }

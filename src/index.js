@@ -1,25 +1,32 @@
-import { MantineProvider, createTheme } from '@mantine/core';
-
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import './index.css';
-import '@mantine/core/styles.css';
+
 import App from './App';
 
+import axios from 'axios';
+
+import './index.css';
+import '@mantine/core/styles.css';
+
+import { MantineProvider, createTheme } from '@mantine/core';
+
+axios.defaults.baseURL = process.env.REACT_APP_BE_BASE_URL;
+
 const themeColors = [
-  '#e9fbef',
-  '#dcf0e3',
-  '#bcdec7',
-  '#99c9a9',
-  '#7bb990',
-  '#68af7f',
-  '#5daa76',
-  '#4c9465',
-  '#408557',
-  '#307349',
+  '#f2f8f2',
+  '#e3ede3',
+  '#c4dac4',
+  '#a1c6a1',
+  '#84b584',
+  '#72ab71',
+  '#68a767',
+  '#579156',
+  '#4c814b',
+  '#3e703e',
 ];
 
 const theme = createTheme({
+  fontFamily: 'Poppins, sans-serif',
   colors: {
     themeColors,
   },
