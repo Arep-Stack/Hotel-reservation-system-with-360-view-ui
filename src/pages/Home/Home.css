@@ -1,11 +1,11 @@
 .home-hero-text {
   text-transform: uppercase;
-  font-size: 15rem;
-  font-weight: 800;
-  background-clip: text;
-  -webkit-background-clip: text;
-  color: transparent;
-  font-family: 'Steelfish Rg', 'helvetica neue', helvetica, arial, sans-serif;
+  font-size: 15rem !important;
+  font-weight: 900 !important;
+  background-clip: text !important;
+  -webkit-background-clip: text !important;
+  color: transparent !important;
+  font-family: 'Steelfish Rg', 'helvetica neue', helvetica, arial, sans-serif !important;
   background-image: url('https://c.wallhere.com/photos/1a/f6/house_trees_grass_style_comfort-635185.jpg!d');
   text-align: center;
   background-repeat: no-repeat;
