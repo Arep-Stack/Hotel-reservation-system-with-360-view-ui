@@ -1,10 +1,16 @@
-import { MantineProvider, createTheme } from '@mantine/core';
-
 import React from 'react';
 import ReactDOM from 'react-dom/client';
+
+import App from './App';
+
+import axios from 'axios';
+
 import './index.css';
 import '@mantine/core/styles.css';
-import App from './App';
+
+import { MantineProvider, createTheme } from '@mantine/core';
+
+axios.defaults.baseURL = process.env.REACT_APP_BE_BASE_URL;
 
 const themeColors = [
   '#f2f8f2',

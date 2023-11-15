@@ -7,12 +7,15 @@ import Rooms from './pages/Rooms/Rooms';
 import About from './pages/About/About';
 import Login from './pages/Login/Login';
 import SignUp from './pages/SignUp/SignUp';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 function App() {
   return (
     <div style={{ position: 'relative' }}>
       <BrowserRouter>
         <Navbar />
+        <ToastContainer style={{ marginTop: 80 }} />
         <Routes>
           <Route path="/" element={<Home />}></Route>
           <Route path="/Home" element={<Home />}></Route>
