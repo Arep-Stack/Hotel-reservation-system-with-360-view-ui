@@ -1,7 +1,9 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 import axios from 'axios';
 import camelCase from 'camelcase';
+import { toast } from 'react-toastify';
 
 import { useForm } from '@mantine/form';
 
@@ -46,6 +48,7 @@ const signInInputs = [
 ];
 
 function SignUp() {
+  const navigator = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [serviceStatus, setServiceStatus] = useState(null);
 
@@ -103,6 +106,15 @@ function SignUp() {
           message: data?.message,
           status,
         });
+
+        toast.success(data?.message, {
+          position: toast.POSITION.TOP_RIGHT,
+          autoClose: 1500,
+        });
+
+        setTimeout(() => {
+          navigator('/Login');
+        }, 2000);
       })
       .catch(({ response }) => {
         setServiceStatus({
@@ -150,7 +162,9 @@ function SignUp() {
                 : 'red'
             }
           >
-            {serviceStatus?.message}
+            {String(serviceStatus?.status).startsWith('2')
+              ? 'Redirecting you to Login page...'
+              : serviceStatus?.message}
           </Text>
         </Paper>
 
