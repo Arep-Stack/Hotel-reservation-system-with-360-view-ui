@@ -30,22 +30,21 @@ function Navbar() {
   }, [navigator]);
 
   const navMenu = nav.map((nav) => (
-    <>
-      {nav === 'Login' && <hr />}
+    <div key={nav}>
       <Button
-        key={nav}
         onClick={() => navigate(nav)}
         color="themeColors"
         variant={activePage.includes(nav) ? 'filled' : 'outline'}
       >
         {nav === 'SignUp' ? 'Sign Up' : nav}
       </Button>
-    </>
+    </div>
   ));
 
   return (
     <Paper
       withBorder
+      display={activePage === 'User' ? 'none' : 'block'}
       w="100%"
       h="80px"
       px="xl"

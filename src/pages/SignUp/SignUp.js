@@ -91,7 +91,6 @@ function SignUp() {
     axios({
       method: 'POST',
       url: '/api/users/register',
-      withCredentials: false,
       data: {
         FIRSTNAME,
         LASTNAME,

@@ -1,18 +1,70 @@
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+
+import { postUser } from '../../utils/user';
+
 import { GoogleButton } from './GoogleButton/GoogleButton';
 
+import axios from 'axios';
+
 import './Login.css';
+
+import { useForm } from '@mantine/form';
 
 import {
   Box,
   Button,
   Container,
   Flex,
+  Paper,
   PasswordInput,
   Text,
   TextInput,
 } from '@mantine/core';
 
 function Login() {
+  const navigator = useNavigate();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [serviceStatus, setServiceStatus] = useState(null);
+
+  const form = useForm({
+    initialValues: {
+      email: '',
+      password: '',
+    },
+
+    validate: {
+      email: (value) => (value ? null : 'Email cannot be empty'),
+      password: (value) => (value ? null : 'Password cannot be empty'),
+    },
+  });
+
+  const handleSubmit = ({ EMAIL, PASSWORD }) => {
+    setIsSubmitting(true);
+    setServiceStatus(null);
+
+    axios({
+      method: 'POST',
+      url: '/api/users/login',
+      data: {
+        EMAIL,
+        PASSWORD,
+      },
+    })
+      .then(({ data }) => {
+        if (data?.user) {
+          postUser('__USER__DATA', data.user, 1);
+        }
+        navigator('/User'); //Change when useContext is used
+      })
+      .catch(({ response }) => {
+        setServiceStatus({
+          message: response?.data?.error,
+          status: response?.status,
+        });
+      })
+      .finally(() => setIsSubmitting(false));
+  };
   return (
     <Container
       size="xl"
@@ -30,6 +82,32 @@ function Login() {
           Hi, Welcome Back!
         </Text>
 
+        <Paper
+          withBorder
+          display={serviceStatus ? 'block' : 'none'}
+          p="sm"
+          mb="lg"
+          mih="50px"
+          w="100%"
+          style={{
+            borderColor: String(serviceStatus?.status).startsWith('2')
+              ? 'darkgreen'
+              : 'crimson',
+          }}
+        >
+          <Text
+            c={
+              String(serviceStatus?.status).startsWith('2')
+                ? 'darkGreen'
+                : 'red'
+            }
+          >
+            {String(serviceStatus?.status).startsWith('2')
+              ? 'Redirecting you to Login page...'
+              : serviceStatus?.message}
+          </Text>
+        </Paper>
+
         <GoogleButton>Login with Google</GoogleButton>
 
         <Box my="xl" pos="relative">
@@ -37,34 +115,51 @@ function Login() {
           <div className="login-with-email-line"></div>
         </Box>
 
-        <Box>
-          <Text component="label" htmlFor="email" size="sm" fw={500}>
-            Email
-          </Text>
-          <TextInput placeholder="Email" id="emai" mb="sm" />
+        <form
+          onSubmit={form.onSubmit((values) =>
+            handleSubmit({
+              EMAIL: values.email,
+              PASSWORD: values.password,
+            }),
+          )}
+        >
+          <Box>
+            <TextInput
+              mb={5}
+              label="Email"
+              placeholder="Email"
+              {...form.getInputProps('email')}
+            />
 
-          <Text component="label" htmlFor="password" size="sm" fw={500}>
-            Password
-          </Text>
+            <PasswordInput
+              label="Password"
+              placeholder="Password"
+              {...form.getInputProps('password')}
+            />
 
-          <PasswordInput placeholder="Password" id="password" />
+            <a
+              href="/Login"
+              onClick={(event) => event.preventDefault()}
+              tabIndex={-1}
+              style={{
+                fontSize: '12px',
+                marginLeft: 'auto',
+              }}
+            >
+              Forgot your password?
+            </a>
+          </Box>
 
-          <a
-            href="/Login"
-            onClick={(event) => event.preventDefault()}
-            tabIndex={-1}
-            style={{
-              fontSize: '12px',
-              marginLeft: 'auto',
-            }}
+          <Button
+            loading={isSubmitting}
+            type="submit"
+            mt="lg"
+            fullWidth
+            color="themeColors"
           >
-            Forgot your password?
-          </a>
-        </Box>
-
-        <Button mt="lg" fullWidth color="themeColors">
-          Login
-        </Button>
+            Login
+          </Button>
+        </form>
 
         <Text mt="md" size="sm" ta="center">
           Not registered yet? <a href="/SignUp">Create an account</a>
