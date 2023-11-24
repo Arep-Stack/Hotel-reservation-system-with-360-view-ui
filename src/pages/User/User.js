@@ -15,7 +15,8 @@ function User() {
   const [user, setUser] = useState(null);
 
   useEffect(() => {
-    const userData = getUser('__USER__DATA');
+    const userData = getUser();
+
     if (userData) {
       setUser(JSON.parse(userData));
     } else {

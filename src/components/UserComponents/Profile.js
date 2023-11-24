@@ -7,7 +7,7 @@ function Profile() {
   const [user, setUser] = useState(null); // Change when useContext is used
 
   useEffect(() => {
-    const userData = getUser('__USER__DATA');
+    const userData = getUser();
 
     if (userData) setUser(JSON.parse(userData));
   }, []);

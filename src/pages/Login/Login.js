@@ -45,7 +45,7 @@ function Login() {
 
     axios({
       method: 'POST',
-      url: '/api/users/login',
+      url: '/users/login',
       data: {
         EMAIL,
         PASSWORD,
@@ -53,14 +53,14 @@ function Login() {
     })
       .then(({ data }) => {
         if (data?.user) {
-          postUser('__USER__DATA', data.user, 1);
+          postUser(data.user);
         }
         navigator('/User'); //Change when useContext is used
       })
       .catch(({ response }) => {
         setServiceStatus({
           message: response?.data?.error,
-          status: response?.status,
+          status: response?.status || 400,
         });
       })
       .finally(() => setIsSubmitting(false));
@@ -104,7 +104,7 @@ function Login() {
           >
             {String(serviceStatus?.status).startsWith('2')
               ? 'Redirecting you to Login page...'
-              : serviceStatus?.message}
+              : serviceStatus?.message || 'An error occurred.'}
           </Text>
         </Paper>
 

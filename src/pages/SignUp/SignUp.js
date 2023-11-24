@@ -90,7 +90,7 @@ function SignUp() {
 
     axios({
       method: 'POST',
-      url: '/api/users/register',
+      url: '/users/register',
       data: {
         FIRSTNAME,
         LASTNAME,
@@ -118,7 +118,7 @@ function SignUp() {
       .catch(({ response }) => {
         setServiceStatus({
           message: response?.data?.message,
-          status: response?.status,
+          status: response?.status || 400,
         });
       })
       .finally(() => setIsSubmitting(false));

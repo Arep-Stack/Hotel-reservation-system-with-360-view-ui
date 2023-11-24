@@ -23,7 +23,7 @@ function App() {
   const navigator = useNavigate();
 
   useEffect(() => {
-    const userData = getUser('__USER__DATA');
+    const userData = getUser();
 
     if (userData) {
       setUser(userData);
