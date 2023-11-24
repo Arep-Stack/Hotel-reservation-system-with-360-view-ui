@@ -3,7 +3,7 @@ import CryptoJS from 'crypto-js';
 function postUser(user) {
   const encrypted = CryptoJS.TripleDES.encrypt(
     JSON.stringify(user),
-    'process.env.REACT_APP_CJS_SP',
+    process.env.REACT_APP_CJS_SP,
   );
 
   const date = new Date();
@@ -22,7 +22,7 @@ function getUser() {
       const encrypted = cookie.substring(cookieName.length, cookie.length);
       return CryptoJS.TripleDES.decrypt(
         encrypted,
-        'process.env.REACT_APP_CJS_SP',
+        process.env.REACT_APP_CJS_SP,
       ).toString(CryptoJS.enc.Utf8);
     }
   }
