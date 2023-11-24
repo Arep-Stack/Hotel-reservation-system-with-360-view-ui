@@ -1,6 +1,6 @@
 import { Box, Text } from '@mantine/core';
 
-function Reservation() {
+function UserReservation() {
   return (
     <Box>
       <Text size="xl">Reservation</Text>
@@ -8,4 +8,4 @@ function Reservation() {
   );
 }
 
-export default Reservation;
+export default UserReservation;

@@ -1,6 +1,6 @@
-import Dashboard from './Dashboard';
-import Profile from './Profile';
-import Reservation from './Reservation';
+import UserDashboard from './UserDashboard';
+import UserProfile from './UserProfile';
+import UserReservation from './UserReservation';
 
 import { Tabs } from '@mantine/core';
 import {
@@ -25,15 +25,15 @@ function UserMenu() {
       </Tabs.List>
 
       <Tabs.Panel value="dashboard" pt="md">
-        <Dashboard />
+        <UserDashboard />
       </Tabs.Panel>
 
       <Tabs.Panel value="reservation" pt="md">
-        <Reservation />
+        <UserReservation />
       </Tabs.Panel>
 
       <Tabs.Panel value="profile" pt="md">
-        <Profile />
+        <UserProfile />
       </Tabs.Panel>
     </Tabs>
   );
