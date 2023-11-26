@@ -1,14 +1,11 @@
+import { Container, Paper } from '@mantine/core';
 import { useEffect, useState } from 'react';
-
 import { useNavigate } from 'react-router-dom';
 
+import AdminMenu from '../../components/AdminComponents/AdminMenu';
 import NavbarUser from '../../components/Navbar/NavbarUser';
 import UserMenu from '../../components/UserComponents/UserMenu';
-import AdminMenu from '../../components/AdminComponents/AdminMenu';
-
 import { getUser } from '../../utils/user';
-
-import { Container, Paper } from '@mantine/core';
 
 function User() {
   const navigator = useNavigate();
@@ -26,9 +23,16 @@ function User() {
   }, [navigator]);
 
   return (
-    <Container size="xl" mih="100vh" p="lg">
+    <Container size="xl" mih="100vh" p="xl">
       <NavbarUser firstName={user?.FIRSTNAME} />
-      <Paper withBorder p="md" radius={18}>
+      <Paper
+        withBorder
+        p="md"
+        radius={18}
+        style={{
+          borderColor: 'darkgreen',
+        }}
+      >
         {user?.IS_ADMIN ? <AdminMenu /> : <UserMenu />}
       </Paper>
     </Container>

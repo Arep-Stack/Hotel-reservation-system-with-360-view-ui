@@ -1,6 +1,6 @@
+import { Box, Group, Text } from '@mantine/core';
 import { useEffect, useState } from 'react';
 
-import { Box, Group, Text } from '@mantine/core';
 import { getUser } from '../../utils/user';
 
 function UserProfile() {

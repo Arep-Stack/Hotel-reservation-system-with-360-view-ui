@@ -1,12 +1,3 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-
-import axios from 'axios';
-import camelCase from 'camelcase';
-import { toast } from 'react-toastify';
-
-import { useForm } from '@mantine/form';
-
 import {
   Box,
   Button,
@@ -17,6 +8,12 @@ import {
   Text,
   TextInput,
 } from '@mantine/core';
+import { useForm } from '@mantine/form';
+import axios from 'axios';
+import camelCase from 'camelcase';
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { toast } from 'react-toastify';
 
 const signInInputs = [
   {
@@ -98,6 +95,7 @@ function SignUp() {
         ADDRESS,
         EMAIL,
         PASSWORD,
+        IS_ADMIN: false,
       },
     })
       .then(({ data, status }) => {
@@ -117,7 +115,7 @@ function SignUp() {
       })
       .catch(({ response }) => {
         setServiceStatus({
-          message: response?.data?.message,
+          message: response?.data?.message || 'An error',
           status: response?.status || 400,
         });
       })
@@ -157,7 +155,7 @@ function SignUp() {
           <Text
             c={
               String(serviceStatus?.status).startsWith('2')
-                ? 'darkGreen'
+                ? 'darkgreen'
                 : 'red'
             }
           >

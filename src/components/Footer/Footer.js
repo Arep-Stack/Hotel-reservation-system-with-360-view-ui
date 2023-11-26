@@ -7,7 +7,6 @@ import {
   Group,
   Text,
 } from '@mantine/core';
-
 import {
   IconBellRinging,
   IconBrandFacebook,
@@ -104,7 +103,7 @@ const getSocial = () => {
       </Group>
       <Badge
         leftSection={<IconBellRinging />}
-        color="darkGreen"
+        color="darkgreen"
         mt="lg"
         size="xl"
       >

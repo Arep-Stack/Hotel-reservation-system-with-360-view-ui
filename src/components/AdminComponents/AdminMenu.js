@@ -1,13 +1,12 @@
-import AdminDashboard from './AdminDashboard';
-import AdminUsers from './AdminUsers';
-
 import { Tabs } from '@mantine/core';
-
 import {
   IconBuildingStore,
   IconLayoutDashboard,
   IconUsers,
 } from '@tabler/icons-react';
+
+import AdminDashboard from './AdminDashboard';
+import AdminUsers from './AdminUsers';
 
 function AdminMenu() {
   return (

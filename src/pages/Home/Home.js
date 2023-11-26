@@ -1,9 +1,3 @@
-import { useNavigate } from 'react-router-dom';
-
-import { GoogleMapEmbed } from './GoogleMapEmbed';
-
-import './Home.css';
-
 import {
   Box,
   Button,
@@ -14,8 +8,11 @@ import {
   Loader,
   Text,
 } from '@mantine/core';
-
 import { IconArrowBadgeRightFilled } from '@tabler/icons-react';
+import { useNavigate } from 'react-router-dom';
+
+import { GoogleMapEmbed } from './GoogleMapEmbed';
+import './Home.css';
 
 function Home() {
   const navigate = useNavigate();
@@ -24,7 +21,7 @@ function Home() {
     <Container size="xl" mih="100vh" px="lg">
       <Flex mih="100vh" align="center" justify="center" direction="column">
         <Text className="home-hero-text">Felrey</Text>
-        <Text mb="xl" fw={900} size="5rem" c="darkGreen">
+        <Text mb="xl" fw={900} size="5rem" c="darkgreen">
           Resort and Pavilion
         </Text>
         <Text mb="xl" size="3rem">
@@ -50,7 +47,7 @@ function Home() {
         direction="column"
         pos="relative"
       >
-        <Text color="darkGreen" size="3rem" align="center" mb="lg">
+        <Text color="darkgreen" size="3rem" align="center" mb="lg">
           We are on Google Maps!
         </Text>
 
@@ -66,7 +63,7 @@ function Home() {
               zIndex: -1,
             }}
           >
-            <Loader color="darkGreen" />
+            <Loader color="darkgreen" />
             <Text>Loading Google Maps...</Text>
           </Flex>
 

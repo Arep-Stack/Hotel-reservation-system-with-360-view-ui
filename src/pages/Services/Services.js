@@ -1,8 +1,7 @@
+import { Container, Flex, Text } from '@mantine/core';
 import { useNavigate } from 'react-router-dom';
 
 import ServiceChoice from '../../components/ServiceChoices/ServiceChoice';
-
-import { Container, Flex, Text } from '@mantine/core';
 
 function Services() {
   const navigator = useNavigate();

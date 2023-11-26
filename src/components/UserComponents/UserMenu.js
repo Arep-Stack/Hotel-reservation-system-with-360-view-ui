@@ -1,13 +1,13 @@
-import UserDashboard from './UserDashboard';
-import UserProfile from './UserProfile';
-import UserReservation from './UserReservation';
-
 import { Tabs } from '@mantine/core';
 import {
   IconBookmarks,
   IconLayoutDashboard,
   IconUserCircle,
 } from '@tabler/icons-react';
+
+import UserDashboard from './UserDashboard';
+import UserProfile from './UserProfile';
+import UserReservation from './UserReservation';
 
 function UserMenu() {
   return (

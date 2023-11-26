@@ -1,16 +1,12 @@
+import { MantineProvider, createTheme } from '@mantine/core';
+import '@mantine/core/styles.css';
+import axios from 'axios';
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-
-import App from './App';
-
 import { BrowserRouter } from 'react-router-dom';
 
-import axios from 'axios';
-
+import App from './App';
 import './index.css';
-import '@mantine/core/styles.css';
-
-import { MantineProvider, createTheme } from '@mantine/core';
 
 axios.defaults.baseURL = process.env.REACT_APP_BE_BASE_URL;
 

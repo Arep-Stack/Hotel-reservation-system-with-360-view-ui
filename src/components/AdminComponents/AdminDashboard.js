@@ -1,4 +1,5 @@
 import { Box, Text } from '@mantine/core';
+
 import { greet } from '../../utils/greet';
 
 function AdminDashboard() {

@@ -8,7 +8,6 @@ import {
   Paper,
   Text,
 } from '@mantine/core';
-
 import {
   Icon360,
   IconBuildingSkyscraper,
@@ -54,7 +53,7 @@ function ServiceCard({ image, type, persons, price, amenities }) {
             borderBottom: '2px solid #868e96',
           }}
         >
-          <Text color="darkGreen">Amenities</Text>
+          <Text color="darkgreen">Amenities</Text>
           <Group gap={7} mt={5}>
             {amenities.map((a) => (
               <Badge color="dark" variant="light" key={a}>
@@ -73,7 +72,7 @@ function ServiceCard({ image, type, persons, price, amenities }) {
             Book Now
           </Button>
           <Button
-            color="darkGreen"
+            color="darkgreen"
             fullWidth
             rightSection={<Icon360 />}
             variant="light"

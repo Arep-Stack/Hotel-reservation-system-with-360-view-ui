@@ -1,8 +1,7 @@
+import { Box, Container, Flex, Image, Text } from '@mantine/core';
 import React from 'react';
 
 import about from './data.json';
-
-import { Box, Container, Flex, Image, Text } from '@mantine/core';
 
 function About() {
   return (

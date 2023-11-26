@@ -1,12 +1,10 @@
+import { ActionIcon, Container, Flex, Text } from '@mantine/core';
+import { IconArrowBarRight } from '@tabler/icons-react';
+import axios from 'axios';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import ServiceCard from '../../components/ServiceCard/ServiceCard';
-
-import axios from 'axios';
-
-import { ActionIcon, Container, Flex, Text } from '@mantine/core';
-import { IconArrowBarRight } from '@tabler/icons-react';
 
 function Rooms() {
   const [rooms, setRooms] = useState([]);

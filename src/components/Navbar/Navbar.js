@@ -1,7 +1,6 @@
-import { useNavigate } from 'react-router-dom';
-import React, { useEffect, useState } from 'react';
-
 import { Button, Flex, Image, Paper, Text } from '@mantine/core';
+import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 const nav = ['Home', 'Services', 'About', 'Login', 'SignUp'];
 
