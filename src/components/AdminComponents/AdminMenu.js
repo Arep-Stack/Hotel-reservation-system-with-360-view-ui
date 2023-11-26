@@ -6,6 +6,7 @@ import {
 } from '@tabler/icons-react';
 
 import AdminDashboard from './AdminDashboard';
+import AdminService from './AdminService';
 import AdminUsers from './AdminUsers';
 
 function AdminMenu() {
@@ -28,6 +29,9 @@ function AdminMenu() {
       </Tabs.Panel>
       <Tabs.Panel value="users" pt="md">
         <AdminUsers />
+      </Tabs.Panel>
+      <Tabs.Panel value="services" pt="md">
+        <AdminService />
       </Tabs.Panel>
     </Tabs>
   );
