@@ -3,7 +3,7 @@ import { IconUsers } from '@tabler/icons-react';
 
 function ServiceCard({ name, image, price, persons, amenities, children }) {
   return (
-    <Paper withBorder maw="350px" miw="300px" radius="8px">
+    <Paper withBorder maw="350px" miw="300px" h="100%" radius="8px">
       <Box h="200px" w="100%">
         <Image
           src={

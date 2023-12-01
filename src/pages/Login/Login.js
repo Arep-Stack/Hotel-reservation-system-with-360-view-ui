@@ -146,11 +146,12 @@ function Login() {
           </Box>
 
           <Button
-            loading={isSubmitting}
-            type="submit"
-            mt="lg"
             fullWidth
+            type="submit"
+            mih="36px"
+            mt="lg"
             color="themeColors"
+            loading={isSubmitting}
           >
             Login
           </Button>

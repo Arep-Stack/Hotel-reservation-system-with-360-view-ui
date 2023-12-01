@@ -269,24 +269,25 @@ function AdminService() {
                     persons={service.PERSONS}
                     price={service.PRICE}
                   >
-                    <Button
-                      fullWidth
-                      mb="sm"
-                      color="#006400"
-                      leftSection={<IconEdit />}
-                      onClick={() => handleOpenModal(service, 'Update')}
-                    >
-                      Edit
-                    </Button>
+                    <Flex align="center" gap={5}>
+                      <Button
+                        fullWidth
+                        color="#006400"
+                        leftSection={<IconEdit />}
+                        onClick={() => handleOpenModal(service, 'Update')}
+                      >
+                        Edit
+                      </Button>
 
-                    <Button
-                      fullWidth
-                      color="red"
-                      leftSection={<IconTrashFilled />}
-                      onClick={() => handleOpenModal(service, 'Delete')}
-                    >
-                      Delete
-                    </Button>
+                      <Button
+                        fullWidth
+                        color="red"
+                        leftSection={<IconTrashFilled />}
+                        onClick={() => handleOpenModal(service, 'Delete')}
+                      >
+                        Delete
+                      </Button>
+                    </Flex>
                   </ServiceCard>
                 ))}
               </Group>
