@@ -2,7 +2,6 @@ import {
   ActionIcon,
   Box,
   Button,
-  Flex,
   Group,
   Input,
   Modal,
@@ -10,85 +9,51 @@ import {
   Text,
 } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
-import {
-  IconCircleFilled,
-  IconEdit,
-  IconSearch,
-  IconTrashFilled,
-} from '@tabler/icons-react';
+import { IconSearch, IconTrashFilled } from '@tabler/icons-react';
 import axios from 'axios';
 import { useEffect, useRef, useState } from 'react';
 import { toast } from 'react-toastify';
 
 import ComponentError from '../utils/ComponentError';
 import ComponentLoader from '../utils/ComponentLoader';
-import TableNoRecords from '../utils/TableNoRecords';
+import NoRecords from '../utils/NoRecords';
 
 function AdminUsers() {
+  //fetching user
   const [users, setUsers] = useState([]);
   const [usersFilter, setUsersFilter] = useState([]);
-  const [selectedUser, setSelectedUser] = useState({});
-  const [isLoading, setIsLoading] = useState(false);
-  const [isDeletingUser, setIsDeletingUser] = useState(false);
-  const [error, setError] = useState(null);
+  const [isFetching, setIsFetching] = useState(false);
+  const [fetchError, setFetchError] = useState(null);
 
+  //deleting user
+  const [selectedUser, setSelectedUser] = useState({});
+  const [isDeletingUser, setIsDeletingUser] = useState(false);
   const searchBar = useRef();
 
-  const [isInfoModalOpen, { open: openInfoModal, close: closeInfoModal }] =
-    useDisclosure(false);
-
+  //modal
   const [
     isDeleteModalOpen,
     { open: openDeleteModal, close: closeDeleteModal },
   ] = useDisclosure(false);
 
+  //functions
   const getUsers = () => {
-    setIsLoading(true);
+    closeDeleteModal();
+    setIsFetching(true);
     axios({
       method: 'GET',
       url: '/users',
     })
       .then(({ data }) => {
-        !!data && setUsers(data);
-        !!data && setUsersFilter(data);
+        if (!!data) {
+          setUsers(data);
+          setUsersFilter(data);
+        }
       })
       .catch(() => {
-        setError('Error while getting users');
+        setFetchError('An error occurred');
       })
-      .finally(() => setIsLoading(false));
-  };
-
-  useEffect(() => {
-    getUsers();
-  }, []);
-
-  const handleDeleteUser = () => {
-    setIsDeletingUser(true);
-    axios({
-      method: 'DELETE',
-      url: `/users/${selectedUser.ID}`,
-    })
-      .then(() => {
-        toast.success('User Deleted', {
-          position: toast.POSITION.TOP_RIGHT,
-          autoClose: 1500,
-        });
-        closeDeleteModal();
-        closeInfoModal();
-        getUsers();
-      })
-      .catch(({ response }) => {
-        toast.error(response?.data?.error || 'An error occurred', {
-          position: toast.POSITION.TOP_RIGHT,
-          autoClose: 1500,
-        });
-      })
-      .finally(() => setIsDeletingUser(false));
-  };
-
-  const handleOpenInfoModal = (user) => {
-    openInfoModal();
-    !!user && setSelectedUser(user);
+      .finally(() => setIsFetching(false));
   };
 
   const handleSearch = () => {
@@ -105,28 +70,57 @@ function AdminUsers() {
     setUsersFilter(filteredData);
   };
 
+  const handleDelete = () => {
+    setIsDeletingUser(true);
+    axios({
+      method: 'DELETE',
+      url: `/users/${selectedUser?.ID}`,
+    })
+      .then(() => {
+        toast.success('User has been deleted', {
+          position: toast.POSITION.TOP_RIGHT,
+          autoClose: 1500,
+        });
+      })
+      .catch(({ response }) => {
+        toast.error(response?.data?.error || 'An error occurred', {
+          position: toast.POSITION.TOP_RIGHT,
+          autoClose: 1500,
+        });
+      })
+      .finally(() => setIsDeletingUser(false));
+  };
+
   const dataRows = usersFilter
     ?.filter((user) => !user?.IS_ADMIN)
-    .map((data) => (
-      <Table.Tr key={data.ID}>
+    .map((user) => (
+      <Table.Tr key={user.ID}>
         <Table.Td>
           <ActionIcon
-            onClick={() => handleOpenInfoModal(data)}
+            onClick={() => {
+              setSelectedUser(user);
+              openDeleteModal();
+            }}
             variant="light"
-            color="yellow"
+            color="red"
           >
-            <IconEdit />
+            <IconTrashFilled />
           </ActionIcon>
         </Table.Td>
-        <Table.Td>{data.FIRSTNAME}</Table.Td>
-        <Table.Td>{data.LASTNAME}</Table.Td>
-        <Table.Td c={data.IS_ACTIVE ? 'darkgreen' : 'crimson'}>
-          {data.EMAIL}
+        <Table.Td>{user.FIRSTNAME}</Table.Td>
+        <Table.Td>{user.LASTNAME}</Table.Td>
+        <Table.Td c={user.IS_ACTIVE ? 'darkgreen' : 'crimson'}>
+          {user.EMAIL}
         </Table.Td>
-        <Table.Td>{data.PHONE_NUMBER}</Table.Td>
-        <Table.Td>{data.ADDRESS}</Table.Td>
+        <Table.Td>{user.PHONE_NUMBER}</Table.Td>
+        <Table.Td>{user.ADDRESS}</Table.Td>
       </Table.Tr>
     ));
+
+  //UseEffect
+  useEffect(() => {
+    getUsers();
+  }, []);
 
   return (
     <Box pos="relative" mih={200}>
@@ -141,10 +135,10 @@ function AdminUsers() {
         />
       </Group>
 
-      {isLoading && <ComponentLoader message="Loading users" />}
-      {error && <ComponentError message={error} />}
-      {dataRows.length < 1 && !error && !isLoading && <TableNoRecords />}
-      {dataRows.length > 0 && !error && !isLoading && (
+      {isFetching && <ComponentLoader message="Fetching users" />}
+      {!isFetching && fetchError && <ComponentError message={fetchError} />}
+      {!isFetching && !fetchError && dataRows.length < 1 && <NoRecords />}
+      {!isFetching && !fetchError && dataRows.length > 0 && (
         <>
           <Table.ScrollContainer
             minWidth={500}
@@ -182,79 +176,6 @@ function AdminUsers() {
 
       <Modal
         centered
-        shadow="xl"
-        opened={isInfoModalOpen}
-        onClose={closeInfoModal}
-        title={'User #' + selectedUser.ID}
-        closeButtonProps={{
-          bg: 'crimson',
-          radius: '50%',
-          c: 'white',
-        }}
-        styles={{
-          title: { color: 'darkgreen', fontSize: '1.7rem' },
-          inner: { padding: 5 },
-        }}
-      >
-        <Flex
-          align="center"
-          style={{
-            borderBottom: '1px solid gray',
-          }}
-        >
-          <IconCircleFilled
-            style={{
-              color: selectedUser.IS_ACTIVE ? 'green' : 'red',
-            }}
-          />
-          <Text size="xl" ml="xs">
-            Personal Information
-          </Text>
-        </Flex>
-
-        <Flex direction="column" py="lg">
-          <Group justify="space-between" mb="sm">
-            <Text>First name</Text>
-            <Text fw={900}>{selectedUser.FIRSTNAME}</Text>
-          </Group>
-
-          <Group justify="space-between" mb="sm">
-            <Text>Last name</Text>
-            <Text fw={900}>{selectedUser.LASTNAME}</Text>
-          </Group>
-
-          <Group justify="space-between" mb="sm">
-            <Text>Email</Text>
-            <Text fw={900}>{selectedUser.EMAIL}</Text>
-          </Group>
-
-          <Group justify="space-between" mb="sm">
-            <Text>Phone</Text>
-            <Text fw={900}>{selectedUser.PHONE_NUMBER}</Text>
-          </Group>
-
-          <Group justify="space-between" mb="sm">
-            <Text>Address</Text>
-            <Text fw={900}>{selectedUser.ADDRESS}</Text>
-          </Group>
-        </Flex>
-
-        <Button
-          color="red"
-          fullWidth
-          fw={400}
-          leftSection={<IconTrashFilled />}
-          onClick={() => {
-            closeInfoModal();
-            openDeleteModal();
-          }}
-        >
-          Delete User
-        </Button>
-      </Modal>
-
-      <Modal
-        centered
         title="Delete User"
         shadow="xl"
         closeButtonProps={{
@@ -269,7 +190,6 @@ function AdminUsers() {
         opened={isDeleteModalOpen}
         onClose={() => {
           closeDeleteModal();
-          openInfoModal();
         }}
         withCloseButton={!isDeletingUser}
         closeOnClickOutside={!isDeletingUser}
@@ -290,7 +210,7 @@ function AdminUsers() {
           fw={400}
           leftSection={<IconTrashFilled />}
           loading={isDeletingUser}
-          onClick={handleDeleteUser}
+          onClick={handleDelete}
         >
           I understand
         </Button>

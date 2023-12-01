@@ -23,13 +23,14 @@ function NavbarUser({ firstName }) {
           {avatarLetter}
         </Avatar>
         <Button
+          color="#006400"
+          variant="outline"
+          fw={400}
+          rightSection={<IconLogout />}
           onClick={() => {
             logOut();
             navigator('/Login'); // Change when useContext is used
           }}
-          rightSection={<IconLogout />}
-          color="#006400"
-          fw="normal"
         >
           Log out
         </Button>

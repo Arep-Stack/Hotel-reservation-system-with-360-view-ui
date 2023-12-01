@@ -1,4 +1,4 @@
-import CryptoJS from "crypto-js";
+import CryptoJS from 'crypto-js';
 
 function postUser(user) {
   const encrypted = CryptoJS.TripleDES.encrypt(
@@ -8,13 +8,13 @@ function postUser(user) {
 
   const date = new Date();
   date.setTime(date.getTime() + 1 * 24 * 60 * 60 * 1000);
-  const expires = "expires=" + date.toUTCString();
-  document.cookie = "__USER__DATA__=" + encrypted + ";" + expires + ";path=/";
+  const expires = 'expires=' + date.toUTCString();
+  document.cookie = '__USER__DATA__=' + encrypted + ';' + expires + ';path=/';
 }
 
 function getUser() {
-  const cookieName = "__USER__DATA__=";
-  const cookies = document.cookie.split(";");
+  const cookieName = '__USER__DATA__=';
+  const cookies = document.cookie.split(';');
 
   for (let i = 0; i < cookies.length; i++) {
     let cookie = cookies[i].trim();
@@ -31,7 +31,7 @@ function getUser() {
 }
 
 function logOut() {
-  document.cookie = "__USER__DATA__=; expires=Thu, 01 Jan 1970 00:00:01 GMT;";
+  document.cookie = '__USER__DATA__=; expires=Thu, 01 Jan 1970 00:00:01 GMT;';
 }
 
 export { getUser, postUser, logOut };

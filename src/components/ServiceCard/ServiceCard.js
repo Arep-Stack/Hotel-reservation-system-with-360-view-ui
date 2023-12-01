@@ -1,38 +1,35 @@
-import {
-  Badge,
-  Box,
-  Button,
-  Flex,
-  Group,
-  Image,
-  Paper,
-  Text,
-} from '@mantine/core';
-import {
-  Icon360,
-  IconBuildingSkyscraper,
-  IconUsers,
-} from '@tabler/icons-react';
+import { Badge, Box, Flex, Group, Image, Paper, Text } from '@mantine/core';
+import { IconUsers } from '@tabler/icons-react';
 
-function ServiceCard({ image, type, persons, price, amenities }) {
+function ServiceCard({ name, image, price, persons, amenities, children }) {
   return (
-    <Paper maw="350px" radius="8px" withBorder>
+    <Paper withBorder maw="350px" miw="300px" radius="8px">
       <Box h="200px" w="100%">
-        <Image src={image} w="100%" h="100%" style={{ borderRadius: '8px' }} />
+        <Image
+          src={
+            image
+              ? image
+              : 'https://www.thespruce.com/thmb/2_Q52GK3rayV1wnqm6vyBvgI3Ew=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/put-together-a-perfect-guest-room-1976987-hero-223e3e8f697e4b13b62ad4fe898d492d.jpg'
+          }
+          w="100%"
+          h="100%"
+          style={{ borderRadius: '8px' }}
+        />
       </Box>
 
-      <Box px="lg">
+      <Box px="lg" pb="sm">
         <Flex
           justify="space-between"
           align="center"
           py="md"
+          gap={10}
           style={{
             borderBottom: '2px solid #868e96',
           }}
         >
           <div>
             <Text size="xl" fw={900} c="#006400">
-              {type}
+              {name}
             </Text>
             <Flex align="center">
               <IconUsers color="#006400" size="16px" />
@@ -55,7 +52,7 @@ function ServiceCard({ image, type, persons, price, amenities }) {
         >
           <Text color="darkgreen">Amenities</Text>
           <Group gap={7} mt={5}>
-            {amenities.map((a) => (
+            {amenities?.map((a) => (
               <Badge color="dark" variant="light" key={a}>
                 {a}
               </Badge>
@@ -63,23 +60,7 @@ function ServiceCard({ image, type, persons, price, amenities }) {
           </Group>
         </Box>
 
-        <Flex py="md" align="center" gap={5}>
-          <Button
-            color="#006400"
-            fullWidth
-            leftSection={<IconBuildingSkyscraper />}
-          >
-            Book Now
-          </Button>
-          <Button
-            color="darkgreen"
-            fullWidth
-            rightSection={<Icon360 />}
-            variant="light"
-          >
-            View Room
-          </Button>
-        </Flex>
+        <Box py="md">{children}</Box>
       </Box>
     </Paper>
   );
