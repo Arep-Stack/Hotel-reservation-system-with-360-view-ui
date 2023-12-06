@@ -3,8 +3,16 @@ import { IconUsers } from '@tabler/icons-react';
 
 function ServiceCard({ name, image, price, persons, amenities, children }) {
   return (
-    <Paper withBorder maw="350px" miw="300px" h="100%" radius="8px">
-      <Box h="200px" w="100%">
+    <Paper
+      withBorder
+      maw={350}
+      w={350}
+      mih={450}
+      radius={8}
+      display="flex"
+      style={{ flexDirection: 'column' }}
+    >
+      <Box h={200} w="100%">
         <Image
           src={
             image
@@ -17,51 +25,56 @@ function ServiceCard({ name, image, price, persons, amenities, children }) {
         />
       </Box>
 
-      <Box px="lg" pb="sm">
-        <Flex
-          justify="space-between"
-          align="center"
-          py="md"
-          gap={10}
-          style={{
-            borderBottom: '2px solid #868e96',
-          }}
-        >
-          <div>
-            <Text size="xl" fw={900} c="#006400">
-              {name}
-            </Text>
-            <Flex align="center">
-              <IconUsers color="#006400" size="16px" />
-              <Text size="md" mt="-3" ml={3}>
-                Up to {persons} person{persons > 1 ? 's' : ''}
+      <Flex justify="space-between" direction="column" px="lg" pb="sm" h="100%">
+        <Box>
+          <Flex
+            justify="space-between"
+            align="center"
+            py="md"
+            gap={10}
+            style={{
+              borderBottom: '2px solid #868e96',
+            }}
+          >
+            <div>
+              <Text size="xl" fw={900} c="#006400">
+                {name}
               </Text>
-            </Flex>
-          </div>
+              <Flex align="center">
+                <IconUsers color="#006400" size="16px" />
+                <Text size="md" mt="-3" ml={3}>
+                  Up to {persons} person{persons > 1 ? 's' : ''}
+                </Text>
+              </Flex>
+            </div>
 
-          <Badge size="lg" variant="light" color="#006400">
-            ₱ {price}
-          </Badge>
-        </Flex>
+            <Badge size="lg" variant="light" color="#006400">
+              ₱ {price}
+            </Badge>
+          </Flex>
+
+          <Box py="md">
+            <Text c="darkgreen">Amenities</Text>
+            <Group gap={7} mt={5}>
+              {amenities?.map((a) => (
+                <Badge color="dark" variant="light" key={a}>
+                  {a}
+                </Badge>
+              ))}
+            </Group>
+          </Box>
+        </Box>
 
         <Box
           py="md"
+          mt="auto"
           style={{
-            borderBottom: '2px solid #868e96',
+            borderTop: '2px solid #868e96',
           }}
         >
-          <Text color="darkgreen">Amenities</Text>
-          <Group gap={7} mt={5}>
-            {amenities?.map((a) => (
-              <Badge color="dark" variant="light" key={a}>
-                {a}
-              </Badge>
-            ))}
-          </Group>
+          {children}
         </Box>
-
-        <Box py="md">{children}</Box>
-      </Box>
+      </Flex>
     </Paper>
   );
 }

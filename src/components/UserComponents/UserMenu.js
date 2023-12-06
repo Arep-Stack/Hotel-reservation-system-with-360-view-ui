@@ -11,7 +11,7 @@ import UserReservation from './UserReservation';
 
 function UserMenu() {
   return (
-    <Tabs defaultValue="dashboard" color="darkgreen" variant="default">
+    <Tabs defaultValue="reservation" color="darkgreen" variant="default">
       <Tabs.List grow justify="space-between">
         <Tabs.Tab value="dashboard" leftSection={<IconLayoutDashboard />}>
           Dashboard

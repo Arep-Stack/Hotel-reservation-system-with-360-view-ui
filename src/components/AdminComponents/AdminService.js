@@ -1,8 +1,10 @@
 import {
   Box,
   Button,
+  FileButton,
   Flex,
   Group,
+  Image,
   Menu,
   Modal,
   NumberInput,
@@ -20,6 +22,7 @@ import {
   IconHome2,
   IconSwimming,
   IconTrashFilled,
+  IconUpload,
 } from '@tabler/icons-react';
 import axios from 'axios';
 import { useEffect, useState } from 'react';
@@ -39,6 +42,21 @@ function AdminService() {
   //updating service
   const [selectedService, setSelectedService] = useState();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [image, setImage] = useState(null);
+
+  const handleUploadImage = (e) => {
+    const selectedFile = e;
+
+    if (selectedFile) {
+      const fileReader = new FileReader();
+
+      fileReader.onloadend = () => {
+        setImage(fileReader.result);
+      };
+
+      fileReader.readAsDataURL(selectedFile);
+    }
+  };
 
   //modal
   const [upsertMode, setUpsertMode] = useState('');
@@ -59,16 +77,18 @@ function AdminService() {
       QUANTITY: 0,
     },
 
-    // validate: {
-    //   NAME: (value) =>
-    //     value && value.trim() !== '' ? null : 'Name is required',
-    //   PERSONS: (value) =>
-    //     value && value > 0 ? null : 'Person capacity must be at least 1',
-    //   PRICE: (value) =>
-    //     value && value > 0 ? null : 'Price must be more than 1',
-    //   AMENITIES: (value) =>
-    //     value.length > 0 ? null : 'Add at least 1 amenity',
-    // },
+    validate: {
+      NAME: (value) =>
+        value && value.trim() !== '' ? null : 'Name is required',
+      PERSONS: (value) =>
+        value && value > 0 ? null : 'Person capacity must be at least 1',
+      PRICE: (value) =>
+        value && value > 0 ? null : 'Price must be at least 0',
+      AMENITIES: (value) =>
+        value.length > 0 ? null : 'Add at least 1 amenity',
+      QUANTITY: (value) =>
+        value && value > 0 ? null : 'Quantity must be at least 1',
+    },
   });
 
   //functions
@@ -250,7 +270,7 @@ function AdminService() {
             align="center"
             justify="center"
             direction="column"
-            gap="md"
+            gap={5}
             p="md"
             style={{ borderBottom: '2px solid gray' }}
           >
@@ -259,7 +279,7 @@ function AdminService() {
             </Text>
 
             {services?.filter((s) => s.TYPE === 'Room').length ? (
-              <Group w="100%" px="md" justify="center">
+              <Flex py="lg" gap={10} justify="center">
                 {services?.map((service) => (
                   <ServiceCard
                     key={service.ID}
@@ -290,7 +310,7 @@ function AdminService() {
                     </Flex>
                   </ServiceCard>
                 ))}
-              </Group>
+              </Flex>
             ) : (
               <NoRecords />
             )}
@@ -338,6 +358,32 @@ function AdminService() {
               </>
             ) : (
               <>
+                <Image
+                  w="100%"
+                  h={200}
+                  src={image}
+                  mb="sm"
+                  fallbackSrc="https://placehold.co/400x200/green/white"
+                />
+                <FileButton
+                  onChange={(e) => handleUploadImage(e)}
+                  accept="image/png,image/jpeg"
+                >
+                  {(props) => (
+                    <Button
+                      fullWidth
+                      {...props}
+                      mb="sm"
+                      color="#006400"
+                      leftSection={<IconUpload />}
+                    >
+                      Upload image
+                    </Button>
+                  )}
+                </FileButton>
+
+                <hr />
+
                 <TextInput
                   withAsterisk
                   label="Name"

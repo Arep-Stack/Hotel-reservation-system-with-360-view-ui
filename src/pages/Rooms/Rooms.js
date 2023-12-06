@@ -56,14 +56,7 @@ function Rooms() {
         </ActionIcon>
       </Flex>
 
-      <Flex
-        pos="relative"
-        py="lg"
-        wrap="wrap"
-        gap={10}
-        justify="center"
-        mih={200}
-      >
+      <Flex py="lg" wrap="wrap" gap={10} justify="center" mih={200}>
         {isFetching && <ComponentLoader message="Fetching rooms" />}
         {!isFetching && fetchError && <ComponentError message={fetchError} />}
         {!isFetching && !fetchError && !rooms.length && <NoRecords />}

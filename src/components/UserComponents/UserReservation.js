@@ -1,4 +1,4 @@
-import { Box, Button, Flex, Group, Text } from '@mantine/core';
+import { Box, Button, Flex, Text } from '@mantine/core';
 import { Icon360, IconBuildingSkyscraper } from '@tabler/icons-react';
 import axios from 'axios';
 import { useEffect, useState } from 'react';
@@ -36,57 +36,59 @@ function UserReservation() {
 
       {isFetching && <ComponentLoader message="Fetching services" />}
       {!isFetching && fetchError && <ComponentError message={fetchError} />}
-      {['Room', 'Pavilion', 'Pool'].map((s) => (
-        <Flex
-          pos="relative"
-          align="center"
-          justify="center"
-          direction="column"
-          gap="md"
-          p="md"
-          style={{ borderBottom: '2px solid gray' }}
-        >
-          <Text size="2rem" px="lg">
-            {s}
-          </Text>
-          <Group w="100%" px="md" justify="center">
-            {services?.filter((service) => service.TYPE === s).length > 0 ? (
-              services
-                ?.filter((service) => service.TYPE === s)
-                .map((service) => (
-                  <ServiceCard
-                    key={service.ID}
-                    amenities={service.AMENITIES}
-                    image={service.IMAGE}
-                    name={service.NAME}
-                    persons={service.PERSONS}
-                    price={service.PRICE}
-                  >
-                    <Flex align="center" gap={5}>
-                      <Button
-                        color="#006400"
-                        fullWidth
-                        leftSection={<IconBuildingSkyscraper />}
-                      >
-                        Book Now
-                      </Button>
-                      <Button
-                        color="darkgreen"
-                        fullWidth
-                        rightSection={<Icon360 />}
-                        variant="light"
-                      >
-                        View Room
-                      </Button>
-                    </Flex>
-                  </ServiceCard>
-                ))
-            ) : (
-              <NoRecords />
-            )}
-          </Group>
-        </Flex>
-      ))}
+      {!isFetching &&
+        !fetchError &&
+        ['Room', 'Pavilion', 'Pool'].map((s) => (
+          <Flex
+            key={s}
+            align="center"
+            justify="center"
+            direction="column"
+            gap={5}
+            p="md"
+            style={{ borderBottom: '2px solid gray' }}
+          >
+            <Text size="2rem" px="lg">
+              {s}
+            </Text>
+            <Flex py="lg" gap={10} justify="center">
+              {services?.filter((service) => service.TYPE === s).length > 0 ? (
+                services
+                  ?.filter((service) => service.TYPE === s)
+                  .map((service) => (
+                    <ServiceCard
+                      key={service.ID}
+                      amenities={service.AMENITIES}
+                      image={service.IMAGE}
+                      name={service.NAME}
+                      persons={service.PERSONS}
+                      price={service.PRICE}
+                    >
+                      <Flex align="center" gap={5}>
+                        <Button
+                          color="#006400"
+                          fullWidth
+                          leftSection={<IconBuildingSkyscraper />}
+                        >
+                          Book Now
+                        </Button>
+                        <Button
+                          color="darkgreen"
+                          fullWidth
+                          rightSection={<Icon360 />}
+                          variant="light"
+                        >
+                          View Room
+                        </Button>
+                      </Flex>
+                    </ServiceCard>
+                  ))
+              ) : (
+                <NoRecords />
+              )}
+            </Flex>
+          </Flex>
+        ))}
     </Box>
   );
 }
