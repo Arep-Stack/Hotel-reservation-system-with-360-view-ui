@@ -1,7 +1,29 @@
 import { Badge, Box, Flex, Group, Image, Paper, Text } from '@mantine/core';
 import { IconUsers } from '@tabler/icons-react';
+import axios from 'axios';
+import { useEffect, useState } from 'react';
 
 function ServiceCard({ name, image, price, persons, amenities, children }) {
+  const [imagePath, setImagePath] = useState(null);
+
+  const getImage = () => {
+    if (image)
+      axios({
+        method: 'GET',
+        url: `/image/${image}`,
+      })
+        .then(({ data }) => {
+          setImagePath(data?.PATH);
+        })
+        .catch((err) => {
+          console.log(err);
+        });
+  };
+
+  useEffect(() => {
+    getImage();
+  }, []);
+
   return (
     <Paper
       withBorder
@@ -12,15 +34,12 @@ function ServiceCard({ name, image, price, persons, amenities, children }) {
       display="flex"
       style={{ flexDirection: 'column' }}
     >
-      <Box h={200} w="100%">
+      <Box mih={200} h={200} w="100%">
         <Image
-          src={
-            image
-              ? image
-              : 'https://www.thespruce.com/thmb/2_Q52GK3rayV1wnqm6vyBvgI3Ew=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/put-together-a-perfect-guest-room-1976987-hero-223e3e8f697e4b13b62ad4fe898d492d.jpg'
-          }
+          src={imagePath}
           w="100%"
           h="100%"
+          fallbackSrc="https://placehold.co/350x200/EEE/31343C?font=source-sans-pro&text=Error%20while%20loading%20picture"
           style={{ borderRadius: '8px' }}
         />
       </Box>

@@ -43,15 +43,17 @@ function AdminService() {
   const [selectedService, setSelectedService] = useState();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [image, setImage] = useState(null);
+  const [imageDisplay, setImageDisplay] = useState(null);
 
   const handleUploadImage = (e) => {
+    setImage(e);
     const selectedFile = e;
 
     if (selectedFile) {
       const fileReader = new FileReader();
 
       fileReader.onloadend = () => {
-        setImage(fileReader.result);
+        setImageDisplay(fileReader.result);
       };
 
       fileReader.readAsDataURL(selectedFile);
@@ -79,15 +81,25 @@ function AdminService() {
 
     validate: {
       NAME: (value) =>
-        value && value.trim() !== '' ? null : 'Name is required',
+        upsertMode.includes('Delete') || (value && value.trim() !== '')
+          ? null
+          : 'Name is required',
       PERSONS: (value) =>
-        value && value > 0 ? null : 'Person capacity must be at least 1',
+        upsertMode.includes('Delete') || (value && value > 0)
+          ? null
+          : 'Person capacity must be at least 1',
       PRICE: (value) =>
-        value && value > 0 ? null : 'Price must be at least 0',
+        upsertMode.includes('Delete') || (value && value > 0)
+          ? null
+          : 'Price must be at least 0',
       AMENITIES: (value) =>
-        value.length > 0 ? null : 'Add at least 1 amenity',
+        upsertMode.includes('Delete') || value.length > 0
+          ? null
+          : 'Add at least 1 amenity',
       QUANTITY: (value) =>
-        value && value > 0 ? null : 'Quantity must be at least 1',
+        upsertMode.includes('Delete') || (value && value > 0)
+          ? null
+          : 'Quantity must be at least 1',
     },
   });
 
@@ -112,6 +124,22 @@ function AdminService() {
     { ID, AMENITIES, IMAGE, NAME, PERSONS, PRICE, TYPE, QUANTITY },
     mode,
   ) => {
+    if (mode === 'Update') {
+      axios({
+        method: 'GET',
+        url: `/image/${IMAGE}`,
+      })
+        .then(({ data }) => setImageDisplay(data?.PATH))
+        .catch(() => {
+          setImageDisplay(
+            'https://placehold.co/350x200/EEE/31343C?font=source-sans-pro&text=Error%20while%20loading%20picture',
+          );
+        });
+    } else {
+      setImageDisplay('https://placehold.co/400x200/green/white');
+      setImage(null);
+    }
+
     setUpsertMode(mode + ' ' + TYPE);
     openUpsertModal();
 
@@ -146,6 +174,43 @@ function AdminService() {
   }) => {
     setIsSubmitting(true);
 
+    const upsert = (id) => {
+      axios({
+        method: upsertMode.includes('Create') ? 'POST' : 'PUT',
+        url: `/services${
+          upsertMode.includes('Create') ? '' : '/' + selectedService?.ID
+        }`,
+        data: {
+          AMENITIES,
+          IMAGE: id,
+          NAME,
+          PERSONS,
+          PRICE,
+          QUANTITY,
+          TYPE: upsertMode.includes('Create') ? selectedService?.TYPE : TYPE,
+        },
+      })
+        .then(({ data }) => {
+          toast.success(data?.message || 'Successfully updated service', {
+            position: toast.POSITION.TOP_RIGHT,
+            autoClose: 1500,
+          });
+          getServices();
+        })
+        .catch(({ response }) => {
+          toast.error(
+            response?.data?.message ||
+              response?.data?.error ||
+              'An error occurred',
+            {
+              position: toast.POSITION.TOP_RIGHT,
+              autoClose: 1500,
+            },
+          );
+        })
+        .finally(() => setIsSubmitting(false));
+    };
+
     if (upsertMode.includes('Delete')) {
       axios({
         method: 'DELETE',
@@ -167,41 +232,36 @@ function AdminService() {
         })
         .finally(() => setIsSubmitting(false));
     } else {
-      axios({
-        method: upsertMode.includes('Create') ? 'POST' : 'PUT',
-        url: `/services${
-          upsertMode.includes('Create') ? '' : '/' + selectedService?.ID
-        }`,
-        data: {
-          AMENITIES,
-          IMAGE,
-          NAME,
-          PERSONS,
-          PRICE,
-          QUANTITY,
-          TYPE: upsertMode.includes('Create') ? selectedService?.TYPE : TYPE,
-        },
-      })
-        .then(({ data }) => {
-          toast.success(data?.message || 'Successfully updated service', {
-            position: toast.POSITION.TOP_RIGHT,
-            autoClose: 1500,
-          });
+      if (image) {
+        const formData = new FormData();
+        formData.append('image', image);
 
-          getServices();
+        //Upload picture
+        axios({
+          method: 'POST',
+          url: '/image/upload',
+          data: formData,
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
         })
-        .catch(({ response }) => {
-          toast.error(
-            response?.data?.message ||
-              response?.data?.error ||
-              'An error occurred',
-            {
+          .then(({ data }) => {
+            upsert(data?.ID);
+          })
+          .catch(() => {
+            toast.error('Error while uploading image', {
               position: toast.POSITION.TOP_RIGHT,
               autoClose: 1500,
-            },
-          );
-        })
-        .finally(() => setIsSubmitting(false));
+            });
+            setIsSubmitting(false);
+          });
+      } else {
+        if (upsertMode.includes('Create')) {
+          upsert('');
+        } else {
+          upsert(IMAGE);
+        }
+      }
     }
   };
 
@@ -284,7 +344,7 @@ function AdminService() {
                   <ServiceCard
                     key={service.ID}
                     amenities={service.AMENITIES}
-                    image={service.IMAGE}
+                    image={service?.IMAGE}
                     name={service.NAME}
                     persons={service.PERSONS}
                     price={service.PRICE}
@@ -361,7 +421,7 @@ function AdminService() {
                 <Image
                   w="100%"
                   h={200}
-                  src={image}
+                  src={imageDisplay}
                   mb="sm"
                   fallbackSrc="https://placehold.co/400x200/green/white"
                 />
