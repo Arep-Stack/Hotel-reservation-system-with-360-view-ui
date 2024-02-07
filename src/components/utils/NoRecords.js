@@ -1,9 +1,9 @@
 import { Text } from '@mantine/core';
 
-function NoRecords() {
+function NoRecords({ message }) {
   return (
     <Text size="xl" c="crimson" align="center">
-      No Records
+      {message ? message : 'No Records'}
     </Text>
   );
 }

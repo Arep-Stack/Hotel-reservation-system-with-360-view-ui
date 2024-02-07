@@ -11,7 +11,7 @@ import AdminUsers from './AdminUsers';
 
 function AdminMenu() {
   return (
-    <Tabs defaultValue="users" color="darkgreen" variant="default">
+    <Tabs defaultValue="dashboard" color="darkgreen" variant="default">
       <Tabs.List grow justify="space-between">
         <Tabs.Tab value="dashboard" leftSection={<IconLayoutDashboard />}>
           Dashboard
