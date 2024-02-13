@@ -178,6 +178,8 @@ function AdminUsers() {
         centered
         title="Delete User"
         shadow="xl"
+        opened={isDeleteModalOpen}
+        onClose={() => closeDeleteModal()}
         closeButtonProps={{
           bg: 'crimson',
           radius: '50%',
@@ -186,10 +188,6 @@ function AdminUsers() {
         styles={{
           title: { color: 'crimson', fontSize: '1.7rem' },
           inner: { padding: 5 },
-        }}
-        opened={isDeleteModalOpen}
-        onClose={() => {
-          closeDeleteModal();
         }}
         withCloseButton={!isDeletingUser}
         closeOnClickOutside={!isDeletingUser}

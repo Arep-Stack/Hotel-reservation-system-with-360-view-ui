@@ -1,7 +1,24 @@
-import { Box, Button, Group, Table, Text } from '@mantine/core';
+import {
+  ActionIcon,
+  Box,
+  Button,
+  Flex,
+  Group,
+  Modal,
+  NumberInput,
+  Table,
+  Tabs,
+  Text,
+  TextInput,
+} from '@mantine/core';
+import { useForm } from '@mantine/form';
+import { useDisclosure } from '@mantine/hooks';
+import { IconCash } from '@tabler/icons-react';
 import axios from 'axios';
 import moment from 'moment';
+import { nanoid } from 'nanoid';
 import { useEffect, useState } from 'react';
+import { toast } from 'react-toastify';
 
 import ComponentError from '../utils/ComponentError';
 import ComponentLoader from '../utils/ComponentLoader';
@@ -10,11 +27,42 @@ import NoRecords from '../utils/NoRecords';
 function AdminDashboard() {
   //fetching reservation
   const [reservations, setReservations] = useState([]);
+  const [reservationsUnfiltered, setReservationsUnfiltered] = useState([]);
   const [isFetching, setIsFetching] = useState(false);
   const [fetchError, setFetchError] = useState(null);
 
+  //processing payment
+  const [selectedReservation, setSelectedReservation] = useState({});
+  const [isProcessingPayment, setIsProcessingPayment] = useState(false);
+
+  //form
+  let form = useForm({
+    initialValues: {
+      amount: 0,
+      method: '',
+      dop: moment().format('ll'),
+    },
+
+    validate: {
+      amount: (value) =>
+        value > 0
+          ? value > selectedReservation.BALANCE
+            ? 'Amount is greater than balance'
+            : null
+          : 'Please enter a valid amount',
+      method: (value) =>
+        value && value.trim() !== '' ? null : 'Please enter mode of payment',
+    },
+  });
+
   //filter
   const [sortingCriteria, setSortingCriteria] = useState('Today');
+
+  //modal
+  const [
+    isProcessPaymentModalOpen,
+    { open: openProcessPaymentModal, close: closeProcessPaymentModal },
+  ] = useDisclosure(false);
 
   //functions
   const getReservations = () => {
@@ -37,9 +85,11 @@ function AdminDashboard() {
             })
               .then((dataReservations) => {
                 if (!!dataReservations) {
+                  setReservationsUnfiltered(dataReservations.data);
+
                   const newReservations = dataReservations.data.map(
                     (reservation) => {
-                      const { FIRSTNAME, LASTNAME, EMAIL } =
+                      const { FIRSTNAME, LASTNAME, EMAIL, PHONE_NUMBER } =
                         dataUsers.data.find(
                           (user) => user.ID === reservation.USER_ID,
                         ) || {};
@@ -54,6 +104,7 @@ function AdminDashboard() {
                         ...reservation,
                         NAME: USER,
                         EMAIL,
+                        PHONE_NUMBER,
                         SERVICE_NAME: NAME,
                         SERVICE_TYPE: TYPE,
                       };
@@ -97,19 +148,68 @@ function AdminDashboard() {
     }
   };
 
+  const handleProcessPayment = ({ amount, method, dop }) => {
+    setIsProcessingPayment(true);
+
+    const data = reservationsUnfiltered?.find(
+      (r) => r.ID === selectedReservation.ID,
+    );
+
+    data.BALANCE = data.BALANCE - amount;
+
+    data.PAYMENT_HISTORY.push({ amount, dop, method });
+
+    axios({
+      method: 'PUT',
+      url: `/reservations/${data.ID}`,
+      data: data,
+    })
+      .then(({ data }) => {
+        getReservations();
+        toast.success('Successfully processed payment', {
+          position: toast.POSITION.TOP_RIGHT,
+          autoClose: 1500,
+        });
+
+        closeProcessPaymentModal();
+        form.reset();
+      })
+      .catch(() => {
+        toast.success('An error occurred', {
+          position: toast.POSITION.TOP_RIGHT,
+          autoClose: 1500,
+        });
+      })
+      .finally(() => setIsProcessingPayment(false));
+  };
+
   const renderTable = (filteredReservations) => {
     return (
       <>
         {filteredReservations?.length ? (
           filteredReservations.map((reservation) => (
             <Table.Tr key={reservation.ID}>
+              <Table.Td>
+                <ActionIcon
+                  onClick={() => {
+                    setSelectedReservation(reservation);
+                    openProcessPaymentModal();
+                  }}
+                  variant="light"
+                  color="darkgreen"
+                >
+                  <IconCash />
+                </ActionIcon>
+              </Table.Td>
               <Table.Td>{reservation.NAME}</Table.Td>
               <Table.Td>{reservation.EMAIL}</Table.Td>
+              <Table.Td>{reservation.PHONE_NUMBER}</Table.Td>
               <Table.Td>{reservation.SERVICE_NAME}</Table.Td>
               <Table.Td>{reservation.SERVICE_TYPE}</Table.Td>
               <Table.Td>{moment(reservation.START_DATE).format('LL')}</Table.Td>
               <Table.Td>{moment(reservation.END_DATE).format('LL')}</Table.Td>
               <Table.Td>{reservation.STATUS}</Table.Td>
+              <Table.Td>₱{reservation.BALANCE}</Table.Td>
               <Table.Td>
                 {`${Math.max(
                   1,
@@ -139,20 +239,83 @@ function AdminDashboard() {
           ))
         ) : (
           <Table.Tr>
-            <Table.Td colSpan={8}>
+            <Table.Td colSpan={11}>
               <NoRecords
                 message={
                   sortingCriteria === 'Today'
                     ? 'No reservations today'
                     : sortingCriteria === 'Upcoming'
                     ? 'No upcoming reservations'
-                    : 'No Records'
+                    : 'No reservations'
                 }
               />
             </Table.Td>
           </Table.Tr>
         )}
       </>
+    );
+  };
+
+  const renderInfoTab = () => {
+    return (
+      <>
+        <Group justify="space-between">
+          <Text>Name</Text>
+          <Text fw={700}>{selectedReservation.NAME}</Text>
+        </Group>
+
+        <Group mt="xs" justify="space-between">
+          <Text>Email</Text>
+          <Text fw={700}>{selectedReservation.EMAIL}</Text>
+        </Group>
+
+        <Group mt="xs" mb="xs" justify="space-between">
+          <Text>Phone</Text>
+          <Text fw={700}>{selectedReservation.PHONE_NUMBER}</Text>
+        </Group>
+
+        <hr />
+
+        <Group mt="xs" justify="space-between">
+          <Text>Service</Text>
+          <Text fw={700}>
+            {selectedReservation.SERVICE_TYPE} -{' '}
+            {selectedReservation.SERVICE_NAME}
+          </Text>
+        </Group>
+
+        <Group mt="xs" justify="space-between">
+          <Text>Start Date</Text>
+          <Text fw={700}>
+            {moment(selectedReservation.START_DATE).format('LL')}
+          </Text>
+        </Group>
+
+        <Group mt="xs" mb="xs" justify="space-between">
+          <Text>End Date</Text>
+          <Text fw={700}>
+            {moment(selectedReservation.END_DATE).format('LL')}
+          </Text>
+        </Group>
+      </>
+    );
+  };
+
+  const renderPaymentHistoryTab = () => {
+    return (
+      <Box key={nanoid()} mb="sm">
+        {selectedReservation?.PAYMENT_HISTORY ? (
+          selectedReservation.PAYMENT_HISTORY.map((history) => (
+            <Group justify="space-between" key={nanoid()} p="xs" style={{}}>
+              <Text fw={700}>₱{history.amount}</Text>
+              <Text>{history.method}</Text>
+              <Text>{history.dop}</Text>
+            </Group>
+          ))
+        ) : (
+          <NoRecords message="No payment history" />
+        )}
+      </Box>
     );
   };
 
@@ -200,13 +363,16 @@ function AdminDashboard() {
                 }}
               >
                 <Table.Tr>
+                  <Table.Th></Table.Th>
                   <Table.Th>Name</Table.Th>
                   <Table.Th>Email</Table.Th>
+                  <Table.Th>Phone</Table.Th>
                   <Table.Th>Service Name</Table.Th>
                   <Table.Th>Service Type</Table.Th>
                   <Table.Th>Start Date</Table.Th>
                   <Table.Th>End Date</Table.Th>
                   <Table.Th>Status</Table.Th>
+                  <Table.Th>Balance</Table.Th>
                   <Table.Th>Duration</Table.Th>
                 </Table.Tr>
               </Table.Thead>
@@ -220,6 +386,94 @@ function AdminDashboard() {
           </Group>
         </>
       )}
+
+      <Modal
+        centered
+        title="Process Payment"
+        shadow="xl"
+        opened={isProcessPaymentModalOpen}
+        onClose={() => closeProcessPaymentModal()}
+        closeButtonProps={{
+          bg: 'crimson',
+          radius: '50%',
+          c: 'white',
+        }}
+        styles={{
+          title: { color: 'darkgreen', fontSize: '1.7rem' },
+          inner: { padding: 5 },
+        }}
+        withCloseButton={!isProcessingPayment}
+        closeOnClickOutside={!isProcessingPayment}
+        closeOnEscape={!isProcessingPayment}
+      >
+        <Flex direction="column" w="100%">
+          <Tabs defaultValue="info" color="darkgreen" variant="default">
+            <Tabs.List grow justify="space-between">
+              <Tabs.Tab value="info">Information</Tabs.Tab>
+              <Tabs.Tab value="history">Payment History</Tabs.Tab>
+            </Tabs.List>
+
+            <Tabs.Panel value="info" pt="md">
+              {renderInfoTab()}
+
+              <hr />
+
+              <Group mt="xs" justify="space-between">
+                <Text>Total Amount</Text>
+                <Text fw={700}>₱{selectedReservation.AMOUNT}</Text>
+              </Group>
+              <Group mt="xs" justify="space-between">
+                <Text>Balance</Text>
+                <Text fw={700}>₱{selectedReservation.BALANCE}</Text>
+              </Group>
+
+              <form
+                onSubmit={form.onSubmit((values) => {
+                  handleProcessPayment(values);
+                })}
+              >
+                <Flex mt="xs">
+                  <TextInput
+                    withAsterisk
+                    label="Mode of Payment"
+                    placeholder="Cash"
+                    mr="sm"
+                    styles={{
+                      label: { fontWeight: 700 },
+                    }}
+                    {...form.getInputProps('method')}
+                  />
+
+                  <NumberInput
+                    withAsterisk
+                    label="Amount"
+                    placeholder="0.00"
+                    mb="sm"
+                    min={0}
+                    styles={{
+                      label: { fontWeight: 700 },
+                    }}
+                    {...form.getInputProps('amount')}
+                  />
+                </Flex>
+
+                <Button
+                  fullWidth
+                  type="submit"
+                  color="#006400"
+                  loading={isProcessingPayment}
+                >
+                  Pay
+                </Button>
+              </form>
+            </Tabs.Panel>
+
+            <Tabs.Panel value="history" pt="md">
+              {renderPaymentHistoryTab()}
+            </Tabs.Panel>
+          </Tabs>
+        </Flex>
+      </Modal>
     </Box>
   );
 }

@@ -272,39 +272,31 @@ function AdminService() {
 
   return (
     <Box pos="relative" mih={200}>
-      {isFetching && <ComponentLoader message="Fetching services" />}
-      {!isFetching && fetchError && <ComponentError message={fetchError} />}
-      {!isFetching && !fetchError && (
-        <>
-          <Group mb="sm" justify="space-between" align="center">
-            <Text size="xl">Services</Text>
-            <Menu
-              withArrow
-              arrowSize={10}
-              offset={-3}
-              position="bottom"
-              styles={{
-                dropdown: { border: '1px solid gray' },
-                arrow: { background: '#006400' },
-              }}
+      <Group mb="sm" justify="space-between" align="center">
+        <Text size="xl">Services</Text>
+        <Menu
+          withArrow
+          arrowSize={10}
+          offset={-3}
+          position="bottom"
+          styles={{
+            dropdown: { border: '1px solid gray' },
+            arrow: { background: '#006400' },
+          }}
+        >
+          <Menu.Target>
+            <Button color="#006400" fw={400} leftSection={<IconCirclePlus />}>
+              New Service
+            </Button>
+          </Menu.Target>
+          <Menu.Dropdown>
+            <Menu.Item
+              leftSection={<IconBedFilled />}
+              onClick={() => handleOpenModal({ TYPE: 'Room' }, 'Create')}
             >
-              <Menu.Target>
-                <Button
-                  color="#006400"
-                  fw={400}
-                  leftSection={<IconCirclePlus />}
-                >
-                  New Service
-                </Button>
-              </Menu.Target>
-              <Menu.Dropdown>
-                <Menu.Item
-                  leftSection={<IconBedFilled />}
-                  onClick={() => handleOpenModal({ TYPE: 'Room' }, 'Create')}
-                >
-                  Room
-                </Menu.Item>
-                {/* {['Room', 'Pavilion', 'Pool'].map((service) => (
+              Room
+            </Menu.Item>
+            {/* {['Room', 'Pavilion', 'Pool'].map((service) => (
                   <Menu.Item
                     key={service}
                     leftSection={
@@ -321,10 +313,14 @@ function AdminService() {
                     {service}
                   </Menu.Item>
                 ))} */}
-              </Menu.Dropdown>
-            </Menu>
-          </Group>
+          </Menu.Dropdown>
+        </Menu>
+      </Group>
 
+      {isFetching && <ComponentLoader message="Fetching services" />}
+      {!isFetching && fetchError && <ComponentError message={fetchError} />}
+      {!isFetching && !fetchError && (
+        <>
           <Flex
             pos="relative"
             align="center"
