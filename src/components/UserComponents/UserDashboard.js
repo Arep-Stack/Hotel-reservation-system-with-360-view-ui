@@ -1,7 +1,8 @@
 import { Box, Text } from '@mantine/core';
+
 import { greet } from '../../utils/greet';
 
-function Dashboard() {
+function UserDashboard() {
   return (
     <Box>
       <Text size="xl">{greet()}</Text>
@@ -9,4 +10,4 @@ function Dashboard() {
   );
 }
 
-export default Dashboard;
+export default UserDashboard;

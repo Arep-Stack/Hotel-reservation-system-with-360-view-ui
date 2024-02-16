@@ -1,7 +1,3 @@
-import Dashboard from './Dashboard';
-import Profile from './Profile';
-import Reservation from './Reservation';
-
 import { Tabs } from '@mantine/core';
 import {
   IconBookmarks,
@@ -9,9 +5,13 @@ import {
   IconUserCircle,
 } from '@tabler/icons-react';
 
+import UserDashboard from './UserDashboard';
+import UserProfile from './UserProfile';
+import UserReservation from './UserReservation';
+
 function UserMenu() {
   return (
-    <Tabs defaultValue="dashboard" color="darkgreen" variant="default">
+    <Tabs defaultValue="reservation" color="darkgreen" variant="default">
       <Tabs.List grow justify="space-between">
         <Tabs.Tab value="dashboard" leftSection={<IconLayoutDashboard />}>
           Dashboard
@@ -25,15 +25,15 @@ function UserMenu() {
       </Tabs.List>
 
       <Tabs.Panel value="dashboard" pt="md">
-        <Dashboard />
+        <UserDashboard />
       </Tabs.Panel>
 
       <Tabs.Panel value="reservation" pt="md">
-        <Reservation />
+        <UserReservation />
       </Tabs.Panel>
 
       <Tabs.Panel value="profile" pt="md">
-        <Profile />
+        <UserProfile />
       </Tabs.Panel>
     </Tabs>
   );

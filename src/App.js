@@ -1,21 +1,18 @@
 import { useEffect, useState } from 'react';
-
-import { Routes, Route, useNavigate } from 'react-router-dom';
-
-import { getUser } from './utils/user';
-
-import Navbar from './components/Navbar/Navbar';
-import Footer from './components/Footer/Footer';
-import Home from './pages/Home/Home';
-import Services from './pages/Services/Services';
-import Rooms from './pages/Rooms/Rooms';
-import User from './pages/User/User';
-import About from './pages/About/About';
-import Login from './pages/Login/Login';
-import SignUp from './pages/SignUp/SignUp';
-
+import { Route, Routes, useNavigate } from 'react-router-dom';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+
+import Footer from './components/Footer/Footer';
+import Navbar from './components/Navbar/Navbar';
+import About from './pages/About/About';
+import Home from './pages/Home/Home';
+import Login from './pages/Login/Login';
+import Rooms from './pages/Rooms/Rooms';
+import Services from './pages/Services/Services';
+import SignUp from './pages/SignUp/SignUp';
+import User from './pages/User/User';
+import { getUser } from './utils/user';
 
 function App() {
   const [user, setUser] = useState(null);
@@ -34,7 +31,7 @@ function App() {
   return (
     <div style={{ position: 'relative' }}>
       <Navbar />
-      <ToastContainer style={{ marginTop: 80 }} />
+      <ToastContainer />
       <Routes>
         <Route path="/" element={<Home />}></Route>
         <Route path="/Home" element={<Home />}></Route>

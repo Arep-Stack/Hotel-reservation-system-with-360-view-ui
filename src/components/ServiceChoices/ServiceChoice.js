@@ -1,6 +1,6 @@
-import './ServiceChoice.css';
-
 import { Box, Image, Text } from '@mantine/core';
+
+import './ServiceChoice.css';
 
 function ServiceChoice({ serviceName, bg, handleClick }) {
   return (

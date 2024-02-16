@@ -1,9 +1,9 @@
+import { Box, Group, Text } from '@mantine/core';
 import { useEffect, useState } from 'react';
 
-import { Box, Group, Text } from '@mantine/core';
 import { getUser } from '../../utils/user';
 
-function Profile() {
+function UserProfile() {
   const [user, setUser] = useState(null); // Change when useContext is used
 
   useEffect(() => {
@@ -44,4 +44,4 @@ function Profile() {
   );
 }
 
-export default Profile;
+export default UserProfile;

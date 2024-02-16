@@ -1,16 +1,3 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-
-import { postUser } from '../../utils/user';
-
-import { GoogleButton } from './GoogleButton/GoogleButton';
-
-import axios from 'axios';
-
-import './Login.css';
-
-import { useForm } from '@mantine/form';
-
 import {
   Box,
   Button,
@@ -21,6 +8,14 @@ import {
   Text,
   TextInput,
 } from '@mantine/core';
+import { useForm } from '@mantine/form';
+import axios from 'axios';
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+
+import { postUser } from '../../utils/user';
+import { GoogleButton } from './GoogleButton/GoogleButton';
+import './Login.css';
 
 function Login() {
   const navigator = useNavigate();
@@ -98,7 +93,7 @@ function Login() {
           <Text
             c={
               String(serviceStatus?.status).startsWith('2')
-                ? 'darkGreen'
+                ? 'darkgreen'
                 : 'red'
             }
           >
@@ -151,11 +146,12 @@ function Login() {
           </Box>
 
           <Button
-            loading={isSubmitting}
-            type="submit"
-            mt="lg"
             fullWidth
+            type="submit"
+            mih="36px"
+            mt="lg"
             color="themeColors"
+            loading={isSubmitting}
           >
             Login
           </Button>

@@ -1,87 +1,99 @@
-import {
-  Badge,
-  Box,
-  Button,
-  Flex,
-  Group,
-  Image,
-  Paper,
-  Text,
-} from '@mantine/core';
+import { Badge, Box, Flex, Group, Image, Paper, Text } from '@mantine/core';
+import { IconUsers } from '@tabler/icons-react';
+import axios from 'axios';
+import { useEffect, useState } from 'react';
 
-import {
-  Icon360,
-  IconBuildingSkyscraper,
-  IconUsers,
-} from '@tabler/icons-react';
+function ServiceCard({ name, image, price, persons, amenities, children }) {
+  const [imagePath, setImagePath] = useState(null);
 
-function ServiceCard({ image, type, persons, price, amenities }) {
+  const getImage = () => {
+    if (image)
+      axios({
+        method: 'GET',
+        url: `/image/${image}`,
+      })
+        .then(({ data }) => {
+          setImagePath(data?.PATH);
+        })
+        .catch((err) => {
+          console.log(err);
+        });
+  };
+
+  useEffect(() => {
+    getImage();
+  }, []);
+
   return (
-    <Paper maw="350px" radius="8px" withBorder>
-      <Box h="200px" w="100%">
-        <Image src={image} w="100%" h="100%" style={{ borderRadius: '8px' }} />
+    <Paper
+      withBorder
+      maw={350}
+      w={350}
+      mih={450}
+      radius={8}
+      display="flex"
+      style={{ flexDirection: 'column' }}
+    >
+      <Box mih={200} h={200} w="100%">
+        <Image
+          src={imagePath}
+          w="100%"
+          h="100%"
+          fallbackSrc="https://placehold.co/350x200/EEE/31343C?font=source-sans-pro&text=Error%20while%20loading%20picture"
+          style={{ borderRadius: '8px' }}
+        />
       </Box>
 
-      <Box px="lg">
-        <Flex
-          justify="space-between"
-          align="center"
-          py="md"
-          style={{
-            borderBottom: '2px solid #868e96',
-          }}
-        >
-          <div>
-            <Text size="xl" fw={900} c="#006400">
-              {type}
-            </Text>
-            <Flex align="center">
-              <IconUsers color="#006400" size="16px" />
-              <Text size="md" mt="-3" ml={3}>
-                Up to {persons} person{persons > 1 ? 's' : ''}
+      <Flex justify="space-between" direction="column" px="lg" pb="sm" h="100%">
+        <Box>
+          <Flex
+            justify="space-between"
+            align="center"
+            py="md"
+            gap={10}
+            style={{
+              borderBottom: '2px solid #868e96',
+            }}
+          >
+            <div>
+              <Text size="xl" fw={900} c="#006400">
+                {name}
               </Text>
-            </Flex>
-          </div>
+              <Flex align="center">
+                <IconUsers color="#006400" size="16px" />
+                <Text size="md" mt="-3" ml={3}>
+                  Up to {persons} person{persons > 1 ? 's' : ''}
+                </Text>
+              </Flex>
+            </div>
 
-          <Badge size="lg" variant="light" color="#006400">
-            ₱ {price}
-          </Badge>
-        </Flex>
+            <Badge size="lg" variant="light" color="#006400">
+              ₱ {price}
+            </Badge>
+          </Flex>
+
+          <Box py="md">
+            <Text c="darkgreen">Amenities</Text>
+            <Group gap={7} mt={5}>
+              {amenities?.map((a) => (
+                <Badge color="dark" variant="light" key={a}>
+                  {a}
+                </Badge>
+              ))}
+            </Group>
+          </Box>
+        </Box>
 
         <Box
           py="md"
+          mt="auto"
           style={{
-            borderBottom: '2px solid #868e96',
+            borderTop: '2px solid #868e96',
           }}
         >
-          <Text color="darkGreen">Amenities</Text>
-          <Group gap={7} mt={5}>
-            {amenities.map((a) => (
-              <Badge color="dark" variant="light" key={a}>
-                {a}
-              </Badge>
-            ))}
-          </Group>
+          {children}
         </Box>
-
-        <Flex py="md" align="center" gap={5}>
-          <Button
-            color="#006400"
-            fullWidth
-            leftSection={<IconBuildingSkyscraper />}
-          >
-            Book Now
-          </Button>
-          <Button
-            color="darkGreen"
-            fullWidth
-            rightSection={<Icon360 />}
-            variant="light"
-          >
-            View Room
-          </Button>
-        </Flex>
-      </Box>
+      </Flex>
     </Paper>
   );
 }
