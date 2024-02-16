@@ -11,6 +11,7 @@ import {
   Text,
   TextInput,
 } from '@mantine/core';
+import { DateInput } from '@mantine/dates';
 import { useForm } from '@mantine/form';
 import { useDisclosure } from '@mantine/hooks';
 import { IconCash } from '@tabler/icons-react';
@@ -40,7 +41,7 @@ function AdminDashboard() {
     initialValues: {
       amount: 0,
       method: '',
-      dop: moment().format('ll'),
+      dop: new Date(),
     },
 
     validate: {
@@ -157,14 +158,20 @@ function AdminDashboard() {
 
     data.BALANCE = data.BALANCE - amount;
 
-    data.PAYMENT_HISTORY.push({ amount, dop, method });
+    data.PAYMENT_HISTORY.push({
+      amount,
+      dop: moment(dop).format('ll'),
+      method,
+    });
+
+    data.STATUS = data.BALANCE === 0 ? 'Fully Paid' : 'Paid - Partial';
 
     axios({
       method: 'PUT',
       url: `/reservations/${data.ID}`,
       data: data,
     })
-      .then(({ data }) => {
+      .then(() => {
         getReservations();
         toast.success('Successfully processed payment', {
           position: toast.POSITION.TOP_RIGHT,
@@ -175,7 +182,7 @@ function AdminDashboard() {
         form.reset();
       })
       .catch(() => {
-        toast.success('An error occurred', {
+        toast.error('An error occurred', {
           position: toast.POSITION.TOP_RIGHT,
           autoClose: 1500,
         });
@@ -206,8 +213,8 @@ function AdminDashboard() {
               <Table.Td>{reservation.PHONE_NUMBER}</Table.Td>
               <Table.Td>{reservation.SERVICE_NAME}</Table.Td>
               <Table.Td>{reservation.SERVICE_TYPE}</Table.Td>
-              <Table.Td>{moment(reservation.START_DATE).format('LL')}</Table.Td>
-              <Table.Td>{moment(reservation.END_DATE).format('LL')}</Table.Td>
+              <Table.Td>{moment(reservation.START_DATE).format('ll')}</Table.Td>
+              <Table.Td>{moment(reservation.END_DATE).format('ll')}</Table.Td>
               <Table.Td>{reservation.STATUS}</Table.Td>
               <Table.Td>₱{reservation.BALANCE}</Table.Td>
               <Table.Td>
@@ -287,14 +294,14 @@ function AdminDashboard() {
         <Group mt="xs" justify="space-between">
           <Text>Start Date</Text>
           <Text fw={700}>
-            {moment(selectedReservation.START_DATE).format('LL')}
+            {moment(selectedReservation.START_DATE).format('ll')}
           </Text>
         </Group>
 
         <Group mt="xs" mb="xs" justify="space-between">
           <Text>End Date</Text>
           <Text fw={700}>
-            {moment(selectedReservation.END_DATE).format('LL')}
+            {moment(selectedReservation.END_DATE).format('ll')}
           </Text>
         </Group>
       </>
@@ -305,7 +312,10 @@ function AdminDashboard() {
     return (
       <Box key={nanoid()} mb="sm">
         {selectedReservation?.PAYMENT_HISTORY ? (
-          selectedReservation.PAYMENT_HISTORY.map((history) => (
+          selectedReservation.PAYMENT_HISTORY.sort(
+            (a, b) =>
+              moment(a.dop, 'MMM DD, YYYY') - moment(b.dop, 'MMM DD, YYYY'),
+          ).map((history) => (
             <Group justify="space-between" key={nanoid()} p="xs" style={{}}>
               <Text fw={700}>₱{history.amount}</Text>
               <Text>{history.method}</Text>
@@ -427,23 +437,34 @@ function AdminDashboard() {
                 <Text fw={700}>₱{selectedReservation.BALANCE}</Text>
               </Group>
 
-              <form
-                onSubmit={form.onSubmit((values) => {
-                  handleProcessPayment(values);
-                })}
-              >
-                <Flex mt="xs">
-                  <TextInput
-                    withAsterisk
-                    label="Mode of Payment"
-                    placeholder="Cash"
-                    mr="sm"
-                    styles={{
-                      label: { fontWeight: 700 },
-                    }}
-                    {...form.getInputProps('method')}
-                  />
+              {selectedReservation.BALANCE > 0 ? (
+                <form
+                  onSubmit={form.onSubmit((values) => {
+                    handleProcessPayment(values);
+                  })}
+                >
+                  <Flex mt="xs">
+                    <DateInput
+                      label="Date of Payment"
+                      placeholder="Date of Payment"
+                      maxDate={new Date()}
+                      styles={{
+                        label: { fontWeight: 700 },
+                      }}
+                      {...form.getInputProps('dop')}
+                    />
 
+                    <TextInput
+                      withAsterisk
+                      label="Mode of Payment"
+                      placeholder="Cash"
+                      ml="sm"
+                      styles={{
+                        label: { fontWeight: 700 },
+                      }}
+                      {...form.getInputProps('method')}
+                    />
+                  </Flex>
                   <NumberInput
                     withAsterisk
                     label="Amount"
@@ -455,17 +476,21 @@ function AdminDashboard() {
                     }}
                     {...form.getInputProps('amount')}
                   />
-                </Flex>
 
-                <Button
-                  fullWidth
-                  type="submit"
-                  color="#006400"
-                  loading={isProcessingPayment}
-                >
-                  Pay
-                </Button>
-              </form>
+                  <Button
+                    fullWidth
+                    type="submit"
+                    color="#006400"
+                    loading={isProcessingPayment}
+                  >
+                    Pay
+                  </Button>
+                </form>
+              ) : (
+                <Text mt="sm" c="darkgreen" align="center" fw={700}>
+                  This reservation is fully paid
+                </Text>
+              )}
             </Tabs.Panel>
 
             <Tabs.Panel value="history" pt="md">

@@ -1,5 +1,6 @@
 import { MantineProvider, createTheme } from '@mantine/core';
 import '@mantine/core/styles.css';
+import '@mantine/dates/styles.css';
 import axios from 'axios';
 import React from 'react';
 import ReactDOM from 'react-dom/client';
