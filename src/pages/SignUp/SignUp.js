@@ -217,7 +217,7 @@ function SignUp() {
 
         <Text mt="md" size="sm" ta="center">
           Have an account already?{' '}
-          <Anchor href="/Login" underline="always">
+          <Anchor href="/Login" underline="always" c="green">
             Login
           </Anchor>
         </Text>

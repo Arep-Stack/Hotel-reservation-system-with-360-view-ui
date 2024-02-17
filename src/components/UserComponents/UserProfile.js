@@ -1,45 +1,59 @@
-import { Box, Group, Text } from '@mantine/core';
+import { Box, Card, Flex, Group, Text } from '@mantine/core';
+import {
+  IconMail,
+  IconMapPin,
+  IconPhone,
+  IconUsers,
+} from '@tabler/icons-react';
+import moment from 'moment';
 import { useEffect, useState } from 'react';
 
 import { getUser } from '../../utils/user';
 
 function UserProfile() {
-  const [user, setUser] = useState(null); // Change when useContext is used
+  //fetching user
+  const [user, setUser] = useState(null);
 
+  //functions
   useEffect(() => {
     const userData = getUser();
 
-    if (userData) setUser(JSON.parse(userData));
+    if (!!userData) setUser(JSON.parse(userData));
   }, []);
 
-  const renderUserDetails = () => {
-    if (user) {
-      return Object.keys(user).map((key) => (
-        <Group
-          key={key}
-          my="md"
-          justify="space-between"
-          style={{
-            borderBottom: '1px solid gray',
-          }}
-        >
-          <Text>{key}</Text>
-          <Text>
-            {typeof user[key] === 'boolean'
-              ? user[key]
-                ? 'TRUE'
-                : 'FALSE'
-              : user[key]}
-          </Text>
-        </Group>
-      ));
-    }
-  };
-
   return (
-    <Box>
-      <Text size="xl">Profile</Text>
-      {renderUserDetails()}
+    <Box w="100%">
+      <Card withBorder w={400} shadow="sm" radius="md" ml="auto" mr="auto">
+        <Card.Section withBorder p="sm" bg="#006400">
+          <Group justify="space-between">
+            <Text fw={700} pt="md" pb="md" size="2rem" c="white">
+              {user?.FIRSTNAME + ' ' + user?.LASTNAME}
+            </Text>
+          </Group>
+        </Card.Section>
+
+        <Flex pt="md" pb="md" direction="column" gap="md">
+          <Group>
+            <IconMail />
+            <Text>{user?.EMAIL}</Text>
+          </Group>
+
+          <Group>
+            <IconPhone />
+            <Text>{user?.PHONE_NUMBER}</Text>
+          </Group>
+
+          <Group>
+            <IconMapPin />
+            <Text>{user?.ADDRESS}</Text>
+          </Group>
+
+          <Group>
+            <IconUsers />
+            <Text>Member since {moment(user?.DATE_ADDED).format('LL')}</Text>
+          </Group>
+        </Flex>
+      </Card>
     </Box>
   );
 }
