@@ -1,4 +1,5 @@
 import {
+  Anchor,
   Box,
   Button,
   Container,
@@ -132,17 +133,18 @@ function Login() {
               {...form.getInputProps('password')}
             />
 
-            <a
+            <Anchor
               href="/Login"
               onClick={(event) => event.preventDefault()}
               tabIndex={-1}
+              underline="hover"
               style={{
                 fontSize: '12px',
                 marginLeft: 'auto',
               }}
             >
               Forgot your password?
-            </a>
+            </Anchor>
           </Box>
 
           <Button
@@ -150,7 +152,7 @@ function Login() {
             type="submit"
             mih="36px"
             mt="lg"
-            color="themeColors"
+            color="#006400"
             loading={isSubmitting}
           >
             Login
@@ -158,7 +160,10 @@ function Login() {
         </form>
 
         <Text mt="md" size="sm" ta="center">
-          Not registered yet? <a href="/SignUp">Create an account</a>
+          Not registered yet?{' '}
+          <Anchor href="/SignUp" underline="always">
+            Create an account
+          </Anchor>
         </Text>
       </Flex>
     </Container>

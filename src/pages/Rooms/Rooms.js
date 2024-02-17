@@ -1,6 +1,5 @@
 import { ActionIcon, Button, Container, Flex, Text } from '@mantine/core';
-import { IconArrowBarRight, IconBuildingSkyscraper } from '@tabler/icons-react';
-import { Icon360 } from '@tabler/icons-react';
+import { Icon360View, IconArrowBarRight } from '@tabler/icons-react';
 import axios from 'axios';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -74,20 +73,11 @@ function Rooms() {
                 price={room.PRICE}
               >
                 <Flex align="center" gap={5}>
-                  <Button
-                    color="#006400"
-                    fullWidth
-                    leftSection={<IconBuildingSkyscraper />}
-                  >
+                  <Button color="#006400" fullWidth>
                     Book Now
                   </Button>
-                  <Button
-                    color="darkgreen"
-                    fullWidth
-                    rightSection={<Icon360 />}
-                    variant="light"
-                  >
-                    View Room
+                  <Button color="#006400" variant="outline">
+                    <Icon360View />
                   </Button>
                 </Flex>
               </ServiceCard>

@@ -91,7 +91,9 @@ function Home() {
               w="75px"
               src="https://cdn.iconscout.com/icon/free/png-256/free-waze-1-722645.png"
             />
-            <Text align="center">Waze</Text>
+            <Text align="center" mt="auto">
+              Waze
+            </Text>
           </Flex>
           <Flex
             w="100%"
@@ -113,7 +115,9 @@ function Home() {
                 Maps
               </Text>
             </Group>
-            <Text align="center">Apple Maps</Text>
+            <Text align="center" mt="auto">
+              Apple Maps
+            </Text>
           </Flex>
         </Flex>
       </Flex>

@@ -44,7 +44,7 @@ function ServiceCard({ name, image, price, persons, amenities, children }) {
         />
       </Box>
 
-      <Flex justify="space-between" direction="column" px="lg" pb="sm" h="100%">
+      <Flex justify="space-between" direction="column" px="sm" pb="sm" h="100%">
         <Box>
           <Flex
             justify="space-between"

@@ -1,5 +1,5 @@
 import { Box, Button, Flex, Text } from '@mantine/core';
-import { Icon360, IconBuildingSkyscraper } from '@tabler/icons-react';
+import { Icon360View } from '@tabler/icons-react';
 import axios from 'axios';
 import { useEffect, useState } from 'react';
 
@@ -65,20 +65,11 @@ function UserReservation() {
                       price={service.PRICE}
                     >
                       <Flex align="center" gap={5}>
-                        <Button
-                          color="#006400"
-                          fullWidth
-                          leftSection={<IconBuildingSkyscraper />}
-                        >
+                        <Button color="#006400" fullWidth>
                           Book Now
                         </Button>
-                        <Button
-                          color="darkgreen"
-                          fullWidth
-                          rightSection={<Icon360 />}
-                          variant="light"
-                        >
-                          View Room
+                        <Button color="#006400" variant="outline">
+                          <Icon360View />
                         </Button>
                       </Flex>
                     </ServiceCard>

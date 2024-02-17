@@ -1,4 +1,5 @@
 import {
+  Anchor,
   Box,
   Button,
   Container,
@@ -208,14 +209,17 @@ function SignUp() {
             type="submit"
             mt="lg"
             mih="36px"
-            color="themeColors"
+            color="#006400"
           >
             Sign Up
           </Button>
         </form>
 
         <Text mt="md" size="sm" ta="center">
-          Have an account already? <a href="/Login">Login</a>
+          Have an account already?{' '}
+          <Anchor href="/Login" underline="always">
+            Login
+          </Anchor>
         </Text>
       </Flex>
     </Container>

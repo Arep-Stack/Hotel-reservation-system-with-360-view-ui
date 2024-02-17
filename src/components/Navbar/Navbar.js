@@ -32,7 +32,7 @@ function Navbar() {
     <div key={nav}>
       <Button
         onClick={() => navigate(nav)}
-        color="themeColors"
+        color="#006400"
         variant={activePage.includes(nav) ? 'filled' : 'outline'}
       >
         {nav === 'SignUp' ? 'Sign Up' : nav}
@@ -65,7 +65,7 @@ function Navbar() {
             mr="md"
             src="https://cdn-icons-png.flaticon.com/512/887/887345.png"
           />
-          <Text color="themeColors" size="xl" fw="bold">
+          <Text size="xl" fw="bold" c="darkgreen">
             Felrey Resort and Pavilion
           </Text>
         </Flex>
