@@ -85,7 +85,7 @@ function AdminDashboard() {
               url: '/reservations',
             })
               .then((dataReservations) => {
-                if (!!dataReservations) {
+                if (!!dataReservations.data) {
                   setReservationsUnfiltered(dataReservations.data);
 
                   const newReservations = dataReservations.data.map(
