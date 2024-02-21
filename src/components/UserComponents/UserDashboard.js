@@ -165,7 +165,7 @@ function UserDashboard() {
           ))
         ) : (
           <Table.Tr>
-            <Table.Td colSpan={7}>
+            <Table.Td colSpan={8}>
               <NoRecords message="No reservations" />
             </Table.Td>
           </Table.Tr>
@@ -186,7 +186,7 @@ function UserDashboard() {
         <>
           <Flex justify="space-between" mb="md" gap="md">
             {dashboardTotals.map(({ service, total, cancelled }) => (
-              <Card key={service} withBorder flex={1} shadow="md">
+              <Card key={service} withBorder flex={1} shadow="sm">
                 <Flex align="center">
                   <Paper
                     withBorder

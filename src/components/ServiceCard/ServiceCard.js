@@ -1,4 +1,13 @@
-import { Badge, Box, Flex, Group, Image, Paper, Text } from '@mantine/core';
+import {
+  Badge,
+  Box,
+  Flex,
+  Group,
+  Image,
+  NumberFormatter,
+  Paper,
+  Text,
+} from '@mantine/core';
 import { IconUsers } from '@tabler/icons-react';
 import axios from 'axios';
 import { useEffect, useState } from 'react';
@@ -67,8 +76,9 @@ function ServiceCard({ name, image, price, persons, amenities, children }) {
               </Flex>
             </div>
 
-            <Badge size="lg" variant="light" color="#006400">
-              ₱ {price}
+            <Badge size="lg" variant="light" color="#006400" tt="lowercase">
+              <NumberFormatter prefix="₱" value={price} thousandSeparator />
+              /night
             </Badge>
           </Flex>
 
