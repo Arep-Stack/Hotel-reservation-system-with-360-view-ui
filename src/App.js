@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Route, Routes, useNavigate } from 'react-router-dom';
+import { Route, Routes, useLocation, useNavigate } from 'react-router-dom';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
@@ -18,6 +18,8 @@ function App() {
   const [user, setUser] = useState(null);
 
   const navigator = useNavigate();
+
+  const location = useLocation();
 
   useEffect(() => {
     const userData = getUser();
@@ -42,7 +44,7 @@ function App() {
         <Route path="/Login" element={<Login />}></Route>
         <Route path="/SignUp" element={<SignUp />}></Route>
       </Routes>
-      <Footer />
+      {location.pathname !== '/User' && <Footer />}
     </div>
   );
 }

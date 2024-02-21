@@ -26,25 +26,30 @@ import { IconListDetails } from '@tabler/icons-react';
 import { IconAlertCircle } from '@tabler/icons-react';
 import axios from 'axios';
 import moment from 'moment';
-import { useEffect, useState } from 'react';
+import { useContext, useEffect, useState } from 'react';
 
 import { getUser } from '../../utils/user';
 import ServiceCard from '../ServiceCard/ServiceCard';
 import ComponentError from '../utils/ComponentError';
 import ComponentLoader from '../utils/ComponentLoader';
 import NoRecords from '../utils/NoRecords';
+import { UserMenuTab } from './UserMenu';
 
 function UserReservation() {
+  //context
+  const { setCurrentTab } = useContext(UserMenuTab);
+
   //fetching services
   const [services, setServices] = useState([]);
   const [isFetching, setIsFetching] = useState(false);
   const [fetchError, setFetchError] = useState(null);
+  const [selectedService, setSelectedService] = useState(null);
 
   //booking
   const [activeStepper, setActiveStepper] = useState(0);
   const [bookingDates, setBookingDates] = useState([null, null]);
-  const [selectedService, setSelectedService] = useState(null);
   const [isBooking, setIsBooking] = useState(false);
+  const [isBooked, setIsBooked] = useState(false);
   const [bookingError, setBookingError] = useState(null);
   const [totalNights, setTotalNights] = useState(0);
   const [totalAmount, setTotalAmount] = useState(0);
@@ -99,11 +104,26 @@ function UserReservation() {
     })
       .then(() => {
         nextStep();
+        setIsBooked(true);
       })
       .catch(() => {
         setBookingError('An error occurred. Please try again later');
       })
       .finally(() => setIsBooking(false));
+  };
+
+  const handleCloseModal = () => {
+    closeBookingModal();
+
+    if (isBooked) {
+      setCurrentTab('dashboard');
+    }
+
+    setActiveStepper(0);
+    setBookingDates([null, null]);
+    setIsBooked(false);
+    setTotalAmount(0);
+    setTotalNights(0);
   };
 
   const render1stStepper = () => {
@@ -316,7 +336,7 @@ function UserReservation() {
         title={'Booking - ' + selectedService?.NAME}
         shadow="xl"
         opened={isBookingModalOpen}
-        onClose={closeBookingModal}
+        onClose={() => handleCloseModal()}
         closeButtonProps={{
           bg: 'crimson',
           radius: '50%',
@@ -338,15 +358,16 @@ function UserReservation() {
           size="sm"
           completedIcon={<IconCircleCheck />}
         >
-          <Stepper.Step icon={<IconReceipt />}>
+          <Stepper.Step disabled={isBooked} icon={<IconReceipt />}>
             {render1stStepper()}
           </Stepper.Step>
 
-          <Stepper.Step icon={<IconListDetails />}>
+          <Stepper.Step disabled={isBooked} icon={<IconListDetails />}>
             {render2ndStepper()}
           </Stepper.Step>
 
           <Stepper.Step
+            disabled={isBooked}
             icon={bookingError ? <IconAlertCircle /> : <IconHomeCheck />}
             color={bookingError ? 'red' : ''}
           >
@@ -394,7 +415,7 @@ function UserReservation() {
           {activeStepper === 3 && (
             <Button
               fullWidth
-              onClick={closeBookingModal}
+              onClick={handleCloseModal}
               variant="outline"
               color="#006400"
             >

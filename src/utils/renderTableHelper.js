@@ -21,13 +21,13 @@ const renderReservationDateStatus = (reservation) => {
 
   if (currentDate.isBefore(start)) {
     return (
-      <Badge w="80%" variant="outline" color="#5D8AA8">
+      <Badge w="80%" variant="outline" color="#006400">
         Upcoming
       </Badge>
     );
   } else if (currentDate.isSame(start, 'day')) {
     return (
-      <Badge w="80%" variant="outline" color="#006400">
+      <Badge w="80%" variant="outline" color="#6F00FF">
         Today
       </Badge>
     );
