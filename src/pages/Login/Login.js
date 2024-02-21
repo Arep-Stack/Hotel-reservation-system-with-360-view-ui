@@ -137,11 +137,9 @@ function Login() {
               href="/Login"
               onClick={(event) => event.preventDefault()}
               tabIndex={-1}
-              underline="hover"
-              style={{
-                fontSize: '12px',
-                marginLeft: 'auto',
-              }}
+              underline="always"
+              size="sm"
+              c="dimmed"
             >
               Forgot your password?
             </Anchor>
@@ -161,7 +159,7 @@ function Login() {
 
         <Text mt="md" size="sm" ta="center">
           Not registered yet?{' '}
-          <Anchor href="/SignUp" underline="always">
+          <Anchor href="/SignUp" underline="always" c="green">
             Create an account
           </Anchor>
         </Text>

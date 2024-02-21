@@ -171,7 +171,8 @@ function SignUp() {
             handleSubmit({
               FIRSTNAME: values.firstName,
               LASTNAME: values.lastName,
-              PHONE_NUMBER: values.phone,
+              PHONE_NUMBER:
+                values?.phone[0] === '0' ? values.phone.slice(1) : values.phone,
               ADDRESS: values.address,
               EMAIL: values.email,
               PASSWORD: values.password,
@@ -195,6 +196,24 @@ function SignUp() {
                       withAsterisk={input.required}
                       label={input.name}
                       placeholder={input.name}
+                      leftSection={
+                        input.name === 'Phone' && (
+                          <Text
+                            w="100%"
+                            align="center"
+                            size={12}
+                            pl={4}
+                            c="black"
+                          >
+                            (+63)
+                          </Text>
+                        )
+                      }
+                      styles={{
+                        input: {
+                          paddingLeft: input.name === 'Phone' && '40px',
+                        },
+                      }}
                       {...form.getInputProps(c.trim())}
                     />
                   )}
@@ -217,7 +236,7 @@ function SignUp() {
 
         <Text mt="md" size="sm" ta="center">
           Have an account already?{' '}
-          <Anchor href="/Login" underline="always">
+          <Anchor href="/Login" underline="always" c="green">
             Login
           </Anchor>
         </Text>

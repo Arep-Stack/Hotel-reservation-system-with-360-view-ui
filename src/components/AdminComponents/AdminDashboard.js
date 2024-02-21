@@ -33,7 +33,7 @@ function AdminDashboard() {
   const [fetchError, setFetchError] = useState(null);
 
   //processing payment
-  const [selectedReservation, setSelectedReservation] = useState({});
+  const [selectedReservation, setSelectedReservation] = useState(null);
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
 
   //form
@@ -85,7 +85,7 @@ function AdminDashboard() {
               url: '/reservations',
             })
               .then((dataReservations) => {
-                if (!!dataReservations) {
+                if (!!dataReservations.data) {
                   setReservationsUnfiltered(dataReservations.data);
 
                   const newReservations = dataReservations.data.map(
@@ -268,17 +268,17 @@ function AdminDashboard() {
       <>
         <Group justify="space-between">
           <Text>Name</Text>
-          <Text fw={700}>{selectedReservation.NAME}</Text>
+          <Text fw={700}>{selectedReservation?.NAME}</Text>
         </Group>
 
         <Group mt="xs" justify="space-between">
           <Text>Email</Text>
-          <Text fw={700}>{selectedReservation.EMAIL}</Text>
+          <Text fw={700}>{selectedReservation?.EMAIL}</Text>
         </Group>
 
         <Group mt="xs" mb="xs" justify="space-between">
           <Text>Phone</Text>
-          <Text fw={700}>{selectedReservation.PHONE_NUMBER}</Text>
+          <Text fw={700}>{selectedReservation?.PHONE_NUMBER}</Text>
         </Group>
 
         <hr />
@@ -286,22 +286,22 @@ function AdminDashboard() {
         <Group mt="xs" justify="space-between">
           <Text>Service</Text>
           <Text fw={700}>
-            {selectedReservation.SERVICE_TYPE} -{' '}
-            {selectedReservation.SERVICE_NAME}
+            {selectedReservation?.SERVICE_TYPE} -{' '}
+            {selectedReservation?.SERVICE_NAME}
           </Text>
         </Group>
 
         <Group mt="xs" justify="space-between">
           <Text>Start Date</Text>
           <Text fw={700}>
-            {moment(selectedReservation.START_DATE).format('ll')}
+            {moment(selectedReservation?.START_DATE).format('ll')}
           </Text>
         </Group>
 
         <Group mt="xs" mb="xs" justify="space-between">
           <Text>End Date</Text>
           <Text fw={700}>
-            {moment(selectedReservation.END_DATE).format('ll')}
+            {moment(selectedReservation?.END_DATE).format('ll')}
           </Text>
         </Group>
       </>
@@ -430,14 +430,14 @@ function AdminDashboard() {
 
               <Group mt="xs" justify="space-between">
                 <Text>Total Amount</Text>
-                <Text fw={700}>₱{selectedReservation.AMOUNT}</Text>
+                <Text fw={700}>₱{selectedReservation?.AMOUNT}</Text>
               </Group>
               <Group mt="xs" justify="space-between">
                 <Text>Balance</Text>
-                <Text fw={700}>₱{selectedReservation.BALANCE}</Text>
+                <Text fw={700}>₱{selectedReservation?.BALANCE}</Text>
               </Group>
 
-              {selectedReservation.BALANCE > 0 ? (
+              {selectedReservation?.BALANCE > 0 ? (
                 <form
                   onSubmit={form.onSubmit((values) => {
                     handleProcessPayment(values);
