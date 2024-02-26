@@ -3,32 +3,31 @@ import {
   Box,
   Button,
   Group,
-  Input,
   Modal,
   Table,
   Text,
+  TextInput,
 } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
-import { IconSearch, IconTrashFilled } from '@tabler/icons-react';
+import { IconSearch, IconTrash, IconTrashFilled } from '@tabler/icons-react';
 import axios from 'axios';
-import { useEffect, useRef, useState } from 'react';
+import { useContext, useState } from 'react';
 import { toast } from 'react-toastify';
 
+import { GlobalContext } from '../../App';
 import ComponentError from '../utils/ComponentError';
 import ComponentLoader from '../utils/ComponentLoader';
 import NoRecords from '../utils/NoRecords';
 
 function AdminUsers() {
-  //fetching user
-  const [users, setUsers] = useState([]);
-  const [usersFilter, setUsersFilter] = useState([]);
-  const [isFetching, setIsFetching] = useState(false);
-  const [fetchError, setFetchError] = useState(null);
+  //context
+  const { getAllUsers, allUsers, allUsersError, allUsersLoading } =
+    useContext(GlobalContext);
 
   //deleting user
   const [selectedUser, setSelectedUser] = useState({});
   const [isDeletingUser, setIsDeletingUser] = useState(false);
-  const searchBar = useRef();
+  const [searchValue, setSearchValue] = useState('');
 
   //modal
   const [
@@ -37,37 +36,13 @@ function AdminUsers() {
   ] = useDisclosure(false);
 
   //functions
-  const getUsers = () => {
-    closeDeleteModal();
-    setIsFetching(true);
-    axios({
-      method: 'GET',
-      url: '/users',
-    })
-      .then(({ data }) => {
-        if (!!data) {
-          setUsers(data);
-          setUsersFilter(data);
-        }
-      })
-      .catch(() => {
-        setFetchError('An error occurred');
-      })
-      .finally(() => setIsFetching(false));
+  const handleSearch = (e) => {
+    setSearchValue(e?.target?.value?.toLowerCase());
   };
 
-  const handleSearch = () => {
-    const filteredData = users?.filter((item) => {
-      const searchValue = searchBar.current.value.toLowerCase();
-      return (
-        item.FIRSTNAME.toLowerCase().includes(searchValue) ||
-        item.LASTNAME.toLowerCase().includes(searchValue) ||
-        item.EMAIL.toLowerCase().includes(searchValue) ||
-        item.PHONE_NUMBER.toLowerCase().includes(searchValue) ||
-        item.ADDRESS.toLowerCase().includes(searchValue)
-      );
-    });
-    setUsersFilter(filteredData);
+  const handleOpenDeleteModal = (user) => {
+    setSelectedUser(user);
+    openDeleteModal();
   };
 
   const handleDelete = () => {
@@ -77,6 +52,8 @@ function AdminUsers() {
       url: `/users/${selectedUser?.ID}`,
     })
       .then(() => {
+        getAllUsers();
+        closeDeleteModal();
         toast.success('User has been deleted', {
           position: toast.POSITION.TOP_RIGHT,
           autoClose: 1500,
@@ -91,54 +68,53 @@ function AdminUsers() {
       .finally(() => setIsDeletingUser(false));
   };
 
-  const dataRows = usersFilter
-    ?.filter((user) => !user?.IS_ADMIN)
-    .map((user) => (
-      <Table.Tr key={user.ID}>
+  //render
+  const userTable = allUsers
+    ?.filter((user) => !user.IS_ADMIN)
+    ?.filter((user) =>
+      ['FIRSTNAME', 'LASTNAME', 'EMAIL', 'PHONE_NUMBER', 'ADDRESS'].some(
+        (key) => user[key].toLowerCase().includes(searchValue),
+      ),
+    )
+    ?.map((u) => (
+      <Table.Tr key={u.ID}>
         <Table.Td>
-          <ActionIcon
-            onClick={() => {
-              setSelectedUser(user);
-              openDeleteModal();
-            }}
-            variant="light"
-            color="red"
-          >
-            <IconTrashFilled />
+          <ActionIcon variant="transparent">
+            <IconTrash
+              color="#FF0800"
+              onClick={() => handleOpenDeleteModal(u)}
+            />
           </ActionIcon>
         </Table.Td>
-        <Table.Td>{user.FIRSTNAME}</Table.Td>
-        <Table.Td>{user.LASTNAME}</Table.Td>
-        <Table.Td c={user.IS_ACTIVE ? 'darkgreen' : 'crimson'}>
-          {user.EMAIL}
-        </Table.Td>
-        <Table.Td>{user.PHONE_NUMBER}</Table.Td>
-        <Table.Td>{user.ADDRESS}</Table.Td>
+        <Table.Td>{u.FIRSTNAME}</Table.Td>
+        <Table.Td>{u.LASTNAME}</Table.Td>
+        <Table.Td>{u.EMAIL}</Table.Td>
+        <Table.Td>{u.PHONE_NUMBER}</Table.Td>
+        <Table.Td>{u.ADDRESS}</Table.Td>
       </Table.Tr>
     ));
-
-  //UseEffect
-  useEffect(() => {
-    getUsers();
-  }, []);
 
   return (
     <Box pos="relative" mih={200}>
       <Group mb="sm" justify="space-between" align="center">
         <Text size="xl">Users</Text>
-        <Input
-          ref={searchBar}
-          onChange={handleSearch}
+        <TextInput
+          onChange={(e) => handleSearch(e)}
+          disabled={allUsersError || allUsersLoading}
           type="search"
           placeholder="Search users"
           leftSection={<IconSearch />}
         />
       </Group>
 
-      {isFetching && <ComponentLoader message="Fetching users" />}
-      {!isFetching && fetchError && <ComponentError message={fetchError} />}
-      {!isFetching && !fetchError && dataRows.length < 1 && <NoRecords />}
-      {!isFetching && !fetchError && dataRows.length > 0 && (
+      {allUsersLoading && <ComponentLoader message="Fetching users" />}
+      {!allUsersLoading && allUsersError && (
+        <ComponentError message={allUsersError} />
+      )}
+      {!allUsersLoading && !allUsersError && userTable.length < 1 && (
+        <NoRecords />
+      )}
+      {!allUsersLoading && !allUsersError && userTable.length > 0 && (
         <>
           <Table.ScrollContainer
             minWidth={500}
@@ -164,12 +140,16 @@ function AdminUsers() {
                   <Table.Th>Address</Table.Th>
                 </Table.Tr>
               </Table.Thead>
-              <Table.Tbody>{dataRows}</Table.Tbody>
+              <Table.Tbody>{userTable}</Table.Tbody>
             </Table>
           </Table.ScrollContainer>
           <Group justify="center" mt="md" c="gray">
-            <Text>Total Users: {users.filter((u) => !u.IS_ADMIN).length}</Text>
-            <Text>Total Admin: {users.filter((u) => u.IS_ADMIN).length}</Text>
+            <Text>
+              Total Users: {allUsers.filter((u) => !u.IS_ADMIN).length}
+            </Text>
+            <Text>
+              Total Admin: {allUsers.filter((u) => u.IS_ADMIN).length}
+            </Text>
           </Group>
         </>
       )}
@@ -203,7 +183,7 @@ function AdminUsers() {
         <Button
           fullWidth
           mt="md"
-          color="red"
+          color="#FF0800"
           tt="uppercase"
           fw={400}
           leftSection={<IconTrashFilled />}
