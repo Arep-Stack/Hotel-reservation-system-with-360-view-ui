@@ -2,9 +2,11 @@ import {
   ActionIcon,
   Box,
   Button,
+  Divider,
   Flex,
   Group,
   Modal,
+  NumberFormatter,
   NumberInput,
   Table,
   Tabs,
@@ -14,23 +16,37 @@ import {
 import { DateInput } from '@mantine/dates';
 import { useForm } from '@mantine/form';
 import { useDisclosure } from '@mantine/hooks';
-import { IconCash } from '@tabler/icons-react';
+import { IconWallet } from '@tabler/icons-react';
 import axios from 'axios';
 import moment from 'moment';
 import { nanoid } from 'nanoid';
-import { useEffect, useState } from 'react';
+import { useContext, useState } from 'react';
 import { toast } from 'react-toastify';
 
+import { GlobalContext } from '../../App';
+import {
+  calculateDuration,
+  capitalize,
+  filterReservationsByCriteria,
+  renderReservationDateStatus,
+  renderReservationServiceType,
+  sortReservations,
+  statusColorChanger,
+} from '../../utils/renderTableHelper';
 import ComponentError from '../utils/ComponentError';
 import ComponentLoader from '../utils/ComponentLoader';
 import NoRecords from '../utils/NoRecords';
 
 function AdminDashboard() {
-  //fetching reservation
-  const [reservations, setReservations] = useState([]);
-  const [reservationsUnfiltered, setReservationsUnfiltered] = useState([]);
-  const [isFetching, setIsFetching] = useState(false);
-  const [fetchError, setFetchError] = useState(null);
+  //context
+  const {
+    getAllReservations,
+    allReservations,
+    allReservationsError,
+    allReservationsLoading,
+    allUsers,
+    allServices,
+  } = useContext(GlobalContext);
 
   //processing payment
   const [selectedReservation, setSelectedReservation] = useState(null);
@@ -59,104 +75,26 @@ function AdminDashboard() {
   //filter
   const [sortingCriteria, setSortingCriteria] = useState('Today');
 
-  //modal
+  // modal
   const [
     isProcessPaymentModalOpen,
     { open: openProcessPaymentModal, close: closeProcessPaymentModal },
   ] = useDisclosure(false);
 
   //functions
-  const getReservations = () => {
-    setIsFetching(true);
-    axios({
-      method: 'GET',
-      url: '/users',
-    })
-      .then((dataUsers) => {
-        //get Services
-        axios({
-          method: 'GET',
-          url: '/services',
-        })
-          .then((dataServices) => {
-            //get Reservations
-            axios({
-              method: 'GET',
-              url: '/reservations',
-            })
-              .then((dataReservations) => {
-                if (!!dataReservations.data) {
-                  setReservationsUnfiltered(dataReservations.data);
-
-                  const newReservations = dataReservations.data.map(
-                    (reservation) => {
-                      const { FIRSTNAME, LASTNAME, EMAIL, PHONE_NUMBER } =
-                        dataUsers.data.find(
-                          (user) => user.ID === reservation.USER_ID,
-                        ) || {};
-                      const USER = `${FIRSTNAME} ${LASTNAME}`;
-
-                      const { NAME, TYPE } =
-                        dataServices.data.find(
-                          (service) => service.ID === reservation.SERVICE_ID,
-                        ) || {};
-
-                      return {
-                        ...reservation,
-                        NAME: USER,
-                        EMAIL,
-                        PHONE_NUMBER,
-                        SERVICE_NAME: NAME,
-                        SERVICE_TYPE: TYPE,
-                      };
-                    },
-                  );
-
-                  newReservations.sort(
-                    (a, b) => new Date(b.END_DATE) - new Date(a.END_DATE),
-                  );
-
-                  setReservations(newReservations);
-                }
-              })
-              .catch(() => setFetchError('An error occurred'))
-              .finally(() => setIsFetching(false));
-          })
-          .catch(() => {
-            setFetchError('An error occurred');
-            setIsFetching(false);
-          });
-      })
-      .catch(() => {
-        setFetchError('An error occurred');
-        setIsFetching(false);
-      });
-  };
-
-  const filterReservations = () => {
-    switch (sortingCriteria) {
-      case 'Today':
-        return reservations.filter((reservation) =>
-          moment(reservation.START_DATE).isSame(moment(), 'day'),
-        );
-      case 'Upcoming':
-        return reservations.filter((reservation) =>
-          moment(reservation.START_DATE).isAfter(moment(), 'day'),
-        );
-      case 'All':
-      default:
-        return reservations;
-    }
+  const handleOpenModal = (reservation) => {
+    setSelectedReservation(reservation);
+    openProcessPaymentModal();
   };
 
   const handleProcessPayment = ({ amount, method, dop }) => {
     setIsProcessingPayment(true);
 
-    const data = reservationsUnfiltered?.find(
-      (r) => r.ID === selectedReservation.ID,
-    );
+    const data = allReservations?.find((r) => r.ID === selectedReservation.ID);
 
     data.BALANCE = data.BALANCE - amount;
+
+    data.STATUS = data.BALANCE === 0 ? 'Fully Paid' : 'Paid - Partial';
 
     data.PAYMENT_HISTORY.push({
       amount,
@@ -164,15 +102,13 @@ function AdminDashboard() {
       method,
     });
 
-    data.STATUS = data.BALANCE === 0 ? 'Fully Paid' : 'Paid - Partial';
-
     axios({
       method: 'PUT',
       url: `/reservations/${data.ID}`,
       data: data,
     })
       .then(() => {
-        getReservations();
+        getAllReservations();
         toast.success('Successfully processed payment', {
           position: toast.POSITION.TOP_RIGHT,
           autoClose: 1500,
@@ -190,115 +126,146 @@ function AdminDashboard() {
       .finally(() => setIsProcessingPayment(false));
   };
 
-  const renderTable = (filteredReservations) => {
-    return (
-      <>
-        {filteredReservations?.length ? (
-          filteredReservations.map((reservation) => (
-            <Table.Tr key={reservation.ID}>
-              <Table.Td>
-                <ActionIcon
-                  onClick={() => {
-                    setSelectedReservation(reservation);
-                    openProcessPaymentModal();
-                  }}
-                  variant="light"
-                  color="darkgreen"
-                >
-                  <IconCash />
-                </ActionIcon>
-              </Table.Td>
-              <Table.Td>{reservation.NAME}</Table.Td>
-              <Table.Td>{reservation.EMAIL}</Table.Td>
-              <Table.Td>{reservation.PHONE_NUMBER}</Table.Td>
-              <Table.Td>{reservation.SERVICE_NAME}</Table.Td>
-              <Table.Td>{reservation.SERVICE_TYPE}</Table.Td>
-              <Table.Td>{moment(reservation.START_DATE).format('ll')}</Table.Td>
-              <Table.Td>{moment(reservation.END_DATE).format('ll')}</Table.Td>
-              <Table.Td>{reservation.STATUS}</Table.Td>
-              <Table.Td>₱{reservation.BALANCE}</Table.Td>
-              <Table.Td>
-                {`${Math.max(
-                  1,
-                  moment
-                    .duration(
-                      moment(reservation.END_DATE).diff(
-                        moment(reservation.START_DATE),
-                      ),
-                    )
-                    .asDays(),
-                )} ${
-                  Math.max(
-                    1,
-                    moment
-                      .duration(
-                        moment(reservation.END_DATE).diff(
-                          moment(reservation.START_DATE),
-                        ),
-                      )
-                      .asDays(),
-                  ) === 1
-                    ? 'day'
-                    : 'days'
-                }`}
-              </Table.Td>
-            </Table.Tr>
-          ))
-        ) : (
-          <Table.Tr>
-            <Table.Td colSpan={11}>
-              <NoRecords
-                message={
-                  sortingCriteria === 'Today'
-                    ? 'No reservations today'
-                    : sortingCriteria === 'Upcoming'
-                    ? 'No upcoming reservations'
-                    : 'No reservations'
-                }
-              />
-            </Table.Td>
-          </Table.Tr>
-        )}
-      </>
+  //renders
+  const renderTable = () => {
+    const syncedData = allReservations?.map((reservation) => {
+      //USER
+      const { FIRSTNAME, LASTNAME, EMAIL, PHONE_NUMBER } =
+        allUsers?.find((user) => user.ID === reservation?.USER_ID) || {};
+
+      //SERVICE
+      const {
+        NAME: SERVICE_NAME,
+        PERSONS,
+        PRICE,
+        TYPE,
+      } = allServices?.find(
+        (service) => service.ID === reservation?.SERVICE_ID,
+      ) || {};
+
+      //Return
+      return {
+        ...reservation,
+        FIRSTNAME,
+        LASTNAME,
+        EMAIL,
+        PHONE_NUMBER,
+        SERVICE_NAME,
+        PERSONS,
+        PRICE,
+        TYPE,
+      };
+    });
+
+    const filteredReservations = sortReservations(
+      filterReservationsByCriteria(sortingCriteria, syncedData),
     );
+
+    if (filteredReservations?.length > 0) {
+      return filteredReservations?.map((reservation) => (
+        <Table.Tr key={reservation.ID}>
+          <Table.Td>
+            <ActionIcon
+              variant="transparent"
+              onClick={() => handleOpenModal(reservation)}
+            >
+              <IconWallet color="#027802" />
+            </ActionIcon>
+          </Table.Td>
+
+          <Table.Td>{renderReservationDateStatus(reservation)}</Table.Td>
+
+          <Table.Td>
+            <Flex direction="column">
+              <Text>
+                {capitalize(reservation?.FIRSTNAME) +
+                  ' ' +
+                  capitalize(reservation?.LASTNAME)}
+              </Text>
+              <Text size="xs" c="dimmed">
+                {reservation?.EMAIL}
+              </Text>
+            </Flex>
+          </Table.Td>
+
+          <Table.Td>
+            <Text size="sm">{reservation?.PHONE_NUMBER}</Text>
+          </Table.Td>
+
+          <Table.Td>{renderReservationServiceType(reservation)}</Table.Td>
+
+          <Table.Td>{moment(reservation?.START_DATE).format('ll')}</Table.Td>
+          <Table.Td>{moment(reservation?.END_DATE).format('ll')}</Table.Td>
+
+          <Table.Td>
+            <Text c={statusColorChanger(reservation)}>
+              {reservation?.STATUS}
+            </Text>
+          </Table.Td>
+
+          <Table.Td>
+            <NumberFormatter
+              thousandSeparator
+              prefix="₱"
+              value={reservation?.BALANCE}
+            />
+          </Table.Td>
+
+          <Table.Td>
+            {calculateDuration(reservation?.START_DATE, reservation?.END_DATE)}
+          </Table.Td>
+        </Table.Tr>
+      ));
+    } else {
+      return (
+        <Table.Tr>
+          <Table.Td colSpan={10}>
+            <NoRecords />
+          </Table.Td>
+        </Table.Tr>
+      );
+    }
   };
 
   const renderInfoTab = () => {
     return (
       <>
-        <Group justify="space-between">
+        <Group mb="xs" justify="space-between">
           <Text>Name</Text>
-          <Text fw={700}>{selectedReservation?.NAME}</Text>
+          <Text fw={700}>
+            {selectedReservation?.FIRSTNAME +
+              ' ' +
+              selectedReservation?.LASTNAME}
+          </Text>
         </Group>
 
-        <Group mt="xs" justify="space-between">
+        <Group mb="xs" justify="space-between">
           <Text>Email</Text>
           <Text fw={700}>{selectedReservation?.EMAIL}</Text>
         </Group>
 
-        <Group mt="xs" mb="xs" justify="space-between">
+        <Group mb="xs" justify="space-between">
           <Text>Phone</Text>
           <Text fw={700}>{selectedReservation?.PHONE_NUMBER}</Text>
         </Group>
 
-        <hr />
+        <Divider mb="xs" />
 
-        <Group mt="xs" justify="space-between">
+        <Group mb="xs" justify="space-between">
           <Text>Service</Text>
-          <Text fw={700}>
-            {selectedReservation?.SERVICE_TYPE} -{' '}
-            {selectedReservation?.SERVICE_NAME}
-          </Text>
+          <div style={{ fontWeight: 700 }}>
+            {renderReservationServiceType(selectedReservation)}
+          </div>
         </Group>
 
-        <Group mt="xs" justify="space-between">
+        <Group mb="xs" justify="space-between">
           <Text>Start Date</Text>
           <Text fw={700}>
             {moment(selectedReservation?.START_DATE).format('ll')}
           </Text>
         </Group>
 
-        <Group mt="xs" mb="xs" justify="space-between">
+        <Group mb="xs" justify="space-between">
           <Text>End Date</Text>
           <Text fw={700}>
             {moment(selectedReservation?.END_DATE).format('ll')}
@@ -310,14 +277,24 @@ function AdminDashboard() {
 
   const renderPaymentHistoryTab = () => {
     return (
-      <Box key={nanoid()} mb="sm">
-        {selectedReservation?.PAYMENT_HISTORY ? (
+      <Box mb="sm">
+        {selectedReservation?.PAYMENT_HISTORY.length > 0 ? (
           selectedReservation.PAYMENT_HISTORY.sort(
             (a, b) =>
               moment(a.dop, 'MMM DD, YYYY') - moment(b.dop, 'MMM DD, YYYY'),
           ).map((history) => (
-            <Group justify="space-between" key={nanoid()} p="xs" style={{}}>
-              <Text fw={700}>₱{history.amount}</Text>
+            <Group
+              fw={700}
+              justify="space-between"
+              key={nanoid()}
+              p="xs"
+              style={{}}
+            >
+              <NumberFormatter
+                thousandSeparator
+                prefix="₱"
+                value={history.amount}
+              />
               <Text>{history.method}</Text>
               <Text>{history.dop}</Text>
             </Group>
@@ -329,22 +306,42 @@ function AdminDashboard() {
     );
   };
 
-  useEffect(() => {
-    getReservations();
-  }, []);
+  const renderTableLength = () => {
+    const filteredReservations = filterReservationsByCriteria(
+      sortingCriteria,
+      allReservations,
+    );
+
+    return (
+      <Text
+        fw={700}
+        mt="sm"
+        c="darkgreen"
+        align="center"
+      >{`${sortingCriteria}: ${filteredReservations.length}`}</Text>
+    );
+  };
 
   return (
     <Box pos="relative" mih={200}>
       <Group mb="sm" align="center" justify="space-between">
-        <Text size="xl">Reservations - {sortingCriteria}</Text>
+        <Text size="xl">Reservations</Text>
 
         <Group>
-          {['Today', 'Upcoming', 'All'].map((f) => (
+          {[
+            'Today',
+            'Upcoming',
+            'On-going',
+            'Finished',
+            'All',
+            'Cancelled',
+          ].map((f) => (
             <div key={f}>
               <Button
-                color="#006400"
-                variant={sortingCriteria.includes(f) ? 'filled' : 'outline'}
-                disabled={isFetching}
+                size="xs"
+                color="#2F6C2F"
+                disabled={allReservationsLoading || allReservationsError}
+                variant={sortingCriteria.includes(f) ? 'filled' : 'light'}
                 onClick={() => setSortingCriteria(f)}
               >
                 {f}
@@ -353,13 +350,20 @@ function AdminDashboard() {
           ))}
         </Group>
       </Group>
-      {isFetching && <ComponentLoader message="Fetching reservations" />}
-      {!isFetching && fetchError && <ComponentError message={fetchError} />}
-      {!isFetching && !fetchError && (
+
+      {allReservationsLoading && (
+        <ComponentLoader message="Fetching reservations" />
+      )}
+
+      {!allReservationsLoading && allReservationsError && (
+        <ComponentError message={allReservationsError} />
+      )}
+
+      {!allReservationsLoading && !allReservationsError && (
         <>
           <Table.ScrollContainer
             minWidth={500}
-            mah="calc(100vh - 20rem)"
+            mah="calc(100vh - 21rem)"
             mih={350}
             h="100%"
             type="native"
@@ -374,11 +378,10 @@ function AdminDashboard() {
               >
                 <Table.Tr>
                   <Table.Th></Table.Th>
+                  <Table.Th></Table.Th>
                   <Table.Th>Name</Table.Th>
-                  <Table.Th>Email</Table.Th>
                   <Table.Th>Phone</Table.Th>
-                  <Table.Th>Service Name</Table.Th>
-                  <Table.Th>Service Type</Table.Th>
+                  <Table.Th>Service</Table.Th>
                   <Table.Th>Start Date</Table.Th>
                   <Table.Th>End Date</Table.Th>
                   <Table.Th>Status</Table.Th>
@@ -386,14 +389,10 @@ function AdminDashboard() {
                   <Table.Th>Duration</Table.Th>
                 </Table.Tr>
               </Table.Thead>
-              <Table.Tbody>{renderTable(filterReservations())}</Table.Tbody>
+              <Table.Tbody>{renderTable()}</Table.Tbody>
             </Table>
           </Table.ScrollContainer>
-          <Group justify="center" mt="md" c="gray">
-            <Text c="darkgreen">{`${sortingCriteria}: ${
-              filterReservations().length
-            }`}</Text>
-          </Group>
+          {renderTableLength()}
         </>
       )}
 
@@ -426,15 +425,45 @@ function AdminDashboard() {
             <Tabs.Panel value="info" pt="md">
               {renderInfoTab()}
 
-              <hr />
+              <Divider mb="xs" />
 
-              <Group mt="xs" justify="space-between">
-                <Text>Total Amount</Text>
-                <Text fw={700}>₱{selectedReservation?.AMOUNT}</Text>
+              <Group mb="xs" justify="space-between">
+                <Text>Duration</Text>
+                <Text fw={700}>
+                  {calculateDuration(
+                    selectedReservation?.START_DATE,
+                    selectedReservation?.END_DATE,
+                  )}
+                </Text>
               </Group>
-              <Group mt="xs" justify="space-between">
+
+              <Group fw={700} mb="xs" justify="space-between">
+                <Text>Service Price</Text>
+                <NumberFormatter
+                  thousandSeparator
+                  prefix="₱"
+                  value={selectedReservation?.PRICE}
+                />
+              </Group>
+
+              <Divider mb="xs" />
+
+              <Group fw={700} mb="xs" justify="space-between">
+                <Text>Total Amount</Text>
+                <NumberFormatter
+                  thousandSeparator
+                  prefix="₱"
+                  value={selectedReservation?.AMOUNT}
+                />
+              </Group>
+
+              <Group fw={700} mb="xs" justify="space-between">
                 <Text>Balance</Text>
-                <Text fw={700}>₱{selectedReservation?.BALANCE}</Text>
+                <NumberFormatter
+                  thousandSeparator
+                  prefix="₱"
+                  value={selectedReservation?.BALANCE}
+                />
               </Group>
 
               {selectedReservation?.BALANCE > 0 ? (

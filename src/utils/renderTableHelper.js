@@ -13,7 +13,7 @@ const renderReservationDateStatus = (reservation) => {
 
   if (reservation?.STATUS === 'Cancelled') {
     return (
-      <Badge w="80%" variant="outline" color="#960018">
+      <Badge variant="outline" color="#960018">
         Cancelled
       </Badge>
     );
@@ -21,25 +21,25 @@ const renderReservationDateStatus = (reservation) => {
 
   if (currentDate.isBefore(start)) {
     return (
-      <Badge w="80%" variant="outline" color="#006400">
+      <Badge variant="outline" color="#006400">
         Upcoming
       </Badge>
     );
   } else if (currentDate.isSame(start, 'day')) {
     return (
-      <Badge w="80%" variant="outline" color="#6F00FF">
+      <Badge variant="outline" color="#6F00FF">
         Today
       </Badge>
     );
   } else if (currentDate.isBetween(start, end)) {
     return (
-      <Badge w="80%" variant="outline" color="#007FFF">
+      <Badge variant="outline" color="#007FFF">
         On going
       </Badge>
     );
   } else if (currentDate.isAfter(end)) {
     return (
-      <Badge w="80%" variant="outline" color="#2A3439">
+      <Badge variant="outline" color="#2A3439">
         Finished
       </Badge>
     );
@@ -47,26 +47,26 @@ const renderReservationDateStatus = (reservation) => {
 };
 
 const renderReservationServiceType = (reservation) => {
-  const serviceType = reservation?.SERVICE_TYPE;
+  const serviceType = reservation?.TYPE;
 
   if (serviceType === 'Room') {
     return (
       <Group>
-        <IconBed />
+        <IconBed size={20} />
         {reservation?.SERVICE_NAME}
       </Group>
     );
   } else if (serviceType === 'Pavilion') {
     return (
       <Group>
-        <IconBuildingPavilion />
+        <IconBuildingPavilion size={20} />
         {reservation?.SERVICE_NAME}
       </Group>
     );
   } else if (serviceType === 'Pool') {
     return (
       <Group>
-        <IconSwimming />
+        <IconSwimming size={20} />
         {reservation?.SERVICE_NAME}
       </Group>
     );
@@ -103,10 +103,43 @@ const filterReservationsByCriteria = (criteria, reservations) => {
       return reservations?.filter((r) =>
         moment(r?.END_DATE).isBefore(currentDate, 'day'),
       );
-    } else {
+    } else if (criteria === 'All') {
       return reservations;
     }
   }
+};
+
+const calculateDuration = (start, end) => {
+  const a = moment(start);
+  const b = moment(end);
+
+  const durationInDays = Math.floor(moment.duration(b.diff(a)).asDays());
+
+  const formattedDays = Math.max(1, durationInDays + 1);
+  const formattedNights = Math.max(0, durationInDays);
+
+  return `${formattedDays}D, ${formattedNights}N`;
+};
+
+const statusColorChanger = (reservation) => {
+  switch (reservation?.STATUS?.toLowerCase()) {
+    case 'unpaid':
+    case 'cancelled':
+      return '#B31B1B';
+
+    case 'fully paid':
+      return '#006400';
+
+    case 'paid - partial':
+      return '#4997D0';
+
+    default:
+      return '#000';
+  }
+};
+
+const capitalize = (str) => {
+  return str?.charAt(0).toUpperCase() + str?.slice(1);
 };
 
 export {
@@ -114,4 +147,7 @@ export {
   renderReservationServiceType,
   sortReservations,
   filterReservationsByCriteria,
+  calculateDuration,
+  statusColorChanger,
+  capitalize,
 };

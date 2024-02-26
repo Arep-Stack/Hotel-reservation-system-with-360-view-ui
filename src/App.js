@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { createContext, useContext, useEffect, useState } from 'react';
+import { createContext, useEffect, useState } from 'react';
 import { Route, Routes, useLocation, useNavigate } from 'react-router-dom';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -21,7 +21,17 @@ function App() {
   //CONTEXT - USER
   const [allUsers, setAllUsers] = useState([]);
   const [allUsersError, setAllUsersError] = useState(null);
-  const [allUsersLoading, setAllUsersLoading] = useState(false);
+  const [allUsersLoading, setAllUsersLoading] = useState(true);
+
+  //CONTEXT - RESERVATION
+  const [allReservations, setAllReservations] = useState([]);
+  const [allReservationsError, setAllReservationsError] = useState(null);
+  const [allReservationsLoading, setAllReservationsLoading] = useState(true);
+
+  //CONTEXT - SERVICES
+  const [allServices, setAllServices] = useState([]);
+  const [allServicesError, setAllServicesError] = useState(null);
+  const [allServicesLoading, setAllServicesLoading] = useState(true);
 
   //current user
   const [user, setUser] = useState(null);
@@ -43,6 +53,30 @@ function App() {
       .finally(() => setAllUsersLoading(false));
   };
 
+  const getAllReservations = () => {
+    setAllReservationsLoading(true);
+
+    axios({
+      method: 'GET',
+      url: '/reservations',
+    })
+      .then(({ data }) => setAllReservations(data))
+      .catch(() => setAllReservationsError('Error getting reservations'))
+      .finally(() => setAllReservationsLoading(false));
+  };
+
+  const getAllServices = () => {
+    setAllServicesLoading(true);
+
+    axios({
+      method: 'GET',
+      url: '/services',
+    })
+      .then(({ data }) => setAllServices(data))
+      .catch(() => setAllServicesError('Error getting services'))
+      .finally(() => setAllReservationsLoading(false));
+  };
+
   useEffect(() => {
     const userData = getUser();
 
@@ -52,6 +86,8 @@ function App() {
     }
 
     getAllUsers();
+    getAllReservations();
+    getAllServices();
   }, [navigator, user]);
 
   const contextValues = {
@@ -59,6 +95,14 @@ function App() {
     allUsers,
     allUsersError,
     allUsersLoading,
+    getAllReservations,
+    allReservations,
+    allReservationsError,
+    allReservationsLoading,
+    getAllServices,
+    allServices,
+    allServicesError,
+    allServicesLoading,
   };
 
   return (
