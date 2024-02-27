@@ -163,7 +163,7 @@ function AdminDashboard() {
 
     if (filteredReservations?.length > 0) {
       return filteredReservations?.map((reservation) => (
-        <Table.Tr key={reservation.ID}>
+        <Table.Tr key={reservation?.ID}>
           <Table.Td>
             <ActionIcon
               variant="transparent"
@@ -352,7 +352,7 @@ function AdminDashboard() {
       </Group>
 
       {allReservationsLoading && (
-        <ComponentLoader message="Fetching reservations" />
+        <ComponentLoader message="Fetching dashboard" />
       )}
 
       {!allReservationsLoading && allReservationsError && (

@@ -28,6 +28,7 @@ import axios from 'axios';
 import moment from 'moment';
 import { useContext, useEffect, useState } from 'react';
 
+import { GlobalContext } from '../../App';
 import { getUser } from '../../utils/user';
 import ServiceCard from '../ServiceCard/ServiceCard';
 import ComponentError from '../utils/ComponentError';
@@ -38,11 +39,13 @@ import { UserMenuTab } from './UserMenu';
 function UserReservation() {
   //context
   const { setCurrentTab } = useContext(UserMenuTab);
+  const {
+    getAllReservations,
+    allServices,
+    allServicesError,
+    allServicesLoading,
+  } = useContext(GlobalContext);
 
-  //fetching services
-  const [services, setServices] = useState([]);
-  const [isFetching, setIsFetching] = useState(false);
-  const [fetchError, setFetchError] = useState(null);
   const [selectedService, setSelectedService] = useState(null);
 
   //booking
@@ -94,7 +97,6 @@ function UserReservation() {
         USER_ID: user?.ID,
         SERVICE_ID: selectedService?.ID,
         STATUS: 'Unpaid',
-        DESCRIPTION: null,
         START_DATE: bookingDates[0],
         END_DATE: bookingDates[1],
         AMOUNT: totalAmount,
@@ -103,6 +105,7 @@ function UserReservation() {
       },
     })
       .then(() => {
+        getAllReservations();
         nextStep();
         setIsBooked(true);
       })
@@ -126,12 +129,14 @@ function UserReservation() {
     setTotalNights(0);
   };
 
+  //render
   const render1stStepper = () => {
     return (
       <Flex direction="column">
         <DatePickerInput
           withAsterisk
           minDate={new Date()}
+          mb="sm"
           type="range"
           label="Choose dates"
           placeholder="Please choose date range"
@@ -139,7 +144,7 @@ function UserReservation() {
           onChange={(values) => handleDateChange(values)}
         />
 
-        <Group justify="space-between" mt="xs">
+        <Group mb="xs" justify="space-between">
           <Text>Price</Text>
           <div>
             <NumberFormatter
@@ -151,7 +156,7 @@ function UserReservation() {
           </div>
         </Group>
 
-        <Group justify="space-between" mt="xs">
+        <Group mb="xs" justify="space-between">
           <Text>Duration</Text>
           <Text>
             {totalNights !== 0
@@ -162,9 +167,9 @@ function UserReservation() {
           </Text>
         </Group>
 
-        <hr />
+        <Divider mb="xs" />
 
-        <Group fw={700} justify="space-between" mt="xs" mb="xs">
+        <Group fw={700} mb="xs" justify="space-between">
           <Text>Total Amount</Text>
           <NumberFormatter
             thousandSeparator
@@ -184,24 +189,24 @@ function UserReservation() {
           <Text>{`${selectedService?.TYPE} - ${selectedService?.NAME}`}</Text>
         </Group>
 
-        <Group justify="space-between" mt="xs">
+        <Group mb="xs" justify="space-between">
           <Text>Capacity</Text>
           <Text>up to {selectedService?.PERSONS} pax</Text>
         </Group>
 
-        <Group justify="space-between" mt="xs">
+        <Group mb="xs" justify="space-between">
           <Text>Start Date</Text>
           <Text>{moment(bookingDates[0]).format('ll')}</Text>
         </Group>
 
-        <Group justify="space-between" mt="xs">
+        <Group mb="xs" justify="space-between">
           <Text>End Date</Text>
           <Text>{moment(bookingDates[1]).format('ll')}</Text>
         </Group>
 
-        <Divider mt="sm" />
+        <Divider mb="xs" />
 
-        <Group justify="space-between" mt="xs">
+        <Group mb="xs" justify="space-between">
           <Text>Duration</Text>
           <Text>
             {totalNights !== 0
@@ -212,7 +217,7 @@ function UserReservation() {
           </Text>
         </Group>
 
-        <Group justify="space-between" mt="xs">
+        <Group mb="xs" justify="space-between">
           <Text>Service Price</Text>
           <div>
             <NumberFormatter
@@ -224,9 +229,23 @@ function UserReservation() {
           </div>
         </Group>
 
-        <Group fw={700} justify="space-between" mt="xs">
+        <Group fw={700} mb="xs" justify="space-between">
           <Text>Total Amount</Text>
           <NumberFormatter thousandSeparator value={totalAmount} prefix="₱" />
+        </Group>
+
+        <Divider mb="xs" />
+
+        <Group fw={700} mb="xs" justify="space-between">
+          <Text>Down Payment</Text>
+          <Flex direction="row" align="center" gap="sm">
+            <Text size="sm">(30% of ₱{totalAmount})</Text>
+            <NumberFormatter
+              thousandSeparator
+              value={totalAmount * 0.3}
+              prefix="₱"
+            />
+          </Flex>
         </Group>
 
         <Flex direction="row" align="center" justify="center" mt="lg">
@@ -250,7 +269,7 @@ function UserReservation() {
             <Flex direction="column" align="center">
               <IconAlertCircle color="crimson" size={100} />
               <Text size="lg" align="center">
-                Your booking is unsuccesful, please try again later
+                {bookingError}
               </Text>
             </Flex>
           </>
@@ -281,44 +300,33 @@ function UserReservation() {
   const prevStep = () =>
     setActiveStepper((current) => (current > 0 ? current - 1 : current));
 
-  useEffect(() => {
-    setIsFetching(true);
-    axios({
-      method: 'GET',
-      url: '/services',
-    })
-      .then(({ data }) => {
-        !!data && setServices(data);
-      })
-      .catch(() => {
-        setFetchError('An error occurred');
-      })
-      .finally(() => setIsFetching(false));
-  }, []);
-
   return (
     <Box pos="relative" mih={200}>
-      {isFetching && <ComponentLoader message="Fetching services" />}
-      {!isFetching && fetchError && <ComponentError message={fetchError} />}
-      {!isFetching && !fetchError && (
-        <Flex justify="center">
-          {services
+      {allServicesLoading && <ComponentLoader message="Fetching services" />}
+
+      {!allServicesLoading && allServicesError && (
+        <ComponentError message={allServicesError} />
+      )}
+
+      {!allServicesLoading && !allServicesError && (
+        <Flex justify="center" gap="md">
+          {allServices
             ?.filter((service) => service.TYPE === 'Room')
-            ?.map((el) => (
+            ?.map((service) => (
               <ServiceCard
-                key={el.ID}
-                amenities={el.AMENITIES}
-                image={el.IMAGE}
-                name={el.NAME}
-                persons={el.PERSONS}
-                price={el.PRICE}
+                key={service.ID}
+                amenities={service.AMENITIES}
+                image={service.IMAGE}
+                name={service.NAME}
+                persons={service.PERSONS}
+                price={service.PRICE}
               >
                 <Flex align="center" gap="xs">
                   <Button
                     fullWidth
                     fw="normal"
                     color="#006400"
-                    onClick={() => handleOpenModal(el)}
+                    onClick={() => handleOpenModal(service)}
                   >
                     Book Now
                   </Button>
@@ -377,7 +385,19 @@ function UserReservation() {
           <Stepper.Completed>{renderCompleteStepper()}</Stepper.Completed>
         </Stepper>
 
-        <Flex gap="md" align="center" mt="xs">
+        <Flex mt="xs" align="center" gap="md">
+          {activeStepper === 0 && (
+            <Button
+              fullWidth
+              disabled={!bookingDates[0] || !bookingDates[1]}
+              onClick={nextStep}
+              rightSection={<IconArrowRight />}
+              color="#006400"
+            >
+              Next
+            </Button>
+          )}
+
           {activeStepper === 1 && (
             <>
               <Button
@@ -399,17 +419,6 @@ function UserReservation() {
                 Book reservation
               </Button>
             </>
-          )}
-          {activeStepper === 0 && (
-            <Button
-              fullWidth
-              disabled={!bookingDates[0] || !bookingDates[1]}
-              onClick={nextStep}
-              rightSection={<IconArrowRight />}
-              color="#006400"
-            >
-              Next
-            </Button>
           )}
 
           {activeStepper === 3 && (

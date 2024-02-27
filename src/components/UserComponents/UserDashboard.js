@@ -1,219 +1,145 @@
-import {
-  Box,
-  Button,
-  Card,
-  Flex,
-  NumberFormatter,
-  Paper,
-  Table,
-  Text,
-} from '@mantine/core';
-import { IconBed, IconBuildingPavilion } from '@tabler/icons-react';
-import { IconSwimming } from '@tabler/icons-react';
-import axios from 'axios';
+import { Box, Flex, NumberFormatter, Paper, Table, Text } from '@mantine/core';
 import moment from 'moment';
-import { useEffect, useState } from 'react';
+import { useContext } from 'react';
 
+import { GlobalContext } from '../../App';
 import {
+  calculateDuration,
+  getCountForDashboard,
   renderReservationDateStatus,
   renderReservationServiceType,
-  sortReservations,
+  statusColorChanger,
 } from '../../utils/renderTableHelper';
 import { getUser } from '../../utils/user';
+import DashboardCard from '../DashboardCard/DashboardCard';
 import ComponentError from '../utils/ComponentError';
 import ComponentLoader from '../utils/ComponentLoader';
 import NoRecords from '../utils/NoRecords';
 
+const user = JSON.parse(getUser());
+
 function UserDashboard() {
-  //reservations
-  const [userReservations, setUserReservations] = useState([]);
-  const [isFetching, setIsFetching] = useState(false);
-  const [fetchError, setFetchError] = useState(null);
+  //context
+  const {
+    allReservations,
+    allReservationsError,
+    allReservationsLoading,
+    allServices,
+  } = useContext(GlobalContext);
 
-  //dashboard
-  const [dashboardTotals, setDashboardTotals] = useState([]);
+  const syncedData = allReservations
+    ?.map((reservation) => {
+      const {
+        NAME: SERVICE_NAME,
+        PERSONS,
+        PRICE,
+        TYPE,
+      } = allServices?.find(
+        (service) => service.ID === reservation?.SERVICE_ID,
+      ) || {};
 
-  //functions
-  const getAllReservations = () => {
-    setIsFetching(true);
-    const user = JSON.parse(getUser());
-
-    axios({
-      method: 'GET',
-      url: '/services',
+      return {
+        ...reservation,
+        SERVICE_NAME,
+        PERSONS,
+        PRICE,
+        TYPE,
+      };
     })
-      .then((dataServices) => {
-        if (!!dataServices.data)
-          axios({
-            method: 'GET',
-            url: '/reservations',
-          })
-            .then((dataReservations) => {
-              const userReservations = dataReservations?.data
-                ?.filter((r) => r.USER_ID === user.ID)
-                ?.map((el) => {
-                  const { NAME, TYPE } = dataServices?.data?.find(
-                    (s) => s.ID === el.SERVICE_ID,
-                  );
+    ?.filter((r) => r?.USER_ID === user?.ID);
 
-                  return {
-                    ...el,
-                    SERVICE_NAME: NAME,
-                    SERVICE_TYPE: TYPE,
-                  };
-                });
+  //render
+  const renderDashboardTotals = () => {
+    const dashboardTotals = [
+      getCountForDashboard(syncedData, 'Room'),
+      getCountForDashboard(syncedData, 'Pavilion'),
+      getCountForDashboard(syncedData, 'Pool'),
+    ];
 
-              const totals = ['Room', 'Pavilion', 'Pool'].map((service) => ({
-                service,
-                total: userReservations?.filter(
-                  (r) => r.SERVICE_TYPE === service,
-                )?.length,
-                cancelled: userReservations?.filter(
-                  (r) => r.SERVICE_TYPE === service && r.STATUS === 'Cancelled',
-                )?.length,
-              }));
-
-              setDashboardTotals(totals);
-
-              setUserReservations(sortReservations(userReservations));
-            })
-            .catch(() => setFetchError('An error occurred'))
-            .finally(() => setIsFetching(false));
-      })
-      .catch(() => {
-        setFetchError('An error occurred');
-        setIsFetching(false);
-      });
+    return dashboardTotals?.map(({ service, total, cancelled }) => (
+      <DashboardCard
+        key={service}
+        service={service}
+        total={total}
+        cancelled={cancelled}
+      />
+    ));
   };
 
   const renderTable = () => {
+    if (syncedData?.length > 0) {
+      return syncedData?.map((reservation) => (
+        <Table.Tr key={reservation?.ID}>
+          <Table.Td>{renderReservationDateStatus(reservation)}</Table.Td>
+
+          <Table.Td>{renderReservationServiceType(reservation)}</Table.Td>
+
+          <Table.Td>
+            {moment(reservation?.START_DATE).format('ll')} -{' '}
+            {moment(reservation?.END_DATE).format('ll')}
+          </Table.Td>
+          <Table.Td>
+            {calculateDuration(reservation?.START_DATE, reservation?.END_DATE)}
+          </Table.Td>
+
+          <Table.Td>
+            <Text c={statusColorChanger(reservation)}>
+              {reservation?.STATUS}
+            </Text>
+          </Table.Td>
+
+          <Table.Td>
+            <NumberFormatter
+              thousandSeparator
+              value={reservation?.AMOUNT}
+              prefix="₱"
+            />
+          </Table.Td>
+          <Table.Td>
+            <NumberFormatter
+              thousandSeparator
+              value={reservation?.BALANCE}
+              prefix="₱"
+            />
+          </Table.Td>
+        </Table.Tr>
+      ));
+    } else {
+      return (
+        <Table.Tr>
+          <Table.Td colSpan={8}>
+            <NoRecords />
+          </Table.Td>
+        </Table.Tr>
+      );
+    }
+  };
+
+  const renderTableLength = () => {
     return (
-      <>
-        {userReservations.length ? (
-          userReservations?.map((reservation) => (
-            <Table.Tr key={reservation?.ID}>
-              <Table.Td>{renderReservationDateStatus(reservation)}</Table.Td>
-              <Table.Td>{renderReservationServiceType(reservation)}</Table.Td>
-              <Table.Td>
-                {moment(reservation?.START_DATE).format('ll')} -{' '}
-                {moment(reservation?.END_DATE).format('ll')}{' '}
-              </Table.Td>
-              <Table.Td>{`${Math.max(
-                1,
-                moment
-                  .duration(
-                    moment(reservation?.END_DATE).diff(
-                      moment(reservation?.START_DATE),
-                    ),
-                  )
-                  .asDays(),
-              )} ${
-                Math.max(
-                  1,
-                  moment
-                    .duration(
-                      moment(reservation?.END_DATE).diff(
-                        moment(reservation?.START_DATE),
-                      ),
-                    )
-                    .asDays(),
-                ) === 1
-                  ? 'day'
-                  : 'days'
-              }`}</Table.Td>
-
-              <Table.Td>
-                <Text
-                  fw={700}
-                  c={
-                    reservation.STATUS === 'Unpaid' ||
-                    reservation.STATUS === 'Cancelled'
-                      ? '#8B0000'
-                      : reservation?.STATUS === 'Paid - Partial'
-                      ? '#6495ED'
-                      : '#006400'
-                  }
-                >
-                  {reservation?.STATUS}
-                </Text>
-              </Table.Td>
-
-              <Table.Td>
-                <NumberFormatter
-                  thousandSeparator
-                  value={reservation?.AMOUNT}
-                  prefix="₱"
-                />
-              </Table.Td>
-              <Table.Td>
-                <NumberFormatter
-                  thousandSeparator
-                  value={reservation?.BALANCE}
-                  prefix="₱"
-                />
-              </Table.Td>
-              <Table.Td>
-                <Button
-                  disabled={
-                    !reservation?.BALANCE || reservation?.STATUS === 'Cancelled'
-                  }
-                >
-                  Pay
-                </Button>
-              </Table.Td>
-            </Table.Tr>
-          ))
-        ) : (
-          <Table.Tr>
-            <Table.Td colSpan={8}>
-              <NoRecords message="No reservations" />
-            </Table.Td>
-          </Table.Tr>
-        )}
-      </>
+      <Text
+        fw={700}
+        mt="sm"
+        c="darkgreen"
+        align="center"
+      >{`${syncedData?.length} Total Reservation`}</Text>
     );
   };
 
-  useEffect(() => {
-    getAllReservations();
-  }, []);
-
   return (
     <Box pos="relative" mih={200}>
-      {isFetching && <ComponentLoader message="Fetching dashboard" />}
-      {!isFetching && fetchError && <ComponentError message={fetchError} />}
-      {!isFetching && !fetchError && (
+      {allReservationsLoading && (
+        <ComponentLoader message="Fetching dashboard" />
+      )}
+
+      {!allReservationsLoading && allReservationsError && (
+        <ComponentError message={allReservationsError} />
+      )}
+
+      {!allReservationsLoading && !allReservationsError && (
         <>
           <Flex justify="space-between" mb="md" gap="md">
-            {dashboardTotals.map(({ service, total, cancelled }) => (
-              <Card key={service} withBorder flex={1} shadow="sm">
-                <Flex align="center">
-                  <Paper
-                    withBorder
-                    pl="xs"
-                    pr="xs"
-                    pt="xs"
-                    mr="sm"
-                    bg="#006400"
-                    c="white"
-                  >
-                    {service === 'Room' && <IconBed />}
-                    {service === 'Pavilion' && <IconBuildingPavilion />}
-                    {service === 'Pool' && <IconSwimming />}
-                  </Paper>
-
-                  <Flex direction="column">
-                    <Text size="lg">
-                      {total} {total > 0 ? `${service}s` : service}
-                    </Text>
-                    <Text size="sm" c="dimmed">
-                      {cancelled}{' '}
-                      {cancelled !== 1 ? 'cancellations' : 'cancellation'}
-                    </Text>
-                  </Flex>
-                </Flex>
-              </Card>
-            ))}
+            {renderDashboardTotals()}
           </Flex>
 
           <Paper withBorder p="md">
@@ -247,6 +173,7 @@ function UserDashboard() {
                 <Table.Tbody>{renderTable()}</Table.Tbody>
               </Table>
             </Table.ScrollContainer>
+            {renderTableLength()}
           </Paper>
         </>
       )}

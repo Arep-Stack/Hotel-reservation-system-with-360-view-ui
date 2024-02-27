@@ -13,7 +13,7 @@ const renderReservationDateStatus = (reservation) => {
 
   if (reservation?.STATUS === 'Cancelled') {
     return (
-      <Badge variant="outline" color="#960018">
+      <Badge w="100%" maw={95} variant="outline" color="#960018">
         Cancelled
       </Badge>
     );
@@ -21,25 +21,25 @@ const renderReservationDateStatus = (reservation) => {
 
   if (currentDate.isBefore(start)) {
     return (
-      <Badge variant="outline" color="#006400">
+      <Badge w="100%" maw={95} variant="outline" color="#006400">
         Upcoming
       </Badge>
     );
   } else if (currentDate.isSame(start, 'day')) {
     return (
-      <Badge variant="outline" color="#6F00FF">
+      <Badge w="100%" maw={95} variant="outline" color="#6F00FF">
         Today
       </Badge>
     );
   } else if (currentDate.isBetween(start, end)) {
     return (
-      <Badge variant="outline" color="#007FFF">
+      <Badge w="100%" maw={95} variant="outline" color="#007FFF">
         On going
       </Badge>
     );
   } else if (currentDate.isAfter(end)) {
     return (
-      <Badge variant="outline" color="#2A3439">
+      <Badge w="100%" maw={95} variant="outline" color="#2A3439">
         Finished
       </Badge>
     );
@@ -138,6 +138,19 @@ const statusColorChanger = (reservation) => {
   }
 };
 
+const getCountForDashboard = (reservations, type) => {
+  const total = reservations?.filter(
+    (reservation) => reservation?.TYPE === type,
+  )?.length;
+
+  const cancelled = reservations?.filter(
+    (reservation) =>
+      reservation?.TYPE === type && reservation?.STATUS === 'Cancelled',
+  )?.length;
+
+  return { total, cancelled, service: type };
+};
+
 const capitalize = (str) => {
   return str?.charAt(0).toUpperCase() + str?.slice(1);
 };
@@ -149,5 +162,6 @@ export {
   filterReservationsByCriteria,
   calculateDuration,
   statusColorChanger,
+  getCountForDashboard,
   capitalize,
 };

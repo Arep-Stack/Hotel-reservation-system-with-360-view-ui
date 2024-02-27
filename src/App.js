@@ -74,7 +74,7 @@ function App() {
     })
       .then(({ data }) => setAllServices(data))
       .catch(() => setAllServicesError('Error getting services'))
-      .finally(() => setAllReservationsLoading(false));
+      .finally(() => setAllServicesLoading(false));
   };
 
   useEffect(() => {
