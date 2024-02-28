@@ -15,23 +15,23 @@ import { useEffect, useState } from 'react';
 function ServiceCard({ name, image, price, persons, amenities, children }) {
   const [imagePath, setImagePath] = useState(null);
 
-  const getImage = () => {
-    if (image)
-      axios({
-        method: 'GET',
-        url: `/image/${image}`,
-      })
-        .then(({ data }) => {
-          setImagePath(data?.PATH);
-        })
-        .catch((err) => {
-          console.log(err);
-        });
-  };
-
   useEffect(() => {
+    const getImage = () => {
+      if (image)
+        axios({
+          method: 'GET',
+          url: `/image/${image}`,
+        })
+          .then(({ data }) => {
+            setImagePath(data?.PATH);
+          })
+          .catch((err) => {
+            console.log(err);
+          });
+    };
+
     getImage();
-  }, []);
+  }, [image]);
 
   return (
     <Paper

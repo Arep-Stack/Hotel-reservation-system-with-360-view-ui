@@ -278,7 +278,7 @@ function AdminDashboard() {
   const renderPaymentHistoryTab = () => {
     return (
       <Box mb="sm">
-        {selectedReservation?.PAYMENT_HISTORY.length > 0 ? (
+        {selectedReservation?.PAYMENT_HISTORY?.length > 0 ? (
           selectedReservation.PAYMENT_HISTORY.sort(
             (a, b) =>
               moment(a.dop, 'MMM DD, YYYY') - moment(b.dop, 'MMM DD, YYYY'),
@@ -466,58 +466,68 @@ function AdminDashboard() {
                 />
               </Group>
 
-              {selectedReservation?.BALANCE > 0 ? (
-                <form
-                  onSubmit={form.onSubmit((values) => {
-                    handleProcessPayment(values);
-                  })}
-                >
-                  <Flex mt="xs">
-                    <DateInput
-                      label="Date of Payment"
-                      placeholder="Date of Payment"
-                      maxDate={new Date()}
-                      styles={{
-                        label: { fontWeight: 700 },
-                      }}
-                      {...form.getInputProps('dop')}
-                    />
-
-                    <TextInput
-                      withAsterisk
-                      label="Mode of Payment"
-                      placeholder="Cash"
-                      ml="sm"
-                      styles={{
-                        label: { fontWeight: 700 },
-                      }}
-                      {...form.getInputProps('method')}
-                    />
-                  </Flex>
-                  <NumberInput
-                    withAsterisk
-                    label="Amount"
-                    placeholder="0.00"
-                    mb="sm"
-                    min={0}
-                    styles={{
-                      label: { fontWeight: 700 },
-                    }}
-                    {...form.getInputProps('amount')}
-                  />
-
-                  <Button
-                    fullWidth
-                    type="submit"
-                    color="#006400"
-                    loading={isProcessingPayment}
+              {selectedReservation?.STATUS !== 'Cancelled' &&
+                selectedReservation?.BALANCE > 0 && (
+                  <form
+                    onSubmit={form.onSubmit((values) => {
+                      handleProcessPayment(values);
+                    })}
                   >
-                    Pay
-                  </Button>
-                </form>
-              ) : (
-                <Text mt="sm" c="darkgreen" align="center" fw={700}>
-                  This reservation is fully paid
+                    <Flex mt="xs">
+                      <DateInput
+                        label="Date of Payment"
+                        placeholder="Date of Payment"
+                        maxDate={new Date()}
+                        styles={{
+                          label: { fontWeight: 700 },
+                        }}
+                        {...form.getInputProps('dop')}
+                      />
+
+                      <TextInput
+                        withAsterisk
+                        label="Mode of Payment"
+                        placeholder="Cash"
+                        ml="sm"
+                        styles={{
+                          label: { fontWeight: 700 },
+                        }}
+                        {...form.getInputProps('method')}
+                      />
+                    </Flex>
+                    <NumberInput
+                      withAsterisk
+                      label="Amount"
+                      placeholder="0.00"
+                      mb="sm"
+                      min={0}
+                      styles={{
+                        label: { fontWeight: 700 },
+                      }}
+                      {...form.getInputProps('amount')}
+                    />
+
+                    <Button
+                      fullWidth
+                      type="submit"
+                      color="#006400"
+                      loading={isProcessingPayment}
+                    >
+                      Pay
+                    </Button>
+                  </form>
+                )}
+
+              {selectedReservation?.STATUS !== 'Cancelled' &&
+                selectedReservation?.BALANCE === 0 && (
+                  <Text mt="sm" c="darkgreen" align="center" fw={700}>
+                    This reservation is fully paid
+                  </Text>
+                )}
+
+              {selectedReservation?.STATUS === 'Cancelled' && (
+                <Text mt="sm" c="#FF0800" align="center" fw={700}>
+                  This reservation is cancelled
                 </Text>
               )}
             </Tabs.Panel>
