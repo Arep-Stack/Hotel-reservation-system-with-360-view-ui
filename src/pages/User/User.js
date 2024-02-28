@@ -23,7 +23,7 @@ function User() {
   }, [navigator]);
 
   return (
-    <Container size="xl" mih="100vh" p="xl">
+    <Container size="xl" mih="100vh" p="md">
       <NavbarUser firstName={user?.FIRSTNAME} />
       <Paper
         withBorder

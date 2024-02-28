@@ -26,7 +26,7 @@ import { IconListDetails } from '@tabler/icons-react';
 import { IconAlertCircle } from '@tabler/icons-react';
 import axios from 'axios';
 import moment from 'moment';
-import { useContext, useEffect, useState } from 'react';
+import { useContext, useState } from 'react';
 
 import { GlobalContext } from '../../App';
 import { getUser } from '../../utils/user';
@@ -47,6 +47,7 @@ function UserReservation() {
   } = useContext(GlobalContext);
 
   const [selectedService, setSelectedService] = useState(null);
+  const [sortingCriteria, setSortingCriteria] = useState('Room');
 
   //booking
   const [activeStepper, setActiveStepper] = useState(0);
@@ -130,6 +131,49 @@ function UserReservation() {
   };
 
   //render
+  const renderServices = () => {
+    const services = allServices?.filter(
+      (service) => service?.TYPE === sortingCriteria,
+    );
+
+    services?.sort((a, b) => a.ID - b.ID);
+
+    if (services?.length > 0) {
+      return allServices
+        ?.filter((service) => service.TYPE === sortingCriteria)
+        ?.map((service) => (
+          <ServiceCard
+            key={service.ID}
+            amenities={service.AMENITIES}
+            image={service.IMAGE}
+            name={service.NAME}
+            persons={service.PERSONS}
+            price={service.PRICE}
+          >
+            <Flex align="center" gap="xs">
+              <Button
+                fullWidth
+                fw="normal"
+                color="#006400"
+                onClick={() => handleOpenModal(service)}
+              >
+                Book Now
+              </Button>
+              <Button color="#006400" variant="outline">
+                <Icon360View />
+              </Button>
+            </Flex>
+          </ServiceCard>
+        ));
+    } else {
+      return (
+        <NoRecords
+          message={'No available ' + sortingCriteria.toLocaleLowerCase()}
+        />
+      );
+    }
+  };
+
   const render1stStepper = () => {
     return (
       <Flex direction="column">
@@ -242,7 +286,7 @@ function UserReservation() {
             <Text size="sm">(30% of ₱{totalAmount})</Text>
             <NumberFormatter
               thousandSeparator
-              value={totalAmount * 0.3}
+              value={Math.floor(totalAmount * 0.3)}
               prefix="₱"
             />
           </Flex>
@@ -309,34 +353,27 @@ function UserReservation() {
       )}
 
       {!allServicesLoading && !allServicesError && (
-        <Flex justify="center" gap="md">
-          {allServices
-            ?.filter((service) => service.TYPE === 'Room')
-            ?.map((service) => (
-              <ServiceCard
-                key={service.ID}
-                amenities={service.AMENITIES}
-                image={service.IMAGE}
-                name={service.NAME}
-                persons={service.PERSONS}
-                price={service.PRICE}
-              >
-                <Flex align="center" gap="xs">
-                  <Button
-                    fullWidth
-                    fw="normal"
-                    color="#006400"
-                    onClick={() => handleOpenModal(service)}
-                  >
-                    Book Now
-                  </Button>
-                  <Button color="#006400" variant="outline">
-                    <Icon360View />
-                  </Button>
-                </Flex>
-              </ServiceCard>
+        <>
+          <Group mb="md" align="center" justify="center">
+            {['Room', 'Pavilion', 'Pool'].map((f) => (
+              <div key={f}>
+                <Button
+                  size="xs"
+                  color="#2F6C2F"
+                  disabled={allServicesLoading || allServicesError}
+                  variant={sortingCriteria.includes(f) ? 'filled' : 'light'}
+                  onClick={() => setSortingCriteria(f)}
+                >
+                  {f}
+                </Button>
+              </div>
             ))}
-        </Flex>
+          </Group>
+
+          <Flex justify="center" gap="md">
+            {renderServices()}
+          </Flex>
+        </>
       )}
 
       <Modal

@@ -19,6 +19,27 @@ const renderReservationDateStatus = (reservation) => {
     );
   }
 
+  if (reservation?.PAYMENT_HISTORY?.length) {
+    const requiredDP = Math.floor(reservation?.AMOUNT * 0.3);
+    const totalAmountPaid = reservation?.AMOUNT - reservation?.BALANCE;
+
+    if (totalAmountPaid < requiredDP) {
+      return (
+        <Badge w="100%" maw={95} variant="filled" color="#960018">
+          Insufficient
+        </Badge>
+      );
+    }
+  }
+
+  if (!reservation?.IS_DOWNPAYMENT_PAID) {
+    return (
+      <Badge w="100%" maw={95} variant="filled" color="#960018">
+        NO DEPOSIT
+      </Badge>
+    );
+  }
+
   if (currentDate.isBefore(start)) {
     return (
       <Badge w="100%" maw={95} variant="outline" color="#006400">

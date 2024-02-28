@@ -23,7 +23,7 @@ import {
   IconUpload,
 } from '@tabler/icons-react';
 import axios from 'axios';
-import { useContext, useEffect, useState } from 'react';
+import { useContext, useState } from 'react';
 import { toast } from 'react-toastify';
 
 import { GlobalContext } from '../../App';
@@ -214,31 +214,31 @@ function AdminService() {
       </Flex>
     );
 
-    if (sortingCriteria) {
-      const services = allServices?.filter(
-        (service) => service?.TYPE === sortingCriteria,
+    const services = allServices?.filter(
+      (service) => service?.TYPE === sortingCriteria,
+    );
+
+    services?.sort((a, b) => a.ID - b.ID);
+
+    if (services?.length > 0) {
+      return services?.map(({ AMENITIES, ID, IMAGE, NAME, PERSONS, PRICE }) => (
+        <ServiceCard
+          key={ID}
+          amenities={AMENITIES}
+          image={IMAGE}
+          name={NAME}
+          persons={PERSONS}
+          price={PRICE}
+        >
+          {serviceButtons({ AMENITIES, ID, IMAGE, NAME, PERSONS, PRICE })}
+        </ServiceCard>
+      ));
+    } else {
+      return (
+        <NoRecords
+          message={'No available ' + sortingCriteria.toLocaleLowerCase()}
+        />
       );
-
-      services?.sort((a, b) => a.ID - b.ID);
-
-      if (services?.length) {
-        return services?.map(
-          ({ AMENITIES, ID, IMAGE, NAME, PERSONS, PRICE }) => (
-            <ServiceCard
-              key={ID}
-              amenities={AMENITIES}
-              image={IMAGE}
-              name={NAME}
-              persons={PERSONS}
-              price={PRICE}
-            >
-              {serviceButtons({ AMENITIES, ID, IMAGE, NAME, PERSONS, PRICE })}
-            </ServiceCard>
-          ),
-        );
-      } else {
-        return <NoRecords />;
-      }
     }
   };
 
@@ -329,39 +329,24 @@ function AdminService() {
     );
   };
 
+  const renderServiceLength = () => {
+    const services = allServices?.filter(
+      (service) => service?.TYPE === sortingCriteria,
+    );
+
+    return (
+      services?.length > 0 && (
+        <Text
+          mt="sm"
+          c="gray"
+          align="center"
+        >{`Total ${sortingCriteria}: ${services.length}`}</Text>
+      )
+    );
+  };
+
   return (
     <Box pos="relative" mih={200}>
-      <Group mb="md" align="center" justify="space-between">
-        <Text size="xl">Services</Text>
-
-        <Group>
-          {['Room', 'Pavilion', 'Pool'].map((f) => (
-            <div key={f}>
-              <Button
-                size="xs"
-                color="#2F6C2F"
-                disabled={allServicesLoading || allServicesError}
-                variant={sortingCriteria.includes(f) ? 'filled' : 'light'}
-                onClick={() => setSortingCriteria(f)}
-              >
-                {f}
-              </Button>
-            </div>
-          ))}
-        </Group>
-
-        <Button
-          disabled={allServicesError || allServicesLoading}
-          rightSection={<IconCirclePlus />}
-          variant="filled"
-          size="xs"
-          color="#006400"
-          onClick={() => handleOpenModal('Create', {})}
-        >
-          Create {sortingCriteria}
-        </Button>
-      </Group>
-
       {allServicesLoading && <ComponentLoader message="Fetching services" />}
 
       {!allServicesLoading && allServicesError && (
@@ -369,9 +354,44 @@ function AdminService() {
       )}
 
       {!allServicesLoading && !allServicesError && (
-        <Flex w="100%" justify="center" gap="md" wrap="wrap">
-          {renderServices()}
-        </Flex>
+        <>
+          <Group mb="md" align="center" justify="space-between">
+            <Text size="xl">Services</Text>
+
+            <Group>
+              {['Room', 'Pavilion', 'Pool'].map((f) => (
+                <div key={f}>
+                  <Button
+                    size="xs"
+                    color="#2F6C2F"
+                    disabled={allServicesLoading || allServicesError}
+                    variant={sortingCriteria.includes(f) ? 'filled' : 'light'}
+                    onClick={() => setSortingCriteria(f)}
+                  >
+                    {f}
+                  </Button>
+                </div>
+              ))}
+            </Group>
+
+            <Button
+              disabled={allServicesError || allServicesLoading}
+              rightSection={<IconCirclePlus />}
+              variant="filled"
+              size="xs"
+              color="#006400"
+              onClick={() => handleOpenModal('Create', {})}
+            >
+              Create {sortingCriteria}
+            </Button>
+          </Group>
+
+          <Flex w="100%" justify="center" gap="md" wrap="wrap">
+            {renderServices()}
+          </Flex>
+
+          {renderServiceLength()}
+        </>
       )}
 
       <Modal

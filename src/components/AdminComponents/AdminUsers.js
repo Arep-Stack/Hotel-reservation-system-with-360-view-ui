@@ -96,17 +96,6 @@ function AdminUsers() {
 
   return (
     <Box pos="relative" mih={200}>
-      <Group mb="sm" justify="space-between" align="center">
-        <Text size="xl">Users</Text>
-        <TextInput
-          onChange={(e) => handleSearch(e)}
-          disabled={allUsersError || allUsersLoading}
-          type="search"
-          placeholder="Search users"
-          leftSection={<IconSearch />}
-        />
-      </Group>
-
       {allUsersLoading && <ComponentLoader message="Fetching users" />}
       {!allUsersLoading && allUsersError && (
         <ComponentError message={allUsersError} />
@@ -116,6 +105,17 @@ function AdminUsers() {
       )}
       {!allUsersLoading && !allUsersError && userTable.length > 0 && (
         <>
+          <Group mb="sm" justify="space-between" align="center">
+            <Text size="xl">Users</Text>
+            <TextInput
+              onChange={(e) => handleSearch(e)}
+              disabled={allUsersError || allUsersLoading}
+              type="search"
+              placeholder="Search users"
+              leftSection={<IconSearch />}
+            />
+          </Group>
+
           <Table.ScrollContainer
             minWidth={500}
             mah="calc(100vh - 20rem)"
@@ -143,6 +143,7 @@ function AdminUsers() {
               <Table.Tbody>{userTable}</Table.Tbody>
             </Table>
           </Table.ScrollContainer>
+
           <Group justify="center" mt="md" c="gray">
             <Text>
               Total Users: {allUsers.filter((u) => !u.IS_ADMIN).length}

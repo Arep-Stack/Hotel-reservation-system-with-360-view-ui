@@ -8,6 +8,7 @@ import {
   Modal,
   NumberFormatter,
   NumberInput,
+  Paper,
   Table,
   Tabs,
   Text,
@@ -28,11 +29,13 @@ import {
   calculateDuration,
   capitalize,
   filterReservationsByCriteria,
+  getCountForDashboard,
   renderReservationDateStatus,
   renderReservationServiceType,
   sortReservations,
   statusColorChanger,
 } from '../../utils/renderTableHelper';
+import DashboardCard from '../DashboardCard/DashboardCard';
 import ComponentError from '../utils/ComponentError';
 import ComponentLoader from '../utils/ComponentLoader';
 import NoRecords from '../utils/NoRecords';
@@ -47,6 +50,35 @@ function AdminDashboard() {
     allUsers,
     allServices,
   } = useContext(GlobalContext);
+
+  const syncedData = allReservations?.map((reservation) => {
+    //USER
+    const { FIRSTNAME, LASTNAME, EMAIL, PHONE_NUMBER } =
+      allUsers?.find((user) => user.ID === reservation?.USER_ID) || {};
+
+    //SERVICE
+    const {
+      NAME: SERVICE_NAME,
+      PERSONS,
+      PRICE,
+      TYPE,
+    } = allServices?.find(
+      (service) => service.ID === reservation?.SERVICE_ID,
+    ) || {};
+
+    //Return
+    return {
+      ...reservation,
+      FIRSTNAME,
+      LASTNAME,
+      EMAIL,
+      PHONE_NUMBER,
+      SERVICE_NAME,
+      PERSONS,
+      PRICE,
+      TYPE,
+    };
+  });
 
   //processing payment
   const [selectedReservation, setSelectedReservation] = useState(null);
@@ -94,6 +126,10 @@ function AdminDashboard() {
 
     data.BALANCE = data.BALANCE - amount;
 
+    const requiredDP = Math.floor(data.AMOUNT * 0.3);
+    const totalAmountPaid = data.AMOUNT - data.BALANCE;
+    if (totalAmountPaid >= requiredDP) data.IS_DOWNPAYMENT_PAID = true;
+
     data.STATUS = data.BALANCE === 0 ? 'Fully Paid' : 'Paid - Partial';
 
     data.PAYMENT_HISTORY.push({
@@ -127,43 +163,39 @@ function AdminDashboard() {
   };
 
   //renders
+  const renderDashboardTotals = () => {
+    const dashboardTotals = [
+      getCountForDashboard(syncedData, 'Room'),
+      getCountForDashboard(syncedData, 'Pavilion'),
+      getCountForDashboard(syncedData, 'Pool'),
+    ];
+
+    return dashboardTotals?.map(({ service, total, cancelled }) => (
+      <DashboardCard
+        key={service}
+        service={service}
+        total={total}
+        cancelled={cancelled}
+      />
+    ));
+  };
+
   const renderTable = () => {
-    const syncedData = allReservations?.map((reservation) => {
-      //USER
-      const { FIRSTNAME, LASTNAME, EMAIL, PHONE_NUMBER } =
-        allUsers?.find((user) => user.ID === reservation?.USER_ID) || {};
-
-      //SERVICE
-      const {
-        NAME: SERVICE_NAME,
-        PERSONS,
-        PRICE,
-        TYPE,
-      } = allServices?.find(
-        (service) => service.ID === reservation?.SERVICE_ID,
-      ) || {};
-
-      //Return
-      return {
-        ...reservation,
-        FIRSTNAME,
-        LASTNAME,
-        EMAIL,
-        PHONE_NUMBER,
-        SERVICE_NAME,
-        PERSONS,
-        PRICE,
-        TYPE,
-      };
-    });
-
     const filteredReservations = sortReservations(
       filterReservationsByCriteria(sortingCriteria, syncedData),
     );
 
     if (filteredReservations?.length > 0) {
       return filteredReservations?.map((reservation) => (
-        <Table.Tr key={reservation?.ID}>
+        <Table.Tr
+          key={reservation?.ID}
+          bg={
+            reservation?.STATUS !== 'Cancelled' &&
+            !reservation?.IS_DOWNPAYMENT_PAID
+              ? '#FFCDD2'
+              : ''
+          }
+        >
           <Table.Td>
             <ActionIcon
               variant="transparent"
@@ -314,9 +346,9 @@ function AdminDashboard() {
 
     return (
       <Text
-        fw={700}
         mt="sm"
-        c="darkgreen"
+        mb="sm"
+        c="gray"
         align="center"
       >{`${sortingCriteria}: ${filteredReservations.length}`}</Text>
     );
@@ -324,33 +356,6 @@ function AdminDashboard() {
 
   return (
     <Box pos="relative" mih={200}>
-      <Group mb="sm" align="center" justify="space-between">
-        <Text size="xl">Reservations</Text>
-
-        <Group>
-          {[
-            'Today',
-            'Upcoming',
-            'On-going',
-            'Finished',
-            'All',
-            'Cancelled',
-          ].map((f) => (
-            <div key={f}>
-              <Button
-                size="xs"
-                color="#2F6C2F"
-                disabled={allReservationsLoading || allReservationsError}
-                variant={sortingCriteria.includes(f) ? 'filled' : 'light'}
-                onClick={() => setSortingCriteria(f)}
-              >
-                {f}
-              </Button>
-            </div>
-          ))}
-        </Group>
-      </Group>
-
       {allReservationsLoading && (
         <ComponentLoader message="Fetching dashboard" />
       )}
@@ -361,38 +366,68 @@ function AdminDashboard() {
 
       {!allReservationsLoading && !allReservationsError && (
         <>
-          <Table.ScrollContainer
-            minWidth={500}
-            mah="calc(100vh - 21rem)"
-            mih={350}
-            h="100%"
-            type="native"
-          >
-            <Table stickyHeader>
-              <Table.Thead
-                bg="white"
-                style={{
-                  zIndex: 2,
-                  boxShadow: 'rgba(0, 0, 0, .24) 0px 3px 8px',
-                }}
-              >
-                <Table.Tr>
-                  <Table.Th></Table.Th>
-                  <Table.Th></Table.Th>
-                  <Table.Th>Name</Table.Th>
-                  <Table.Th>Phone</Table.Th>
-                  <Table.Th>Service</Table.Th>
-                  <Table.Th>Start Date</Table.Th>
-                  <Table.Th>End Date</Table.Th>
-                  <Table.Th>Status</Table.Th>
-                  <Table.Th>Balance</Table.Th>
-                  <Table.Th>Duration</Table.Th>
-                </Table.Tr>
-              </Table.Thead>
-              <Table.Tbody>{renderTable()}</Table.Tbody>
-            </Table>
-          </Table.ScrollContainer>
-          {renderTableLength()}
+          <Flex justify="space-between" mb="md" gap="md">
+            {renderDashboardTotals()}
+          </Flex>
+
+          <Paper withBorder pt="sm">
+            <Group mb="sm" align="center" justify="center">
+              {[
+                'Today',
+                'Upcoming',
+                'On-going',
+                'Finished',
+                'All',
+                'Cancelled',
+              ].map((f) => (
+                <div key={f}>
+                  <Button
+                    size="xs"
+                    color="#2F6C2F"
+                    disabled={allReservationsLoading || allReservationsError}
+                    variant={sortingCriteria.includes(f) ? 'filled' : 'light'}
+                    onClick={() => setSortingCriteria(f)}
+                  >
+                    {f}
+                  </Button>
+                </div>
+              ))}
+            </Group>
+
+            <Table.ScrollContainer
+              minWidth={500}
+              mah="calc(100vh - 26.5rem)"
+              mih={350}
+              h="100%"
+              type="native"
+            >
+              <Table stickyHeader>
+                <Table.Thead
+                  bg="white"
+                  style={{
+                    zIndex: 2,
+                    boxShadow: 'rgba(0, 0, 0, .24) 0px 3px 8px',
+                  }}
+                >
+                  <Table.Tr>
+                    <Table.Th></Table.Th>
+                    <Table.Th></Table.Th>
+                    <Table.Th>Name</Table.Th>
+                    <Table.Th>Phone</Table.Th>
+                    <Table.Th>Service</Table.Th>
+                    <Table.Th>Start Date</Table.Th>
+                    <Table.Th>End Date</Table.Th>
+                    <Table.Th>Status</Table.Th>
+                    <Table.Th>Balance</Table.Th>
+                    <Table.Th>Duration</Table.Th>
+                  </Table.Tr>
+                </Table.Thead>
+                <Table.Tbody>{renderTable()}</Table.Tbody>
+              </Table>
+            </Table.ScrollContainer>
+
+            {renderTableLength()}
+          </Paper>
         </>
       )}
 
@@ -465,6 +500,22 @@ function AdminDashboard() {
                   value={selectedReservation?.BALANCE}
                 />
               </Group>
+
+              {!selectedReservation?.IS_DOWNPAYMENT_PAID && (
+                <Group fw={700} mb="xs" justify="space-between">
+                  <Text>Required Downpayment</Text>
+                  <Flex direction="row" align="center" gap="sm">
+                    <Text size="sm">
+                      (30% of ₱{selectedReservation?.AMOUNT})
+                    </Text>
+                    <NumberFormatter
+                      thousandSeparator
+                      value={Math.floor(selectedReservation?.AMOUNT * 0.3)}
+                      prefix="₱"
+                    />
+                  </Flex>
+                </Group>
+              )}
 
               {selectedReservation?.STATUS !== 'Cancelled' &&
                 selectedReservation?.BALANCE > 0 && (

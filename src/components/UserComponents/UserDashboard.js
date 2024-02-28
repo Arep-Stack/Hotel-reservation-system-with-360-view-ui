@@ -1,4 +1,4 @@
-import { Box, Flex, NumberFormatter, Paper, Table, Text } from '@mantine/core';
+import { Box, Flex, NumberFormatter, Table, Text } from '@mantine/core';
 import moment from 'moment';
 import { useContext } from 'react';
 
@@ -8,6 +8,7 @@ import {
   getCountForDashboard,
   renderReservationDateStatus,
   renderReservationServiceType,
+  sortReservations,
   statusColorChanger,
 } from '../../utils/renderTableHelper';
 import { getUser } from '../../utils/user';
@@ -15,8 +16,6 @@ import DashboardCard from '../DashboardCard/DashboardCard';
 import ComponentError from '../utils/ComponentError';
 import ComponentLoader from '../utils/ComponentLoader';
 import NoRecords from '../utils/NoRecords';
-
-const user = JSON.parse(getUser());
 
 function UserDashboard() {
   //context
@@ -26,6 +25,8 @@ function UserDashboard() {
     allReservationsLoading,
     allServices,
   } = useContext(GlobalContext);
+
+  const user = JSON.parse(getUser());
 
   const syncedData = allReservations
     ?.map((reservation) => {
@@ -67,9 +68,19 @@ function UserDashboard() {
   };
 
   const renderTable = () => {
-    if (syncedData?.length > 0) {
-      return syncedData?.map((reservation) => (
-        <Table.Tr key={reservation?.ID}>
+    const sortedReservation = sortReservations(syncedData);
+
+    if (sortedReservation?.length > 0) {
+      return sortedReservation?.map((reservation) => (
+        <Table.Tr
+          key={reservation?.ID}
+          bg={
+            reservation?.STATUS !== 'Cancelled' &&
+            !reservation?.IS_DOWNPAYMENT_PAID
+              ? '#FFCDD2'
+              : ''
+          }
+        >
           <Table.Td>{renderReservationDateStatus(reservation)}</Table.Td>
 
           <Table.Td>{renderReservationServiceType(reservation)}</Table.Td>
@@ -117,12 +128,14 @@ function UserDashboard() {
 
   const renderTableLength = () => {
     return (
-      <Text
-        fw={700}
-        mt="sm"
-        c="darkgreen"
-        align="center"
-      >{`${syncedData?.length} Total Reservation`}</Text>
+      syncedData?.length > 0 && (
+        <Text
+          mt="sm"
+          mb="sm"
+          c="gray"
+          align="center"
+        >{`${syncedData.length} Total Reservation`}</Text>
+      )
     );
   };
 
@@ -142,39 +155,37 @@ function UserDashboard() {
             {renderDashboardTotals()}
           </Flex>
 
-          <Paper withBorder p="md">
-            <Table.ScrollContainer
-              minWidth={500}
-              mah="calc(100vh - 24rem)"
-              mih={0}
-              h="100%"
-              type="native"
-            >
-              <Table stickyHeader>
-                <Table.Thead
-                  bg="white"
-                  style={{
-                    zIndex: 2,
-                    boxShadow: 'rgba(0, 0, 0, .24) 0px 3px 8px',
-                  }}
-                >
-                  <Table.Tr>
-                    <Table.Th></Table.Th>
-                    <Table.Th>Service</Table.Th>
-                    <Table.Th>Date</Table.Th>
-                    <Table.Th>Duration</Table.Th>
-                    <Table.Th>Status</Table.Th>
-                    <Table.Th>Amount</Table.Th>
-                    <Table.Th>Balance</Table.Th>
-                    <Table.Th></Table.Th>
-                  </Table.Tr>
-                </Table.Thead>
+          <Table.ScrollContainer
+            minWidth={500}
+            mah="calc(100vh - 24rem)"
+            mih={0}
+            h="100%"
+            type="native"
+          >
+            <Table stickyHeader>
+              <Table.Thead
+                bg="white"
+                style={{
+                  zIndex: 2,
+                  boxShadow: 'rgba(0, 0, 0, .24) 0px 3px 8px',
+                }}
+              >
+                <Table.Tr>
+                  <Table.Th></Table.Th>
+                  <Table.Th>Service</Table.Th>
+                  <Table.Th>Date</Table.Th>
+                  <Table.Th>Duration</Table.Th>
+                  <Table.Th>Status</Table.Th>
+                  <Table.Th>Amount</Table.Th>
+                  <Table.Th>Balance</Table.Th>
+                </Table.Tr>
+              </Table.Thead>
 
-                <Table.Tbody>{renderTable()}</Table.Tbody>
-              </Table>
-            </Table.ScrollContainer>
-            {renderTableLength()}
-          </Paper>
+              <Table.Tbody>{renderTable()}</Table.Tbody>
+            </Table>
+          </Table.ScrollContainer>
+
+          {syncedData?.length > 0 && renderTableLength()}
         </>
       )}
     </Box>
