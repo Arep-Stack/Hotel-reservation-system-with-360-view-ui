@@ -329,8 +329,11 @@ function UserReservation() {
           {!isBooking && !bookingError && (
             <>
               <IconSquareCheck color="#006400" size={100} />
+              <Text size="xl" align="center" fw={700}>
+                You're almost there!
+              </Text>
               <Text size="lg" align="center">
-                Your booking is successful, See you!
+                Please pay the required down payment to confirm your booking.
               </Text>
             </>
           )}
