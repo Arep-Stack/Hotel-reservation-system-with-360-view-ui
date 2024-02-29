@@ -1,4 +1,4 @@
-import { Badge, Group } from '@mantine/core';
+import { Badge, Group, Text } from '@mantine/core';
 import {
   IconBed,
   IconBuildingPavilion,
@@ -74,21 +74,27 @@ const renderReservationServiceType = (reservation) => {
     return (
       <Group>
         <IconBed size={20} />
-        {reservation?.SERVICE_NAME}
+        <Text td={reservation?.IS_DELETED ? 'line-through' : ''}>
+          {reservation?.SERVICE_NAME}
+        </Text>
       </Group>
     );
   } else if (serviceType === 'Pavilion') {
     return (
       <Group>
         <IconBuildingPavilion size={20} />
-        {reservation?.SERVICE_NAME}
+        <Text td={reservation?.IS_DELETED ? 'line-through' : ''}>
+          {reservation?.SERVICE_NAME}
+        </Text>
       </Group>
     );
   } else if (serviceType === 'Pool') {
     return (
       <Group>
         <IconSwimming size={20} />
-        {reservation?.SERVICE_NAME}
+        <Text td={reservation?.IS_DELETED ? 'line-through' : ''}>
+          {reservation?.SERVICE_NAME}
+        </Text>
       </Group>
     );
   }

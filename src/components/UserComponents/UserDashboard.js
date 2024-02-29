@@ -35,6 +35,7 @@ function UserDashboard() {
         PERSONS,
         PRICE,
         TYPE,
+        IS_DELETED,
       } = allServices?.find(
         (service) => service.ID === reservation?.SERVICE_ID,
       ) || {};
@@ -45,6 +46,7 @@ function UserDashboard() {
         PERSONS,
         PRICE,
         TYPE,
+        IS_DELETED,
       };
     })
     ?.filter((r) => r?.USER_ID === user?.ID);

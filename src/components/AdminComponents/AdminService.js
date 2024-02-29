@@ -104,17 +104,25 @@ function AdminService() {
           PRICE,
           QUANTITY: 1,
           TYPE: sortingCriteria,
+          IS_DELETED: upsertMode === 'Delete' ? true : false,
         },
       })
-        .then(({ data }) => {
+        .then(() => {
           getAllServices();
 
           closeUpsertModal();
 
-          toast.success(data?.message || 'Successfully updated service', {
-            position: toast.POSITION.TOP_RIGHT,
-            autoClose: 1500,
-          });
+          toast.success(
+            upsert === 'Delete'
+              ? 'Successfully deleted service'
+              : upsert === 'Create'
+              ? 'Successfully created service'
+              : 'Successfully updated service',
+            {
+              position: toast.POSITION.TOP_RIGHT,
+              autoClose: 1500,
+            },
+          );
         })
         .catch(() =>
           toast.error('An error occurred', {
@@ -126,6 +134,7 @@ function AdminService() {
     };
 
     if (upsertMode === 'Delete') {
+      upsert(IMAGE);
     } else {
       if (image) {
         const formData = new FormData();
@@ -169,13 +178,12 @@ function AdminService() {
             'https://placehold.co/350x200/EEE/31343C?font=source-sans-pro&text=Error%20while%20loading%20picture',
           ),
         );
+      form.setValues(service);
     } else {
       setImageDisplay('https://placehold.co/400x200/green/white');
       setImage(null);
+      form.reset();
     }
-
-    if (mode === 'Update') form.setValues(service);
-    else form.reset();
 
     setUpsertMode(mode);
     setSelectedService(service);
@@ -208,14 +216,18 @@ function AdminService() {
         >
           Edit
         </Button>
-        <Button variant="light" color="#FF0800">
+        <Button
+          variant="light"
+          color="#FF0800"
+          onClick={() => handleOpenModal('Delete', service)}
+        >
           <IconTrash />
         </Button>
       </Flex>
     );
 
     const services = allServices?.filter(
-      (service) => service?.TYPE === sortingCriteria,
+      (service) => service?.TYPE === sortingCriteria && !service?.IS_DELETED,
     );
 
     services?.sort((a, b) => a.ID - b.ID);
@@ -243,95 +255,121 @@ function AdminService() {
   };
 
   const renderUpsertModal = () => {
-    return (
-      <form
-        style={{ width: '100%' }}
-        onSubmit={form.onSubmit((values) => {
-          handleSubmit(values);
-        })}
-      >
-        <Image
-          w="100%"
-          h={200}
-          src={imageDisplay}
-          mb="sm"
-          fallbackSrc="https://placehold.co/400x200/green/white"
-        />
+    if (upsertMode === 'Delete') {
+      return (
+        <>
+          <Text align="center" my="md">
+            Are you sure you want to delete? This action cannot be undone.
+          </Text>
+          <Text size="xl" fw={900} align="center">
+            {selectedService.NAME}
+          </Text>
 
-        <FileButton
-          onChange={(e) => handleUploadImage(e)}
-          accept="image/png,image/jpeg"
+          <Button
+            fullWidth
+            mt="md"
+            color="#FF0800"
+            tt="uppercase"
+            fw={400}
+            leftSection={<IconTrash />}
+            loading={isSubmitting}
+            onClick={() => handleSubmit('Delete', selectedService)}
+          >
+            I understand
+          </Button>
+        </>
+      );
+    } else {
+      return (
+        <form
+          style={{ width: '100%' }}
+          onSubmit={form.onSubmit((values) => {
+            handleSubmit(values);
+          })}
         >
-          {(props) => (
-            <Button
-              fullWidth
-              {...props}
-              mb="sm"
-              color="#006400"
-              leftSection={<IconUpload />}
-            >
-              Upload image
-            </Button>
-          )}
-        </FileButton>
+          <Image
+            w="100%"
+            h={200}
+            src={imageDisplay}
+            mb="sm"
+            fallbackSrc="https://placehold.co/400x200/green/white"
+          />
 
-        <Divider mt="sm" mb="sm" />
+          <FileButton
+            onChange={(e) => handleUploadImage(e)}
+            accept="image/png,image/jpeg"
+          >
+            {(props) => (
+              <Button
+                fullWidth
+                {...props}
+                mb="sm"
+                color="#006400"
+                leftSection={<IconUpload />}
+              >
+                Upload image
+              </Button>
+            )}
+          </FileButton>
 
-        <TextInput
-          withAsterisk
-          label="Name"
-          placeholder="Name"
-          {...form.getInputProps('NAME')}
-        />
+          <Divider mt="sm" mb="sm" />
 
-        <NumberInput
-          withAsterisk
-          label="Price"
-          placeholder="0.00"
-          min={0}
-          leftSection={<IconCurrencyPeso />}
-          {...form.getInputProps('PRICE')}
-        />
+          <TextInput
+            withAsterisk
+            label="Name"
+            placeholder="Name"
+            {...form.getInputProps('NAME')}
+          />
 
-        <NumberInput
-          withAsterisk
-          label="Person Capacity"
-          placeholder="2"
-          min={0}
-          {...form.getInputProps('PERSONS')}
-        />
+          <NumberInput
+            withAsterisk
+            label="Price"
+            placeholder="0.00"
+            min={0}
+            leftSection={<IconCurrencyPeso />}
+            {...form.getInputProps('PRICE')}
+          />
 
-        <TagsInput
-          withAsterisk
-          label="Amenities"
-          description="Add at least 1"
-          placeholder="Enter here"
-          {...form.getInputProps('AMENITIES')}
-          data={['WIFI', 'Aircon', 'Fan', 'TV', 'Own Bathroom']}
-          min={1}
-          styles={{
-            pill: { background: 'darkgreen', color: 'white' },
-            dropdown: { border: '1px solid gray' },
-          }}
-        />
+          <NumberInput
+            withAsterisk
+            label="Person Capacity"
+            placeholder="2"
+            min={0}
+            {...form.getInputProps('PERSONS')}
+          />
 
-        <Button
-          fullWidth
-          loading={isSubmitting}
-          leftSection={<IconDeviceFloppy />}
-          mt="md"
-          type="submit"
-          color="#006400"
-        >
-          Save
-        </Button>
-      </form>
-    );
+          <TagsInput
+            withAsterisk
+            label="Amenities"
+            description="Add at least 1"
+            placeholder="Enter here"
+            {...form.getInputProps('AMENITIES')}
+            data={['WIFI', 'Aircon', 'Fan', 'TV', 'Own Bathroom']}
+            min={1}
+            styles={{
+              pill: { background: 'darkgreen', color: 'white' },
+              dropdown: { border: '1px solid gray' },
+            }}
+          />
+
+          <Button
+            fullWidth
+            loading={isSubmitting}
+            leftSection={<IconDeviceFloppy />}
+            mt="md"
+            type="submit"
+            color="#006400"
+          >
+            Save
+          </Button>
+        </form>
+      );
+    }
   };
 
   const renderServiceLength = () => {
     const services = allServices?.filter(
-      (service) => service?.TYPE === sortingCriteria,
+      (service) => service?.TYPE === sortingCriteria && !service?.IS_DELETED,
     );
 
     return (

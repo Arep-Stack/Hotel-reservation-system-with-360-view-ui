@@ -62,6 +62,7 @@ function AdminDashboard() {
       PERSONS,
       PRICE,
       TYPE,
+      IS_DELETED,
     } = allServices?.find(
       (service) => service.ID === reservation?.SERVICE_ID,
     ) || {};
@@ -77,6 +78,7 @@ function AdminDashboard() {
       PERSONS,
       PRICE,
       TYPE,
+      IS_DELETED,
     };
   });
 

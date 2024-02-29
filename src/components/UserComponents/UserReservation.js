@@ -133,13 +133,13 @@ function UserReservation() {
   //render
   const renderServices = () => {
     const services = allServices?.filter(
-      (service) => service?.TYPE === sortingCriteria,
+      (service) => service?.TYPE === sortingCriteria && !service?.IS_DELETED,
     );
 
     services?.sort((a, b) => a.ID - b.ID);
 
     if (services?.length > 0) {
-      return allServices
+      return services
         ?.filter((service) => service.TYPE === sortingCriteria)
         ?.map((service) => (
           <ServiceCard
