@@ -167,9 +167,9 @@ function UserDashboard() {
                 selectedReservation?.ID === reservation?.ID
               }
               disabled={
-                // reservation?.STATUS === 'Fully Paid' ||
-                isProcessingPayment &&
-                selectedReservation?.ID !== reservation?.ID
+                reservation?.STATUS === 'Fully Paid' ||
+                (isProcessingPayment &&
+                  selectedReservation?.ID !== reservation?.ID)
               }
               variant="light"
               onClick={() => handleOpenPaypal(reservation)}
