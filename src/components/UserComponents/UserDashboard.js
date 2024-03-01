@@ -1,6 +1,16 @@
-import { Box, Flex, NumberFormatter, Table, Text } from '@mantine/core';
+import {
+  ActionIcon,
+  Box,
+  Flex,
+  NumberFormatter,
+  Table,
+  Text,
+} from '@mantine/core';
+import { IconBrandPaypal } from '@tabler/icons-react';
+import axios from 'axios';
 import moment from 'moment';
-import { useContext } from 'react';
+import { useContext, useEffect, useState } from 'react';
+import { toast } from 'react-toastify';
 
 import { GlobalContext } from '../../App';
 import {
@@ -20,11 +30,15 @@ import NoRecords from '../utils/NoRecords';
 function UserDashboard() {
   //context
   const {
+    getAllReservations,
     allReservations,
     allReservationsError,
     allReservationsLoading,
     allServices,
   } = useContext(GlobalContext);
+
+  const [selectedReservation, setSelectedReservation] = useState({});
+  const [isProcessingPayment, setIsProcessingPayment] = useState(false);
 
   const user = JSON.parse(getUser());
 
@@ -50,6 +64,69 @@ function UserDashboard() {
       };
     })
     ?.filter((r) => r?.USER_ID === user?.ID);
+
+  //function
+  const handleOpenPaypal = (reservation) => {
+    setSelectedReservation(reservation);
+    setIsProcessingPayment(true);
+
+    const paypalWindow = window.open(
+      `${process.env.REACT_APP_BE_BASE_URL}/pay?id=${reservation?.ID}`,
+      '_blank',
+      'height=600 width=500 top=' +
+        (window.outerHeight / 2 + window.screenY - 600 / 2) +
+        ',left=' +
+        (window.outerWidth / 2 + window.screenX - 500 / 2),
+    );
+
+    const checkPaypalWindow = setInterval(() => {
+      if (paypalWindow.closed) {
+        setIsProcessingPayment(false);
+        clearInterval(checkPaypalWindow);
+      }
+    }, 500);
+
+    return () => {
+      clearInterval(checkPaypalWindow);
+    };
+  };
+
+  const handleProcessPayment = () => {
+    selectedReservation?.PAYMENT_HISTORY.push({
+      amount: selectedReservation?.BALANCE,
+      dop: moment().format('ll'),
+      method: 'PayPal',
+    });
+
+    const paymentHistory = selectedReservation?.PAYMENT_HISTORY;
+
+    axios({
+      method: 'PUT',
+      url: `/reservations/${selectedReservation?.ID}`,
+      data: {
+        ...selectedReservation,
+        BALANCE: 0,
+        IS_DOWNPAYMENT_PAID: true,
+        PAYMENT_HISTORY: paymentHistory,
+        STATUS: 'Fully Paid',
+      },
+    })
+      .then(() => {
+        getAllReservations();
+
+        toast.success('Successfully paid', {
+          position: toast.POSITION.TOP_RIGHT,
+          autoClose: 1500,
+        });
+      })
+      .catch(() =>
+        toast.error('An error occurred', {
+          position: toast.POSITION.TOP_RIGHT,
+          autoClose: 1500,
+        }),
+      )
+      .finally(() => setIsProcessingPayment(false));
+  };
 
   //render
   const renderDashboardTotals = () => {
@@ -83,6 +160,23 @@ function UserDashboard() {
               : ''
           }
         >
+          <Table.Td>
+            <ActionIcon
+              loading={
+                isProcessingPayment &&
+                selectedReservation?.ID === reservation?.ID
+              }
+              disabled={
+                // reservation?.STATUS === 'Fully Paid' ||
+                isProcessingPayment &&
+                selectedReservation?.ID !== reservation?.ID
+              }
+              variant="light"
+              onClick={() => handleOpenPaypal(reservation)}
+            >
+              <IconBrandPaypal />
+            </ActionIcon>
+          </Table.Td>
           <Table.Td>{renderReservationDateStatus(reservation)}</Table.Td>
 
           <Table.Td>{renderReservationServiceType(reservation)}</Table.Td>
@@ -141,6 +235,32 @@ function UserDashboard() {
     );
   };
 
+  useEffect(() => {
+    let isMessageHandled = false;
+    const messageListener = (event) => {
+      if (isMessageHandled) {
+        return;
+      }
+
+      if (
+        typeof event.data === 'string' &&
+        event.data.startsWith('PAYPAL_SUCCESS')
+      ) {
+        handleProcessPayment();
+      } else {
+        setIsProcessingPayment(false);
+      }
+
+      isMessageHandled = true;
+    };
+
+    window.addEventListener('message', messageListener);
+
+    return () => {
+      window.removeEventListener('message', messageListener);
+    };
+  }, [selectedReservation?.ID, isProcessingPayment]);
+
   return (
     <Box pos="relative" mih={200}>
       {allReservationsLoading && (
@@ -173,6 +293,7 @@ function UserDashboard() {
                 }}
               >
                 <Table.Tr>
+                  <Table.Th></Table.Th>
                   <Table.Th></Table.Th>
                   <Table.Th>Service</Table.Th>
                   <Table.Th>Date</Table.Th>

@@ -7,6 +7,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import Footer from './components/Footer/Footer';
 import Navbar from './components/Navbar/Navbar';
 import About from './pages/About/About';
+import PaypalCallback from './pages/Callbacks/PaypalCallback';
 import Home from './pages/Home/Home';
 import Login from './pages/Login/Login';
 import Rooms from './pages/Rooms/Rooms';
@@ -82,7 +83,7 @@ function App() {
 
     if (userData) {
       setUser(userData);
-      navigator('/User');
+      if (location.pathname !== '/Paypal-Callback') navigator('/User');
     }
 
     getAllUsers();
@@ -108,7 +109,7 @@ function App() {
   return (
     <GlobalContext.Provider value={contextValues}>
       <div style={{ position: 'relative' }}>
-        <Navbar />
+        {location.pathname !== '/Paypal-Callback' && <Navbar />}
         <ToastContainer />
         <Routes>
           <Route path="/" element={<Home />}></Route>
@@ -119,8 +120,11 @@ function App() {
           <Route path="/About" element={<About />}></Route>
           <Route path="/Login" element={<Login />}></Route>
           <Route path="/SignUp" element={<SignUp />}></Route>
+          <Route path="/Paypal-Callback" element={<PaypalCallback />}></Route>
         </Routes>
-        {location.pathname !== '/User' && <Footer />}
+        {location.pathname !== '/User' ||
+          location.pathname !== '/Paypal-Callback' ||
+          (location !== '/Paypal-Cancel' && <Footer />)}
       </div>
     </GlobalContext.Provider>
   );
