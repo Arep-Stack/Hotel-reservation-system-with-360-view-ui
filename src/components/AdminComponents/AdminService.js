@@ -112,17 +112,10 @@ function AdminService() {
 
           closeUpsertModal();
 
-          toast.success(
-            upsert === 'Delete'
-              ? 'Successfully deleted service'
-              : upsert === 'Create'
-              ? 'Successfully created service'
-              : 'Successfully updated service',
-            {
-              position: toast.POSITION.TOP_RIGHT,
-              autoClose: 1500,
-            },
-          );
+          toast.success('Successfully processed', {
+            position: toast.POSITION.TOP_RIGHT,
+            autoClose: 1500,
+          });
         })
         .catch(() =>
           toast.error('An error occurred', {
