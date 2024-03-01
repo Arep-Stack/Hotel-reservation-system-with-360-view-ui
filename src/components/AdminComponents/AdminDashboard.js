@@ -198,15 +198,6 @@ function AdminDashboard() {
               : ''
           }
         >
-          <Table.Td>
-            <ActionIcon
-              variant="transparent"
-              onClick={() => handleOpenModal(reservation)}
-            >
-              <IconWallet color="#027802" />
-            </ActionIcon>
-          </Table.Td>
-
           <Table.Td>{renderReservationDateStatus(reservation)}</Table.Td>
 
           <Table.Td>
@@ -247,6 +238,15 @@ function AdminDashboard() {
 
           <Table.Td>
             {calculateDuration(reservation?.START_DATE, reservation?.END_DATE)}
+          </Table.Td>
+
+          <Table.Td>
+            <ActionIcon
+              variant="transparent"
+              onClick={() => handleOpenModal(reservation)}
+            >
+              <IconWallet color="#027802" />
+            </ActionIcon>
           </Table.Td>
         </Table.Tr>
       ));
@@ -413,7 +413,6 @@ function AdminDashboard() {
                 >
                   <Table.Tr>
                     <Table.Th></Table.Th>
-                    <Table.Th></Table.Th>
                     <Table.Th>Name</Table.Th>
                     <Table.Th>Phone</Table.Th>
                     <Table.Th>Service</Table.Th>
@@ -422,6 +421,7 @@ function AdminDashboard() {
                     <Table.Th>Status</Table.Th>
                     <Table.Th>Balance</Table.Th>
                     <Table.Th>Duration</Table.Th>
+                    <Table.Th>Payment</Table.Th>
                   </Table.Tr>
                 </Table.Thead>
                 <Table.Tbody>{renderTable()}</Table.Tbody>

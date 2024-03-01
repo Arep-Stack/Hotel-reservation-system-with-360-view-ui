@@ -160,23 +160,6 @@ function UserDashboard() {
               : ''
           }
         >
-          <Table.Td>
-            <ActionIcon
-              loading={
-                isProcessingPayment &&
-                selectedReservation?.ID === reservation?.ID
-              }
-              disabled={
-                reservation?.STATUS === 'Fully Paid' ||
-                (isProcessingPayment &&
-                  selectedReservation?.ID !== reservation?.ID)
-              }
-              variant="light"
-              onClick={() => handleOpenPaypal(reservation)}
-            >
-              <IconBrandPaypal />
-            </ActionIcon>
-          </Table.Td>
           <Table.Td>{renderReservationDateStatus(reservation)}</Table.Td>
 
           <Table.Td>{renderReservationServiceType(reservation)}</Table.Td>
@@ -208,6 +191,24 @@ function UserDashboard() {
               value={reservation?.BALANCE}
               prefix="₱"
             />
+          </Table.Td>
+
+          <Table.Td>
+            <ActionIcon
+              loading={
+                isProcessingPayment &&
+                selectedReservation?.ID === reservation?.ID
+              }
+              disabled={
+                reservation?.STATUS === 'Fully Paid' ||
+                (isProcessingPayment &&
+                  selectedReservation?.ID !== reservation?.ID)
+              }
+              variant="light"
+              onClick={() => handleOpenPaypal(reservation)}
+            >
+              <IconBrandPaypal />
+            </ActionIcon>
           </Table.Td>
         </Table.Tr>
       ));
@@ -294,13 +295,13 @@ function UserDashboard() {
               >
                 <Table.Tr>
                   <Table.Th></Table.Th>
-                  <Table.Th></Table.Th>
                   <Table.Th>Service</Table.Th>
                   <Table.Th>Date</Table.Th>
                   <Table.Th>Duration</Table.Th>
                   <Table.Th>Status</Table.Th>
                   <Table.Th>Amount</Table.Th>
                   <Table.Th>Balance</Table.Th>
+                  <Table.Th>Payment</Table.Th>
                 </Table.Tr>
               </Table.Thead>
 
