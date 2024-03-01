@@ -18,11 +18,11 @@ import { GlobalContext } from '../../App';
 import ServiceCard from '../../components/ServiceCard/ServiceCard';
 import NoRecords from '../../components/utils/NoRecords';
 
-function Rooms() {
+function Pavilions() {
   //context
   const { allServices } = useContext(GlobalContext);
 
-  const [selectedRoom, setSelectedRoom] = useState(null);
+  const [selectedPavilion, setSelectedPavilion] = useState(null);
 
   //navigate
   const navigator = useNavigate();
@@ -39,15 +39,15 @@ function Rooms() {
       service?.MAIN360,
     )}&autoLoad=true&autoRotate=-2`;
 
-    setSelectedRoom({ ...service, MAIN360: src });
+    setSelectedPavilion({ ...service, MAIN360: src });
 
     openBookingModal();
   };
 
   //render
-  const renderRooms = () => {
+  const renderPavilions = () => {
     const services = allServices?.filter(
-      (service) => service?.TYPE === 'Room' && !service?.IS_DELETED,
+      (service) => service?.TYPE === 'Pavilion' && !service?.IS_DELETED,
     );
 
     services?.sort((a, b) => a.ID - b.ID);
@@ -73,7 +73,7 @@ function Rooms() {
         </ServiceCard>
       ));
     } else {
-      return <NoRecords message={'No available rooms'} />;
+      return <NoRecords message={'No available pavilions'} />;
     }
   };
 
@@ -87,7 +87,7 @@ function Rooms() {
           borderBottom: '1px solid gray',
         }}
       >
-        <Text size="3rem">Rooms</Text>
+        <Text size="3rem">Pavilions</Text>
         <ActionIcon
           onClick={() => navigator('/Services')}
           size="xl"
@@ -99,13 +99,13 @@ function Rooms() {
       </Flex>
 
       <Flex py="lg" wrap="wrap" gap={10} justify="center" mih={200}>
-        {renderRooms()}
+        {renderPavilions()}
       </Flex>
 
       <Modal
         centered
         size="80%"
-        title={selectedRoom?.NAME}
+        title={selectedPavilion?.NAME}
         shadow="xl"
         opened={isBookingModalOpen}
         onClose={closeBookingModal}
@@ -119,7 +119,10 @@ function Rooms() {
           inner: { padding: 5 },
         }}
       >
-        <Flex h={selectedRoom?.MAIN360 ? '70vh' : '100%'} direction="column">
+        <Flex
+          h={selectedPavilion?.MAIN360 ? '70vh' : '100%'}
+          direction="column"
+        >
           <Group mb="md" justify="center" align="center">
             <Title order={3} align="center" c="#006400">
               You need to login to book.
@@ -132,11 +135,11 @@ function Rooms() {
 
           <Flex h="100%">
             <iframe
-              title={selectedRoom?.MAIN360}
+              title={selectedPavilion?.MAIN360}
               width="100%"
               height="100%"
               allowFullScreen
-              src={selectedRoom?.MAIN360}
+              src={selectedPavilion?.MAIN360}
             ></iframe>
           </Flex>
         </Flex>
@@ -145,4 +148,4 @@ function Rooms() {
   );
 }
 
-export default Rooms;
+export default Pavilions;
