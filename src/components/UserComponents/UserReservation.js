@@ -13,7 +13,6 @@ import {
 import { DatePickerInput } from '@mantine/dates';
 import { useDisclosure } from '@mantine/hooks';
 import {
-  Icon360View,
   IconArrowLeft,
   IconArrowRight,
   IconCircleCheck,
@@ -159,9 +158,6 @@ function UserReservation() {
               >
                 Book Now
               </Button>
-              <Button color="#006400" variant="outline">
-                <Icon360View />
-              </Button>
             </Flex>
           </ServiceCard>
         ));
@@ -228,7 +224,7 @@ function UserReservation() {
   const render2ndStepper = () => {
     return (
       <Flex direction="column">
-        <Group justify="space-between">
+        <Group mb="xs" justify="space-between">
           <Text>Service</Text>
           <Text>{`${selectedService?.TYPE} - ${selectedService?.NAME}`}</Text>
         </Group>
@@ -342,6 +338,30 @@ function UserReservation() {
     );
   };
 
+  const render360Iframe = () => {
+    if (selectedService?.MAIN360) {
+      const src = `https://cdn.pannellum.org/2.5/pannellum.htm#panorama=${encodeURIComponent(
+        selectedService.MAIN360,
+      )}&autoLoad=true&autoRotate=-2`;
+
+      return (
+        <iframe
+          title={selectedService?.MAIN360}
+          width="100%"
+          height="100%"
+          allowFullScreen
+          src={src}
+        ></iframe>
+      );
+    } else {
+      return (
+        <Flex w="100%" align="center" justify="center">
+          <NoRecords message="No available 360 view for this service" />
+        </Flex>
+      );
+    }
+  };
+
   const nextStep = () =>
     setActiveStepper((current) => (current < 3 ? current + 1 : current));
   const prevStep = () =>
@@ -381,6 +401,7 @@ function UserReservation() {
 
       <Modal
         centered
+        size={selectedService?.MAIN360 ? '80%' : ''}
         title={'Booking - ' + selectedService?.NAME}
         shadow="xl"
         opened={isBookingModalOpen}
@@ -398,79 +419,89 @@ function UserReservation() {
         closeOnClickOutside={!isBooking}
         closeOnEscape={!isBooking}
       >
-        <Stepper
-          active={activeStepper}
-          onStepClick={setActiveStepper}
-          allowNextStepsSelect={false}
-          color="#006400"
-          size="sm"
-          completedIcon={<IconCircleCheck />}
+        <Flex
+          h={selectedService?.MAIN360 ? '70vh' : '100%'}
+          direction={selectedService?.MAIN360 ? 'row' : 'column'}
+          gap="lg"
         >
-          <Stepper.Step disabled={isBooked} icon={<IconReceipt />}>
-            {render1stStepper()}
-          </Stepper.Step>
-
-          <Stepper.Step disabled={isBooked} icon={<IconListDetails />}>
-            {render2ndStepper()}
-          </Stepper.Step>
-
-          <Stepper.Step
-            disabled={isBooked}
-            icon={bookingError ? <IconAlertCircle /> : <IconHomeCheck />}
-            color={bookingError ? 'red' : ''}
-          >
-            {render3rdStepper()}
-          </Stepper.Step>
-
-          <Stepper.Completed>{renderCompleteStepper()}</Stepper.Completed>
-        </Stepper>
-
-        <Flex mt="xs" align="center" gap="md">
-          {activeStepper === 0 && (
-            <Button
-              fullWidth
-              disabled={!bookingDates[0] || !bookingDates[1]}
-              onClick={nextStep}
-              rightSection={<IconArrowRight />}
+          <Flex direction="column" gap="sm" miw={550} maw={550}>
+            <Stepper
+              active={activeStepper}
+              onStepClick={setActiveStepper}
+              allowNextStepsSelect={false}
               color="#006400"
+              size="sm"
+              completedIcon={<IconCircleCheck />}
             >
-              Next
-            </Button>
-          )}
+              <Stepper.Step disabled={isBooked} icon={<IconReceipt />}>
+                {render1stStepper()}
+              </Stepper.Step>
 
-          {activeStepper === 1 && (
-            <>
-              <Button
-                fullWidth
-                onClick={prevStep}
-                leftSection={<IconArrowLeft />}
-                variant="outline"
-                color="dark"
+              <Stepper.Step disabled={isBooked} icon={<IconListDetails />}>
+                {render2ndStepper()}
+              </Stepper.Step>
+
+              <Stepper.Step
+                disabled={isBooked}
+                icon={bookingError ? <IconAlertCircle /> : <IconHomeCheck />}
+                color={bookingError ? 'red' : ''}
               >
-                Previous
-              </Button>
+                {render3rdStepper()}
+              </Stepper.Step>
 
-              <Button
-                fullWidth
-                onClick={handleBookReservation}
-                rightSection={<IconArrowRight />}
-                color="#006400"
-              >
-                Book reservation
-              </Button>
-            </>
-          )}
+              <Stepper.Completed>{renderCompleteStepper()}</Stepper.Completed>
+            </Stepper>
 
-          {activeStepper === 3 && (
-            <Button
-              fullWidth
-              onClick={handleCloseModal}
-              variant="outline"
-              color="#006400"
-            >
-              Close
-            </Button>
-          )}
+            <Flex mt="xs" align="center" gap="md">
+              {activeStepper === 0 && (
+                <Button
+                  fullWidth
+                  disabled={!bookingDates[0] || !bookingDates[1]}
+                  onClick={nextStep}
+                  rightSection={<IconArrowRight />}
+                  color="#006400"
+                >
+                  Next
+                </Button>
+              )}
+
+              {activeStepper === 1 && (
+                <>
+                  <Button
+                    fullWidth
+                    onClick={prevStep}
+                    leftSection={<IconArrowLeft />}
+                    variant="outline"
+                    color="dark"
+                  >
+                    Previous
+                  </Button>
+
+                  <Button
+                    fullWidth
+                    onClick={handleBookReservation}
+                    rightSection={<IconArrowRight />}
+                    color="#006400"
+                  >
+                    Book reservation
+                  </Button>
+                </>
+              )}
+
+              {activeStepper === 3 && (
+                <Button
+                  fullWidth
+                  onClick={handleCloseModal}
+                  variant="outline"
+                  color="#006400"
+                >
+                  Close
+                </Button>
+              )}
+            </Flex>
+          </Flex>
+
+          {render360Iframe()}
         </Flex>
       </Modal>
     </Box>

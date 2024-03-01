@@ -10,6 +10,8 @@ import About from './pages/About/About';
 import PaypalCallback from './pages/Callbacks/PaypalCallback';
 import Home from './pages/Home/Home';
 import Login from './pages/Login/Login';
+import Pavilions from './pages/Pavilions/Pavilions';
+import Pools from './pages/Pools/Pools';
 import Rooms from './pages/Rooms/Rooms';
 import Services from './pages/Services/Services';
 import SignUp from './pages/SignUp/SignUp';
@@ -116,15 +118,15 @@ function App() {
           <Route path="/Home" element={<Home />}></Route>
           <Route path="/Services" element={<Services />}></Route>
           <Route path="Services/Rooms" element={<Rooms />}></Route>
+          <Route path="Services/Pavilions" element={<Pavilions />}></Route>
+          <Route path="Services/Pools" element={<Pools />}></Route>
           <Route path="/User" element={<User />}></Route>
           <Route path="/About" element={<About />}></Route>
           <Route path="/Login" element={<Login />}></Route>
           <Route path="/SignUp" element={<SignUp />}></Route>
           <Route path="/Paypal-Callback" element={<PaypalCallback />}></Route>
         </Routes>
-        {location.pathname !== '/User' ||
-          location.pathname !== '/Paypal-Callback' ||
-          (location !== '/Paypal-Cancel' && <Footer />)}
+        {location.pathname !== '/User' && <Footer />}
       </div>
     </GlobalContext.Provider>
   );

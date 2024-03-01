@@ -44,6 +44,9 @@ function AdminService() {
   );
   const [image, setImage] = useState(null);
 
+  const [image360, setImage360] = useState(null);
+  const [isImage360Uploading, setIsImage360Uploading] = useState(false);
+
   //form
   let form = useForm({
     initialValues: {
@@ -105,6 +108,7 @@ function AdminService() {
           QUANTITY: 1,
           TYPE: sortingCriteria,
           IS_DELETED: upsertMode === 'Delete' ? true : false,
+          MAIN360: image360 ? image360 : '',
         },
       })
         .then(() => {
@@ -175,11 +179,14 @@ function AdminService() {
     } else {
       setImageDisplay('https://placehold.co/400x200/green/white');
       setImage(null);
+      setImage360(null);
       form.reset();
     }
 
     setUpsertMode(mode);
     setSelectedService(service);
+    setIsImage360Uploading(false);
+    setImage360(service?.MAIN360);
     openUpsertModal();
   };
 
@@ -196,6 +203,33 @@ function AdminService() {
     }
   };
 
+  const handleUpload360 = (e) => {
+    setIsImage360Uploading(true);
+
+    if (e) {
+      const formData = new FormData();
+      formData.append('image', e);
+
+      axios({
+        method: 'POST',
+        url: '/image/upload',
+        data: formData,
+        headers: { 'Content-Type': 'multipart/form-data' },
+      })
+        .then(({ data }) => {
+          const securedSrc = data?.PATH?.replace('http', 'https');
+          setImage360(securedSrc);
+        })
+        .catch(() =>
+          toast.error('An error occurred', {
+            position: toast.POSITION.TOP_RIGHT,
+            autoClose: 1500,
+          }),
+        )
+        .finally(() => setIsImage360Uploading(false));
+    }
+  };
+
   //render
   const renderServices = () => {
     const serviceButtons = (service) => (
@@ -209,6 +243,7 @@ function AdminService() {
         >
           Edit
         </Button>
+
         <Button
           variant="light"
           color="#FF0800"
@@ -226,18 +261,29 @@ function AdminService() {
     services?.sort((a, b) => a.ID - b.ID);
 
     if (services?.length > 0) {
-      return services?.map(({ AMENITIES, ID, IMAGE, NAME, PERSONS, PRICE }) => (
-        <ServiceCard
-          key={ID}
-          amenities={AMENITIES}
-          image={IMAGE}
-          name={NAME}
-          persons={PERSONS}
-          price={PRICE}
-        >
-          {serviceButtons({ AMENITIES, ID, IMAGE, NAME, PERSONS, PRICE })}
-        </ServiceCard>
-      ));
+      return services?.map(
+        ({ AMENITIES, ID, IMAGE, NAME, PERSONS, PRICE, MAIN360, OTHER360 }) => (
+          <ServiceCard
+            key={ID}
+            amenities={AMENITIES}
+            image={IMAGE}
+            name={NAME}
+            persons={PERSONS}
+            price={PRICE}
+          >
+            {serviceButtons({
+              AMENITIES,
+              ID,
+              IMAGE,
+              NAME,
+              PERSONS,
+              PRICE,
+              MAIN360,
+              OTHER360,
+            })}
+          </ServiceCard>
+        ),
+      );
     } else {
       return (
         <NoRecords
@@ -274,88 +320,134 @@ function AdminService() {
       );
     } else {
       return (
-        <form
-          style={{ width: '100%' }}
-          onSubmit={form.onSubmit((values) => {
-            handleSubmit(values);
-          })}
-        >
-          <Image
+        <Flex>
+          <form
+            style={{ width: '440px' }}
+            onSubmit={form.onSubmit((values) => {
+              handleSubmit(values);
+            })}
+          >
+            <Image
+              w="100%"
+              h={200}
+              src={imageDisplay}
+              mb="sm"
+              fallbackSrc="https://placehold.co/400x200/green/white"
+            />
+
+            <FileButton
+              onChange={(e) => handleUploadImage(e)}
+              accept="image/png,image/jpeg"
+            >
+              {(props) => (
+                <Button
+                  fullWidth
+                  {...props}
+                  mb="sm"
+                  color="#006400"
+                  leftSection={<IconUpload />}
+                >
+                  Upload image
+                </Button>
+              )}
+            </FileButton>
+
+            <Divider mt="sm" mb="sm" />
+
+            <TextInput
+              withAsterisk
+              label="Name"
+              placeholder="Name"
+              {...form.getInputProps('NAME')}
+            />
+
+            <NumberInput
+              withAsterisk
+              label="Price"
+              placeholder="0.00"
+              min={0}
+              leftSection={<IconCurrencyPeso />}
+              {...form.getInputProps('PRICE')}
+            />
+
+            <NumberInput
+              withAsterisk
+              label="Person Capacity"
+              placeholder="2"
+              min={0}
+              {...form.getInputProps('PERSONS')}
+            />
+
+            <TagsInput
+              withAsterisk
+              label="Amenities"
+              description="Add at least 1"
+              placeholder="Enter here"
+              {...form.getInputProps('AMENITIES')}
+              data={['WIFI', 'Aircon', 'Fan', 'TV', 'Own Bathroom']}
+              min={1}
+              styles={{
+                pill: { background: 'darkgreen', color: 'white' },
+                dropdown: { border: '1px solid gray' },
+              }}
+            />
+
+            <Button
+              fullWidth
+              loading={isSubmitting}
+              disabled={isImage360Uploading}
+              leftSection={<IconDeviceFloppy />}
+              mt="md"
+              type="submit"
+              color="#006400"
+            >
+              Save
+            </Button>
+          </form>
+
+          <Divider mr="sm" ml="sm" />
+
+          <Flex
             w="100%"
-            h={200}
-            src={imageDisplay}
-            mb="sm"
-            fallbackSrc="https://placehold.co/400x200/green/white"
-          />
-
-          <FileButton
-            onChange={(e) => handleUploadImage(e)}
-            accept="image/png,image/jpeg"
+            mih="90%"
+            direction="column"
+            justify="center"
+            align="center"
           >
-            {(props) => (
-              <Button
-                fullWidth
-                {...props}
-                mb="sm"
-                color="#006400"
-                leftSection={<IconUpload />}
+            {render360Iframe()}
+
+            <Flex gap="md">
+              <FileButton
+                onChange={(e) => handleUpload360(e)}
+                accept="image/png,image/jpeg"
               >
-                Upload image
-              </Button>
-            )}
-          </FileButton>
+                {(props) => (
+                  <Button
+                    {...props}
+                    w={250}
+                    mt="sm"
+                    color="#006400"
+                    leftSection={<IconUpload />}
+                  >
+                    Upload 360 view
+                  </Button>
+                )}
+              </FileButton>
 
-          <Divider mt="sm" mb="sm" />
-
-          <TextInput
-            withAsterisk
-            label="Name"
-            placeholder="Name"
-            {...form.getInputProps('NAME')}
-          />
-
-          <NumberInput
-            withAsterisk
-            label="Price"
-            placeholder="0.00"
-            min={0}
-            leftSection={<IconCurrencyPeso />}
-            {...form.getInputProps('PRICE')}
-          />
-
-          <NumberInput
-            withAsterisk
-            label="Person Capacity"
-            placeholder="2"
-            min={0}
-            {...form.getInputProps('PERSONS')}
-          />
-
-          <TagsInput
-            withAsterisk
-            label="Amenities"
-            description="Add at least 1"
-            placeholder="Enter here"
-            {...form.getInputProps('AMENITIES')}
-            data={['WIFI', 'Aircon', 'Fan', 'TV', 'Own Bathroom']}
-            min={1}
-            styles={{
-              pill: { background: 'darkgreen', color: 'white' },
-              dropdown: { border: '1px solid gray' },
-            }}
-          />
-
-          <Button
-            fullWidth
-            loading={isSubmitting}
-            leftSection={<IconDeviceFloppy />}
-            mt="md"
-            type="submit"
-            color="#006400"
-          >
-            Save
-          </Button>
-        </form>
+              {image360 && !isImage360Uploading && (
+                <Button
+                  w={250}
+                  mt="sm"
+                  variant="light"
+                  color="#FF0800"
+                  onClick={() => setImage360(null)}
+                >
+                  Remove 360
+                </Button>
+              )}
+            </Flex>
+          </Flex>
+        </Flex>
       );
     }
   };
@@ -374,6 +466,35 @@ function AdminService() {
         >{`Total ${sortingCriteria}: ${services.length}`}</Text>
       )
     );
+  };
+
+  const render360Iframe = () => {
+    if (image360) {
+      const src = `https://cdn.pannellum.org/2.5/pannellum.htm#panorama=${encodeURIComponent(
+        image360,
+      )}&autoLoad=true&autoRotate=-2`;
+
+      if (!isImage360Uploading)
+        return (
+          <iframe
+            title={selectedService?.MAIN360}
+            width="100%"
+            height="95%"
+            allowFullScreen
+            src={src}
+          ></iframe>
+        );
+    }
+
+    if (isImage360Uploading)
+      return (
+        <Box pos="relative" w="100%" h="100%">
+          <ComponentLoader message="Uploading 360 view" />;
+        </Box>
+      );
+
+    if (!isImage360Uploading && upsertMode === 'Update')
+      return <NoRecords message="No 360 view available for this service" />;
   };
 
   return (
@@ -428,6 +549,7 @@ function AdminService() {
       <Modal
         centered
         shadow="xl"
+        size={upsertMode === 'Delete' ? 'md' : '80%'}
         opened={isUpsertModalOpen}
         onClose={closeUpsertModal}
         title={upsertMode + ' ' + sortingCriteria}
@@ -443,9 +565,9 @@ function AdminService() {
           },
           inner: { padding: 5 },
         }}
-        withCloseButton={!isSubmitting}
-        closeOnClickOutside={!isSubmitting}
-        closeOnEscape={!isSubmitting}
+        withCloseButton={!isSubmitting && !isImage360Uploading}
+        closeOnClickOutside={!isSubmitting && !isImage360Uploading}
+        closeOnEscape={!isSubmitting && !isImage360Uploading}
       >
         {renderUpsertModal()}
       </Modal>
