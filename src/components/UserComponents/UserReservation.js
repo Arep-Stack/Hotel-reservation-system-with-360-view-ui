@@ -7,10 +7,12 @@ import {
   Group,
   Modal,
   NumberFormatter,
+  NumberInput,
+  Select,
   Stepper,
   Text,
 } from '@mantine/core';
-import { DatePickerInput } from '@mantine/dates';
+import { DateInput, DatePickerInput } from '@mantine/dates';
 import { useDisclosure } from '@mantine/hooks';
 import {
   IconArrowLeft,
@@ -35,6 +37,33 @@ import ComponentLoader from '../utils/ComponentLoader';
 import NoRecords from '../utils/NoRecords';
 import { UserMenuTab } from './UserMenu';
 
+const dataTimes = [
+  { value: '0', label: '12:00 am' },
+  { value: '1', label: '1:00 am' },
+  { value: '2', label: '2:00 am' },
+  { value: '3', label: '3:00 am' },
+  { value: '4', label: '4:00 am' },
+  { value: '5', label: '5:00 am' },
+  { value: '6', label: '6:00 am' },
+  { value: '7', label: '7:00 am' },
+  { value: '8', label: '8:00 am' },
+  { value: '9', label: '9:00 am' },
+  { value: '10', label: '10:00 am' },
+  { value: '11', label: '11:00 am' },
+  { value: '12', label: '12:00 pm' },
+  { value: '13', label: '1:00 pm' },
+  { value: '14', label: '2:00 pm' },
+  { value: '15', label: '3:00 pm' },
+  { value: '16', label: '4:00 pm' },
+  { value: '17', label: '5:00 pm' },
+  { value: '18', label: '6:00 pm' },
+  { value: '19', label: '7:00 pm' },
+  { value: '20', label: '8:00 pm' },
+  { value: '21', label: '9:00 pm' },
+  { value: '22', label: '10:00 pm' },
+  { value: '23', label: '11:00 pm' },
+];
+
 function UserReservation() {
   //context
   const { setCurrentTab } = useContext(UserMenuTab);
@@ -48,14 +77,21 @@ function UserReservation() {
   const [selectedService, setSelectedService] = useState(null);
   const [sortingCriteria, setSortingCriteria] = useState('Room');
 
-  //booking
   const [activeStepper, setActiveStepper] = useState(0);
-  const [bookingDates, setBookingDates] = useState([null, null]);
   const [isBooking, setIsBooking] = useState(false);
   const [isBooked, setIsBooked] = useState(false);
   const [bookingError, setBookingError] = useState(null);
+
+  //booking room
+  const [bookingDates, setBookingDates] = useState([null, null]);
   const [totalNights, setTotalNights] = useState(0);
   const [totalAmount, setTotalAmount] = useState(0);
+
+  //booking pav & pool
+  const [bookingDate, setBookingDate] = useState(null);
+  const [bookingTime, setBookingTime] = useState(null);
+  const [totalHours, setTotalHours] = useState(null);
+  const [filteredDataTimes, setFilteredDataTimes] = useState(dataTimes);
 
   //modal
   const [
@@ -70,17 +106,35 @@ function UserReservation() {
   };
 
   const handleDateChange = (values) => {
-    setBookingDates(values);
+    if (selectedService?.TYPE === 'Room') {
+      setBookingDates(values);
 
-    if (values[0] && values[1]) {
-      const startDate = moment(values[0]);
-      const endDate = moment(values[1]);
+      if (values[0] && values[1]) {
+        const startDate = moment(values[0]);
+        const endDate = moment(values[1]);
 
-      const totalNights = endDate.diff(startDate, 'days');
-      const totalAmount = totalNights * selectedService?.PRICE;
+        const totalNights = endDate.diff(startDate, 'days');
+        const totalAmount = totalNights * selectedService?.PRICE;
 
-      setTotalNights(totalNights);
-      setTotalAmount(totalAmount);
+        setTotalNights(totalNights);
+        setTotalAmount(totalAmount);
+      }
+    } else {
+      setBookingDate(values);
+      setBookingTime(null);
+      setTotalHours(null);
+
+      const selectedDate = moment(values);
+      const currentTime = moment().format('HH');
+
+      if (selectedDate.isSame(moment(), 'day')) {
+        const filteredTimes = dataTimes.filter(
+          ({ value }) => parseInt(value) > currentTime,
+        );
+        setFilteredDataTimes(filteredTimes);
+      } else {
+        setFilteredDataTimes(dataTimes);
+      }
     }
   };
 
@@ -124,9 +178,11 @@ function UserReservation() {
 
     setActiveStepper(0);
     setBookingDates([null, null]);
-    setIsBooked(false);
-    setTotalAmount(0);
     setTotalNights(0);
+    setTotalAmount(0);
+    setBookingDate(null);
+    setBookingTime(null);
+    setTotalHours(null);
   };
 
   //render
@@ -173,18 +229,56 @@ function UserReservation() {
   const render1stStepper = () => {
     return (
       <Flex direction="column">
-        <DatePickerInput
-          withAsterisk
-          minDate={new Date()}
-          mb="sm"
-          type="range"
-          label="Choose dates"
-          placeholder="Please choose date range"
-          value={bookingDates}
-          onChange={(values) => handleDateChange(values)}
-        />
+        {selectedService?.TYPE === 'Room' ? (
+          <DatePickerInput
+            withAsterisk
+            minDate={new Date()}
+            mb="sm"
+            type="range"
+            label="Choose dates"
+            placeholder="Please choose date range"
+            value={bookingDates}
+            onChange={(values) => handleDateChange(values)}
+          />
+        ) : (
+          <>
+            <DateInput
+              withAsterisk
+              label="Choose date"
+              placeholder="Please choose date"
+              minDate={new Date()}
+              value={bookingDate}
+              onChange={(value) => handleDateChange(value)}
+            />
 
-        <Group mb="xs" justify="space-between">
+            <Flex mt="xs" mb="xs" justify="center" gap="md">
+              <Select
+                flex={1}
+                withAsterisk
+                clearable
+                disabled={!bookingDate}
+                label="Start time"
+                placeholder="Select start time"
+                data={filteredDataTimes}
+                value={bookingTime}
+                onChange={setBookingTime}
+              />
+
+              <NumberInput
+                flex={1}
+                withAsterisk
+                min={1}
+                label="How many hour/s?"
+                placeholder="1"
+                disabled={!bookingTime}
+                value={totalHours}
+                onChange={setTotalHours}
+              />
+            </Flex>
+          </>
+        )}
+
+        <Group mt="md" mb="xs" justify="space-between">
           <Text>Price</Text>
           <div>
             <NumberFormatter
@@ -192,19 +286,33 @@ function UserReservation() {
               value={selectedService?.PRICE}
               prefix="₱"
             />
-            /night
+            {selectedService?.TYPE === 'Room' ? '/night' : '/hour'}
           </div>
         </Group>
 
         <Group mb="xs" justify="space-between">
           <Text>Duration</Text>
-          <Text>
-            {totalNights !== 0
-              ? `${totalNights + 1} ${
-                  totalNights + 1 > 1 ? 'days' : 'day'
-                }, ${totalNights} ${totalNights > 1 ? 'nights' : 'night'}`
-              : '-'}
-          </Text>
+          <Flex direction="column" align="end">
+            <Text>
+              {selectedService?.TYPE === 'Room' && totalNights !== 0
+                ? `${totalNights + 1} ${
+                    totalNights + 1 > 1 ? 'days' : 'day'
+                  }, ${totalNights} ${totalNights > 1 ? 'nights' : 'night'}`
+                : (selectedService?.TYPE === 'Pavilion' ||
+                    selectedService?.TYPE === 'Pool') &&
+                  totalHours !== null
+                ? totalHours > 1
+                  ? `${totalHours} hours`
+                  : `${totalHours} hour`
+                : '-'}
+            </Text>
+
+            {selectedService?.TYPE !== 'Room' && (
+              <Text size="xs">{`${moment(bookingDate).format('ll')}, ${
+                dataTimes.find((t) => t.value === bookingTime)?.label
+              }`}</Text>
+            )}
+          </Flex>
         </Group>
 
         <Divider mb="xs" />
@@ -356,7 +464,9 @@ function UserReservation() {
     } else {
       return (
         <Flex w="100%" align="center" justify="center">
-          <NoRecords message="No available 360 view for this service" />
+          {activeStepper < 3 && (
+            <NoRecords message="No available 360 view for this service" />
+          )}
         </Flex>
       );
     }

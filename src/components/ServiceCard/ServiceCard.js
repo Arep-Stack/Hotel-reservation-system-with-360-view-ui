@@ -12,7 +12,15 @@ import { IconUsers } from '@tabler/icons-react';
 import axios from 'axios';
 import { useEffect, useState } from 'react';
 
-function ServiceCard({ name, image, price, persons, amenities, children }) {
+function ServiceCard({
+  name,
+  image,
+  price,
+  persons,
+  amenities,
+  children,
+  type,
+}) {
   const [imagePath, setImagePath] = useState(null);
 
   useEffect(() => {
@@ -78,7 +86,7 @@ function ServiceCard({ name, image, price, persons, amenities, children }) {
 
             <Badge size="lg" variant="light" color="#006400" tt="lowercase">
               <NumberFormatter prefix="₱" value={price} thousandSeparator />
-              /night
+              {type === 'Room' ? '/night' : '/hour'}
             </Badge>
           </Flex>
 

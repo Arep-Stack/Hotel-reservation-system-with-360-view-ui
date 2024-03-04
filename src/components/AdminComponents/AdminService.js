@@ -262,7 +262,17 @@ function AdminService() {
 
     if (services?.length > 0) {
       return services?.map(
-        ({ AMENITIES, ID, IMAGE, NAME, PERSONS, PRICE, MAIN360, OTHER360 }) => (
+        ({
+          AMENITIES,
+          ID,
+          IMAGE,
+          NAME,
+          PERSONS,
+          PRICE,
+          MAIN360,
+          OTHER360,
+          TYPE,
+        }) => (
           <ServiceCard
             key={ID}
             amenities={AMENITIES}
@@ -270,6 +280,7 @@ function AdminService() {
             name={NAME}
             persons={PERSONS}
             price={PRICE}
+            type={TYPE}
           >
             {serviceButtons({
               AMENITIES,
@@ -363,7 +374,11 @@ function AdminService() {
 
             <NumberInput
               withAsterisk
-              label="Price"
+              label={
+                selectedService?.TYPE === 'Room'
+                  ? 'Price per night'
+                  : 'Price per hour'
+              }
               placeholder="0.00"
               min={0}
               leftSection={<IconCurrencyPeso />}
