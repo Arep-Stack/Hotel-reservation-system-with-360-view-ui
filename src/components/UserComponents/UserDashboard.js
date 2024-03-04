@@ -18,6 +18,7 @@ import {
   getCountForDashboard,
   renderReservationDateStatus,
   renderReservationServiceType,
+  renderTableDate,
   sortReservations,
   statusColorChanger,
 } from '../../utils/renderTableHelper';
@@ -165,11 +166,19 @@ function UserDashboard() {
           <Table.Td>{renderReservationServiceType(reservation)}</Table.Td>
 
           <Table.Td>
-            {moment(reservation?.START_DATE).format('ll')} -{' '}
-            {moment(reservation?.END_DATE).format('ll')}
+            {renderTableDate(
+              reservation?.START_DATE,
+              reservation?.END_DATE,
+              reservation?.TYPE,
+            )}
           </Table.Td>
+
           <Table.Td>
-            {calculateDuration(reservation?.START_DATE, reservation?.END_DATE)}
+            {calculateDuration(
+              reservation?.START_DATE,
+              reservation?.END_DATE,
+              reservation?.TYPE,
+            )}
           </Table.Td>
 
           <Table.Td>

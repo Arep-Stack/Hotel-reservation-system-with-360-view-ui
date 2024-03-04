@@ -1,4 +1,4 @@
-import { Badge, Group, Text } from '@mantine/core';
+import { Badge, Flex, Group, Text } from '@mantine/core';
 import {
   IconBed,
   IconBuildingPavilion,
@@ -136,16 +136,21 @@ const filterReservationsByCriteria = (criteria, reservations) => {
   }
 };
 
-const calculateDuration = (start, end) => {
+const calculateDuration = (start, end, type) => {
   const a = moment(start);
   const b = moment(end);
 
-  const durationInDays = Math.floor(moment.duration(b.diff(a)).asDays());
+  if (type === 'Room') {
+    const durationInDays = Math.floor(moment.duration(b.diff(a)).asDays());
 
-  const formattedDays = Math.max(1, durationInDays + 1);
-  const formattedNights = Math.max(0, durationInDays);
+    const formattedDays = Math.max(1, durationInDays + 1);
+    const formattedNights = Math.max(0, durationInDays);
 
-  return `${formattedDays}D, ${formattedNights}N`;
+    return `${formattedDays}D, ${formattedNights}N`;
+  } else {
+    const hourDiff = b.diff(a, 'hours');
+    return `${hourDiff} ${hourDiff !== 1 ? 'hours' : 'hour'}`;
+  }
 };
 
 const statusColorChanger = (reservation) => {
@@ -182,6 +187,48 @@ const capitalize = (str) => {
   return str?.charAt(0).toUpperCase() + str?.slice(1);
 };
 
+const renderTableDate = (start, end, type) => {
+  if (type === 'Room') {
+    return (
+      <Flex gap={6} align="center">
+        <Flex direction="column">
+          <Text size="sm">{moment.utc(start).format('ll')}</Text>
+          <Text size="xs" align="left">
+            2:00 pm
+          </Text>
+        </Flex>
+
+        <Text size="xs">-</Text>
+
+        <Flex direction="column">
+          <Text size="sm">{moment.utc(end).format('ll')}</Text>
+          <Text size="xs" align="left">
+            12:00 pm
+          </Text>
+        </Flex>
+      </Flex>
+    );
+  } else {
+    return (
+      <Flex gap={6} align="center">
+        {[start, end].map((date, index) => (
+          <>
+            {index > 0 && <Text size="xs">-</Text>}
+            <div key={index}>
+              <Flex key={index} direction="column">
+                <Text size="sm">{moment.utc(date).format('ll')}</Text>
+                <Text size="xs" align={index === 1 ? 'right' : 'left'}>
+                  {moment.utc(date).format('h:mm a')}
+                </Text>
+              </Flex>
+            </div>
+          </>
+        ))}
+      </Flex>
+    );
+  }
+};
+
 export {
   renderReservationDateStatus,
   renderReservationServiceType,
@@ -191,4 +238,5 @@ export {
   statusColorChanger,
   getCountForDashboard,
   capitalize,
+  renderTableDate,
 };

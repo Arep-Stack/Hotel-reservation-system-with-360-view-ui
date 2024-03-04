@@ -121,8 +121,6 @@ function UserReservation() {
       }
     } else {
       setBookingDate(values);
-      setBookingTime(null);
-      setTotalHours(null);
 
       const selectedDate = moment(values);
       const currentTime = moment().format('HH');
@@ -151,8 +149,22 @@ function UserReservation() {
         USER_ID: user?.ID,
         SERVICE_ID: selectedService?.ID,
         STATUS: 'Unpaid',
-        START_DATE: bookingDates[0],
-        END_DATE: bookingDates[1],
+        START_DATE:
+          selectedService?.TYPE === 'Room'
+            ? moment(bookingDates[0]).format('ll')
+            : moment(bookingDate)
+                .set({
+                  hour: parseInt(bookingTime, 10),
+                })
+                .format('MMMM D, YYYY @ h:mm a'),
+        END_DATE:
+          selectedService?.TYPE === 'Room'
+            ? moment(bookingDates[1]).format('ll')
+            : moment(bookingDate)
+                .set({
+                  hour: parseInt(bookingTime, 10) + totalHours,
+                })
+                .format('MMMM D, YYYY @ h:mm a'),
         AMOUNT: totalAmount,
         BALANCE: totalAmount,
         PAYMENT_HISTORY: [],
@@ -183,6 +195,7 @@ function UserReservation() {
     setBookingDate(null);
     setBookingTime(null);
     setTotalHours(null);
+    setIsBooked(false);
   };
 
   //render
@@ -272,7 +285,10 @@ function UserReservation() {
                 placeholder="1"
                 disabled={!bookingTime}
                 value={totalHours}
-                onChange={setTotalHours}
+                onChange={(value) => {
+                  setTotalHours(value);
+                  setTotalAmount(Math.floor(selectedService?.PRICE * value));
+                }}
               />
             </Flex>
           </>
@@ -290,27 +306,39 @@ function UserReservation() {
           </div>
         </Group>
 
-        <Group mb="xs" justify="space-between">
+        <Group mb="xs" justify="space-between" align="start">
           <Text>Duration</Text>
           <Flex direction="column" align="end">
-            <Text>
+            <Text mb="xs">
               {selectedService?.TYPE === 'Room' && totalNights !== 0
                 ? `${totalNights + 1} ${
                     totalNights + 1 > 1 ? 'days' : 'day'
                   }, ${totalNights} ${totalNights > 1 ? 'nights' : 'night'}`
-                : (selectedService?.TYPE === 'Pavilion' ||
-                    selectedService?.TYPE === 'Pool') &&
-                  totalHours !== null
+                : selectedService?.TYPE !== 'Room' && totalHours !== null
                 ? totalHours > 1
                   ? `${totalHours} hours`
                   : `${totalHours} hour`
                 : '-'}
             </Text>
 
-            {selectedService?.TYPE !== 'Room' && (
-              <Text size="xs">{`${moment(bookingDate).format('ll')}, ${
-                dataTimes.find((t) => t.value === bookingTime)?.label
-              }`}</Text>
+            {selectedService?.TYPE !== 'Room' && !!totalHours && (
+              <Group align="center" gap={4}>
+                <Text size="sm">{`${moment(bookingDate)
+                  .set({
+                    hour: parseInt(bookingTime, 10),
+                  })
+                  .format('MMMM D, YYYY @ h:mm a')}
+                   `}</Text>
+                <Text size="xs" c="dimmed">
+                  to
+                </Text>
+                <Text size="sm">{`${moment(bookingDate)
+                  .set({
+                    hour: parseInt(bookingTime, 10) + totalHours,
+                  })
+                  .format('MMMM D, YYYY @ h:mm a')}
+                   `}</Text>
+              </Group>
             )}
           </Flex>
         </Group>
@@ -344,12 +372,28 @@ function UserReservation() {
 
         <Group mb="xs" justify="space-between">
           <Text>Start Date</Text>
-          <Text>{moment(bookingDates[0]).format('ll')}</Text>
+          <Text>
+            {selectedService?.TYPE === 'Room'
+              ? moment(bookingDates[0]).format('ll')
+              : moment(bookingDate)
+                  .set({
+                    hour: parseInt(bookingTime, 10),
+                  })
+                  .format('MMMM D, YYYY @ h:00 a')}
+          </Text>
         </Group>
 
         <Group mb="xs" justify="space-between">
           <Text>End Date</Text>
-          <Text>{moment(bookingDates[1]).format('ll')}</Text>
+          <Text>
+            {selectedService?.TYPE === 'Room'
+              ? moment(bookingDates[1]).format('ll')
+              : moment(bookingDate)
+                  .set({
+                    hour: parseInt(bookingTime, 10) + totalHours,
+                  })
+                  .format('MMMM D, YYYY @ h:00 a')}
+          </Text>
         </Group>
 
         <Divider mb="xs" />
@@ -357,10 +401,14 @@ function UserReservation() {
         <Group mb="xs" justify="space-between">
           <Text>Duration</Text>
           <Text>
-            {totalNights !== 0
+            {selectedService?.TYPE === 'Room' && totalNights !== 0
               ? `${totalNights + 1} ${
                   totalNights + 1 > 1 ? 'days' : 'day'
                 }, ${totalNights} ${totalNights > 1 ? 'nights' : 'night'}`
+              : selectedService?.TYPE !== 'Room' && totalHours !== null
+              ? totalHours > 1
+                ? `${totalHours} hours`
+                : `${totalHours} hour`
               : '-'}
           </Text>
         </Group>
@@ -373,7 +421,7 @@ function UserReservation() {
               value={selectedService?.PRICE}
               prefix="₱"
             />
-            /night
+            {selectedService?.TYPE === 'Room' ? '/night' : '/hour'}
           </div>
         </Group>
 
@@ -566,7 +614,12 @@ function UserReservation() {
               {activeStepper === 0 && (
                 <Button
                   fullWidth
-                  disabled={!bookingDates[0] || !bookingDates[1]}
+                  disabled={
+                    (selectedService?.TYPE === 'Room' &&
+                      (!bookingDates[0] || !bookingDates[1])) ||
+                    (selectedService?.TYPE !== 'Room' &&
+                      (!bookingDate || !bookingTime || !totalHours))
+                  }
                   onClick={nextStep}
                   rightSection={<IconArrowRight />}
                   color="#006400"

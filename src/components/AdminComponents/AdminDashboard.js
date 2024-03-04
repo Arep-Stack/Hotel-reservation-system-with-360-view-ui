@@ -32,6 +32,7 @@ import {
   getCountForDashboard,
   renderReservationDateStatus,
   renderReservationServiceType,
+  renderTableDate,
   sortReservations,
   statusColorChanger,
 } from '../../utils/renderTableHelper';
@@ -219,8 +220,17 @@ function AdminDashboard() {
 
           <Table.Td>{renderReservationServiceType(reservation)}</Table.Td>
 
-          <Table.Td>{moment(reservation?.START_DATE).format('ll')}</Table.Td>
-          <Table.Td>{moment(reservation?.END_DATE).format('ll')}</Table.Td>
+          <Table.Td>
+            {renderTableDate(
+              reservation?.START_DATE,
+              reservation?.END_DATE,
+              reservation?.TYPE,
+            )}
+          </Table.Td>
+
+          <Table.Td>
+            {calculateDuration(reservation?.START_DATE, reservation?.END_DATE)}
+          </Table.Td>
 
           <Table.Td>
             <Text c={statusColorChanger(reservation)}>
@@ -237,10 +247,6 @@ function AdminDashboard() {
           </Table.Td>
 
           <Table.Td>
-            {calculateDuration(reservation?.START_DATE, reservation?.END_DATE)}
-          </Table.Td>
-
-          <Table.Td>
             <ActionIcon
               variant="transparent"
               onClick={() => handleOpenModal(reservation)}
@@ -253,7 +259,7 @@ function AdminDashboard() {
     } else {
       return (
         <Table.Tr>
-          <Table.Td colSpan={10}>
+          <Table.Td colSpan={9}>
             <NoRecords />
           </Table.Td>
         </Table.Tr>
@@ -416,11 +422,10 @@ function AdminDashboard() {
                     <Table.Th>Name</Table.Th>
                     <Table.Th>Phone</Table.Th>
                     <Table.Th>Service</Table.Th>
-                    <Table.Th>Start Date</Table.Th>
-                    <Table.Th>End Date</Table.Th>
+                    <Table.Th>Date</Table.Th>
+                    <Table.Th>Duration</Table.Th>
                     <Table.Th>Status</Table.Th>
                     <Table.Th>Balance</Table.Th>
-                    <Table.Th>Duration</Table.Th>
                     <Table.Th>Payment</Table.Th>
                   </Table.Tr>
                 </Table.Thead>
