@@ -1,14 +1,22 @@
 import {
   ActionIcon,
   Box,
+  Button,
   Flex,
+  Group,
+  Modal,
   NumberFormatter,
+  NumberInput,
   Table,
+  Tabs,
   Text,
 } from '@mantine/core';
+import { useForm } from '@mantine/form';
+import { useDisclosure } from '@mantine/hooks';
 import { IconBrandPaypal } from '@tabler/icons-react';
 import axios from 'axios';
 import moment from 'moment';
+import { nanoid } from 'nanoid';
 import { useContext, useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
 
@@ -66,13 +74,35 @@ function UserDashboard() {
     })
     ?.filter((r) => r?.USER_ID === user?.ID);
 
+  //modal
+  const [
+    isPayPalModalOpen,
+    { open: openPayPalModal, close: closePayPalModal },
+  ] = useDisclosure(false);
+
+  //form
+  let form = useForm({
+    initialValues: {
+      amount: 0,
+    },
+
+    validate: {
+      amount: (value) =>
+        value > 0
+          ? value > selectedReservation.BALANCE
+            ? 'Amount is greater than balance'
+            : null
+          : 'Please enter a valid amount',
+    },
+  });
+
   //function
-  const handleOpenPaypal = (reservation) => {
-    setSelectedReservation(reservation);
+  const handleOpenPaypalWindow = (amount) => {
+    closePayPalModal();
     setIsProcessingPayment(true);
 
     const paypalWindow = window.open(
-      `${process.env.REACT_APP_BE_BASE_URL}/pay?id=${reservation?.ID}`,
+      `${process.env.REACT_APP_BE_BASE_URL}/pay?id=${selectedReservation?.ID}&amount=${amount}`,
       '_blank',
       'height=600 width=500 top=' +
         (window.outerHeight / 2 + window.screenY - 600 / 2) +
@@ -92,24 +122,37 @@ function UserDashboard() {
     };
   };
 
+  const handleOpenPayPalModal = (reservation) => {
+    form.reset();
+    setSelectedReservation(reservation);
+    openPayPalModal();
+  };
+
   const handleProcessPayment = () => {
     selectedReservation?.PAYMENT_HISTORY.push({
-      amount: selectedReservation?.BALANCE,
+      amount: form.values.amount,
       dop: moment().format('ll'),
       method: 'PayPal',
     });
 
     const paymentHistory = selectedReservation?.PAYMENT_HISTORY;
 
+    const balance = selectedReservation?.BALANCE - form.values?.amount;
+
+    const status = balance <= 0 ? 'Fully Paid' : 'Paid - Partial';
+
+    const requiredDP = Math.floor(selectedReservation?.AMOUNT * 0.3);
+    const totalAmountPaid = selectedReservation?.AMOUNT - balance;
+
     axios({
       method: 'PUT',
       url: `/reservations/${selectedReservation?.ID}`,
       data: {
         ...selectedReservation,
-        BALANCE: 0,
-        IS_DOWNPAYMENT_PAID: true,
+        BALANCE: balance,
+        IS_DOWNPAYMENT_PAID: totalAmountPaid >= requiredDP,
         PAYMENT_HISTORY: paymentHistory,
-        STATUS: 'Fully Paid',
+        STATUS: status,
       },
     })
       .then(() => {
@@ -209,12 +252,11 @@ function UserDashboard() {
                 selectedReservation?.ID === reservation?.ID
               }
               disabled={
-                reservation?.STATUS === 'Fully Paid' ||
-                (isProcessingPayment &&
-                  selectedReservation?.ID !== reservation?.ID)
+                isProcessingPayment &&
+                selectedReservation?.ID !== reservation?.ID
               }
               variant="light"
-              onClick={() => handleOpenPaypal(reservation)}
+              onClick={() => handleOpenPayPalModal(reservation)}
             >
               <IconBrandPaypal />
             </ActionIcon>
@@ -242,6 +284,105 @@ function UserDashboard() {
           align="center"
         >{`${syncedData.length} Total Reservation`}</Text>
       )
+    );
+  };
+
+  const renderPayPalModalAmountTab = () => {
+    return (
+      <>
+        <Group mb="xs" justify="space-between">
+          <Text>Service</Text>
+          <div style={{ fontWeight: 700 }}>
+            {renderReservationServiceType(selectedReservation)}
+          </div>
+        </Group>
+
+        <Group fw={700} mb="xs" justify="space-between">
+          <Text>Service Price</Text>
+          <div>
+            <NumberFormatter
+              thousandSeparator
+              prefix="₱"
+              value={selectedReservation?.PRICE}
+            />
+
+            {selectedReservation?.TYPE === 'Room' ? '/night' : '/hour'}
+          </div>
+        </Group>
+
+        <Group fw={700} mb="xs" justify="space-between">
+          <Text>Total Amount</Text>
+          <NumberFormatter
+            thousandSeparator
+            prefix="₱"
+            value={selectedReservation?.AMOUNT}
+          />
+        </Group>
+
+        <Group fw={700} mb="xs" justify="space-between">
+          <Text>Balance</Text>
+          <NumberFormatter
+            thousandSeparator
+            prefix="₱"
+            value={selectedReservation?.BALANCE}
+          />
+        </Group>
+
+        {selectedReservation?.STATUS !== 'Cancelled' &&
+        selectedReservation?.IS_DOWNPAYMENT_PAID ? (
+          selectedReservation?.BALANCE > 0 && (
+            <Text c="#006400" align="center">
+              Down payment is paid
+            </Text>
+          )
+        ) : (
+          <Group fw={700} mb="xs" justify="space-between">
+            <Text style={{ alignSelf: 'start' }}>Required Downpayment</Text>
+            <Flex direction="column" align="end">
+              <NumberFormatter
+                thousandSeparator
+                prefix="₱"
+                value={Math.floor(selectedReservation?.AMOUNT * 0.3)}
+              />
+              <Text size="xs" mb="xs" mt="xs">
+                (30% of {selectedReservation?.AMOUNT})
+              </Text>
+              {renderReservationDateStatus(selectedReservation)}
+            </Flex>
+          </Group>
+        )}
+      </>
+    );
+  };
+
+  const renderPayPalModalHistoryTab = () => {
+    return (
+      <Box mb="sm">
+        {selectedReservation?.PAYMENT_HISTORY?.length > 0 ? (
+          selectedReservation.PAYMENT_HISTORY.sort(
+            (a, b) =>
+              moment(a.dop, 'MMM DD, YYYY') - moment(b.dop, 'MMM DD, YYYY'),
+          ).map((history) => (
+            <Group
+              fw={700}
+              justify="space-between"
+              key={nanoid()}
+              p="xs"
+              style={{}}
+            >
+              <NumberFormatter
+                thousandSeparator
+                prefix="₱"
+                value={history.amount}
+              />
+              <Text>{history.method}</Text>
+              <Text>{history.dop}</Text>
+            </Group>
+          ))
+        ) : (
+          <NoRecords message="No payment history" />
+        )}
+      </Box>
     );
   };
 
@@ -321,6 +462,85 @@ function UserDashboard() {
           {syncedData?.length > 0 && renderTableLength()}
         </>
       )}
+
+      <Modal
+        centered
+        title="Payment Information"
+        shadow="xl"
+        opened={isPayPalModalOpen}
+        onClose={closePayPalModal}
+        closeButtonProps={{
+          bg: 'crimson',
+          radius: '50%',
+          c: 'white',
+        }}
+        styles={{
+          title: { color: 'darkgreen', fontSize: '1.7rem' },
+          inner: { padding: 5 },
+        }}
+      >
+        <Flex direction="column">
+          <Tabs defaultValue="amount" color="darkgreen" variant="default">
+            <Tabs.List grow justify="space-between">
+              <Tabs.Tab value="amount">Amount</Tabs.Tab>
+              <Tabs.Tab value="history">Payment History</Tabs.Tab>
+            </Tabs.List>
+
+            <Tabs.Panel value="amount" pt="md">
+              {renderPayPalModalAmountTab()}
+
+              {selectedReservation?.STATUS !== 'Cancelled' &&
+                selectedReservation?.BALANCE > 0 && (
+                  <form
+                    onSubmit={form.onSubmit(({ amount }) =>
+                      handleOpenPaypalWindow(amount),
+                    )}
+                  >
+                    <NumberInput
+                      withAsterisk
+                      mt="sm"
+                      mb="xs"
+                      label="Amount"
+                      placeholder="0.00"
+                      min={0}
+                      styles={{
+                        label: { fontWeight: 700 },
+                      }}
+                      {...form.getInputProps('amount')}
+                    />
+
+                    <Button
+                      fullWidth
+                      type="submit"
+                      fw="normal"
+                      color="#006400"
+                      leftSection={<IconBrandPaypal />}
+                    >
+                      Pay with PayPal
+                    </Button>
+                  </form>
+                )}
+
+              {selectedReservation?.STATUS !== 'Cancelled' &&
+                selectedReservation?.BALANCE === 0 && (
+                  <Text mt="sm" c="darkgreen" align="center" fw={700}>
+                    This reservation is fully paid
+                  </Text>
+                )}
+
+              {selectedReservation?.STATUS === 'Cancelled' && (
+                <Text mt="sm" c="#FF0800" align="center" fw={700}>
+                  This reservation is cancelled
+                </Text>
+              )}
+            </Tabs.Panel>
+
+            <Tabs.Panel value="history" pt="md">
+              {renderPayPalModalHistoryTab()}
+            </Tabs.Panel>
+          </Tabs>
+        </Flex>
+      </Modal>
     </Box>
   );
 }

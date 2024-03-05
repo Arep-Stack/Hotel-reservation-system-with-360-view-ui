@@ -118,6 +118,7 @@ function AdminDashboard() {
 
   //functions
   const handleOpenModal = (reservation) => {
+    form.reset();
     setSelectedReservation(reservation);
     openProcessPaymentModal();
   };
@@ -481,11 +482,15 @@ function AdminDashboard() {
 
               <Group fw={700} mb="xs" justify="space-between">
                 <Text>Service Price</Text>
-                <NumberFormatter
-                  thousandSeparator
-                  prefix="₱"
-                  value={selectedReservation?.PRICE}
-                />
+                <div>
+                  <NumberFormatter
+                    thousandSeparator
+                    prefix="₱"
+                    value={selectedReservation?.PRICE}
+                  />
+
+                  {selectedReservation?.TYPE === 'Room' ? '/night' : '/hour'}
+                </div>
               </Group>
 
               <Divider mb="xs" />

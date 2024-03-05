@@ -5,6 +5,7 @@ import {
   IconSwimming,
 } from '@tabler/icons-react';
 import moment from 'moment';
+import React from 'react';
 
 const renderReservationDateStatus = (reservation) => {
   const currentDate = moment();
@@ -40,7 +41,7 @@ const renderReservationDateStatus = (reservation) => {
     );
   }
 
-  if (currentDate.isBefore(start)) {
+  if (currentDate.isBefore(start, 'day')) {
     return (
       <Badge w="100%" maw={95} variant="outline" color="#006400">
         Upcoming
@@ -74,7 +75,7 @@ const renderReservationServiceType = (reservation) => {
     return (
       <Group>
         <IconBed size={20} />
-        <Text td={reservation?.IS_DELETED ? 'line-through' : ''}>
+        <Text fw={700} td={reservation?.IS_DELETED ? 'line-through' : ''}>
           {reservation?.SERVICE_NAME}
         </Text>
       </Group>
@@ -83,7 +84,7 @@ const renderReservationServiceType = (reservation) => {
     return (
       <Group>
         <IconBuildingPavilion size={20} />
-        <Text td={reservation?.IS_DELETED ? 'line-through' : ''}>
+        <Text fw={700} td={reservation?.IS_DELETED ? 'line-through' : ''}>
           {reservation?.SERVICE_NAME}
         </Text>
       </Group>
@@ -92,7 +93,7 @@ const renderReservationServiceType = (reservation) => {
     return (
       <Group>
         <IconSwimming size={20} />
-        <Text td={reservation?.IS_DELETED ? 'line-through' : ''}>
+        <Text fw={700} td={reservation?.IS_DELETED ? 'line-through' : ''}>
           {reservation?.SERVICE_NAME}
         </Text>
       </Group>
@@ -202,7 +203,7 @@ const renderTableDate = (start, end, type) => {
 
         <Flex direction="column">
           <Text size="sm">{moment.utc(end).format('ll')}</Text>
-          <Text size="xs" align="left">
+          <Text size="xs" align="right">
             12:00 pm
           </Text>
         </Flex>
@@ -212,17 +213,17 @@ const renderTableDate = (start, end, type) => {
     return (
       <Flex gap={6} align="center">
         {[start, end].map((date, index) => (
-          <>
+          <React.Fragment key={index}>
             {index > 0 && <Text size="xs">-</Text>}
-            <div key={index}>
-              <Flex key={index} direction="column">
+            <div>
+              <Flex direction="column">
                 <Text size="sm">{moment.utc(date).format('ll')}</Text>
                 <Text size="xs" align={index === 1 ? 'right' : 'left'}>
                   {moment.utc(date).format('h:mm a')}
                 </Text>
               </Flex>
             </div>
-          </>
+          </React.Fragment>
         ))}
       </Flex>
     );
