@@ -259,7 +259,11 @@ function UserReservation() {
               withAsterisk
               label="Choose date"
               placeholder="Please choose date"
-              minDate={new Date()}
+              minDate={
+                new Date().getHours() >= 23
+                  ? new Date(new Date().setDate(new Date().getDate() + 1))
+                  : new Date()
+              }
               value={bookingDate}
               onChange={(value) => handleDateChange(value)}
             />

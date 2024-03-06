@@ -13,7 +13,7 @@ import {
 } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import { useDisclosure } from '@mantine/hooks';
-import { IconBrandPaypal } from '@tabler/icons-react';
+import { IconBrandPaypal, IconCircleX, IconTrash } from '@tabler/icons-react';
 import axios from 'axios';
 import moment from 'moment';
 import { nanoid } from 'nanoid';
@@ -48,6 +48,7 @@ function UserDashboard() {
 
   const [selectedReservation, setSelectedReservation] = useState({});
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
+  const [isCancellingReservation, setIsCancellingReservation] = useState(false);
 
   const user = JSON.parse(getUser());
 
@@ -78,6 +79,11 @@ function UserDashboard() {
   const [
     isPayPalModalOpen,
     { open: openPayPalModal, close: closePayPalModal },
+  ] = useDisclosure(false);
+
+  const [
+    isCancellationModalOpen,
+    { open: openCancelModal, close: closeCancelModal },
   ] = useDisclosure(false);
 
   //form
@@ -172,6 +178,41 @@ function UserDashboard() {
       .finally(() => setIsProcessingPayment(false));
   };
 
+  const handleOpenCancellationModal = (reservation) => {
+    setSelectedReservation(reservation);
+    openCancelModal();
+  };
+
+  const handleCancelReservation = () => {
+    setIsCancellingReservation(true);
+
+    axios({
+      method: 'PUT',
+      url: `/reservations/${selectedReservation?.ID}`,
+      data: {
+        ...selectedReservation,
+        STATUS: 'Cancelled',
+      },
+    })
+      .then(() => {
+        getAllReservations();
+
+        closeCancelModal();
+
+        toast.info('Reservation cancelled', {
+          position: toast.POSITION.TOP_RIGHT,
+          autoClose: 1500,
+        });
+      })
+      .catch(() =>
+        toast.error('An error occurred', {
+          position: toast.POSITION.TOP_RIGHT,
+          autoClose: 1500,
+        }),
+      )
+      .finally(() => setIsCancellingReservation(false));
+  };
+
   //render
   const renderDashboardTotals = () => {
     const dashboardTotals = [
@@ -246,20 +287,34 @@ function UserDashboard() {
           </Table.Td>
 
           <Table.Td>
-            <ActionIcon
-              loading={
-                isProcessingPayment &&
-                selectedReservation?.ID === reservation?.ID
-              }
-              disabled={
-                isProcessingPayment &&
-                selectedReservation?.ID !== reservation?.ID
-              }
-              variant="light"
-              onClick={() => handleOpenPayPalModal(reservation)}
-            >
-              <IconBrandPaypal />
-            </ActionIcon>
+            <Flex direction="row" gap="sm">
+              <ActionIcon
+                variant="light"
+                loading={
+                  isProcessingPayment &&
+                  selectedReservation?.ID === reservation?.ID
+                }
+                disabled={
+                  isProcessingPayment &&
+                  selectedReservation?.ID !== reservation?.ID
+                }
+                onClick={() => handleOpenPayPalModal(reservation)}
+              >
+                <IconBrandPaypal />
+              </ActionIcon>
+
+              <ActionIcon
+                variant="light"
+                color="#FF0800"
+                disabled={
+                  reservation?.STATUS === 'Cancelled' ||
+                  moment().isAfter(reservation?.END_DATE)
+                }
+                onClick={() => handleOpenCancellationModal(reservation)}
+              >
+                <IconCircleX />
+              </ActionIcon>
+            </Flex>
           </Table.Td>
         </Table.Tr>
       ));
@@ -386,6 +441,44 @@ function UserDashboard() {
     );
   };
 
+  const renderCancellationModalBody = () => {
+    if (selectedReservation) {
+      return (
+        <>
+          <Text align="center" my="md">
+            Are you sure you want to cancel? All payments made are
+            non-refundable.
+          </Text>
+
+          <Text size="xl" fw={900} align="center">
+            {selectedReservation?.SERVICE_NAME}
+          </Text>
+
+          <Flex justify="center">
+            {renderTableDate(
+              selectedReservation?.START_DATE,
+              selectedReservation?.END_DATE,
+              selectedReservation?.TYPE,
+            )}
+          </Flex>
+
+          <Button
+            fullWidth
+            mt="md"
+            color="#FF0800"
+            tt="uppercase"
+            fw={400}
+            leftSection={<IconTrash />}
+            loading={isCancellingReservation}
+            onClick={handleCancelReservation}
+          >
+            I understand
+          </Button>
+        </>
+      );
+    }
+  };
+
   useEffect(() => {
     let isMessageHandled = false;
     const messageListener = (event) => {
@@ -451,7 +544,7 @@ function UserDashboard() {
                   <Table.Th>Status</Table.Th>
                   <Table.Th>Amount</Table.Th>
                   <Table.Th>Balance</Table.Th>
-                  <Table.Th>Payment</Table.Th>
+                  <Table.Th>Actions</Table.Th>
                 </Table.Tr>
               </Table.Thead>
 
@@ -540,6 +633,28 @@ function UserDashboard() {
             </Tabs.Panel>
           </Tabs>
         </Flex>
+      </Modal>
+
+      <Modal
+        centered
+        title="Cancel Reservation"
+        shadow="xl"
+        opened={isCancellationModalOpen}
+        onClose={closeCancelModal}
+        closeButtonProps={{
+          bg: 'crimson',
+          radius: '50%',
+          c: 'white',
+        }}
+        styles={{
+          title: { color: '#FF0800', fontSize: '1.7rem' },
+          inner: { padding: 5 },
+        }}
+        withCloseButton={!isCancellingReservation}
+        closeOnClickOutside={!isCancellingReservation}
+        closeOnEscape={!isCancellingReservation}
+      >
+        {renderCancellationModalBody()}
       </Modal>
     </Box>
   );

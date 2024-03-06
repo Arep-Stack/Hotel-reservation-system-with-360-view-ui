@@ -9,7 +9,7 @@ import {
   TextInput,
 } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
-import { IconSearch, IconTrash, IconTrashFilled } from '@tabler/icons-react';
+import { IconSearch, IconTrash } from '@tabler/icons-react';
 import axios from 'axios';
 import { useContext, useState } from 'react';
 import { toast } from 'react-toastify';
@@ -187,7 +187,7 @@ function AdminUsers() {
           color="#FF0800"
           tt="uppercase"
           fw={400}
-          leftSection={<IconTrashFilled />}
+          leftSection={<IconTrash />}
           loading={isDeletingUser}
           onClick={handleDelete}
         >
