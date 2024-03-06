@@ -40,7 +40,7 @@ function Home() {
                 boxShadow:
                   '0px 0px 5px 1px rgba(85,179,111,1), 0px 1px 4px 0px rgba(0,0,0,0.11)',
               }}
-              src="https://cdn.pannellum.org/2.5/pannellum.htm#config=https://gist.githubusercontent.com/arepstack/d43a7bbac2285211e57acf8939ab5c7e/raw/75591c2cf166a1ed486ffcbcf8e9227bbbad1a95/tour-360.json"
+              src="https://cdn.pannellum.org/2.5/pannellum.htm#config=https://gist.githubusercontent.com/arepstack/d43a7bbac2285211e57acf8939ab5c7e/raw/a46d5ee5e800b3ab3cffb66fb4c8ac28aa3636e0/tour-360.json"
             ></iframe>
           </Flex>
         </Flex>
