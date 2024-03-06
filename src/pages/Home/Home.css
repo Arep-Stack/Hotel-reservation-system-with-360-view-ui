@@ -1,6 +1,6 @@
 .home-hero-text {
   text-transform: uppercase;
-  font-size: 15rem !important;
+  font-size: 13rem !important;
   font-weight: 900 !important;
   background-clip: text !important;
   -webkit-background-clip: text !important;
@@ -10,4 +10,5 @@
   text-align: center;
   background-repeat: no-repeat;
   background-size: cover;
+  margin-top: 0;
 }

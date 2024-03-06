@@ -1,6 +1,5 @@
 import {
   Box,
-  Button,
   Container,
   Flex,
   Group,
@@ -8,36 +7,43 @@ import {
   Loader,
   Text,
 } from '@mantine/core';
-import { IconArrowBadgeRightFilled } from '@tabler/icons-react';
-import { useNavigate } from 'react-router-dom';
 
 import { GoogleMapEmbed } from './GoogleMapEmbed';
 import './Home.css';
 
 function Home() {
-  const navigate = useNavigate();
-
   return (
     <Container size="xl" mih="100vh" px="lg">
-      <Flex mih="100vh" align="center" justify="center" direction="column">
+      <Flex
+        mih="100vh"
+        w="100%"
+        align="center"
+        justify="center"
+        direction="column"
+      >
         <Text className="home-hero-text">Felrey</Text>
-        <Text mb="xl" fw={900} size="5rem" c="darkgreen">
-          Resort and Pavilion
-        </Text>
-        <Text mb="xl" size="3rem">
-          Discover Great Deals Today!
-        </Text>
-        <Button
-          fw="normal"
-          rightSection={<IconArrowBadgeRightFilled />}
-          w="100%"
-          maw="400px"
-          size="xl"
-          color="#006400"
-          onClick={() => navigate('/Services')}
-        >
-          Book Now
-        </Button>
+
+        <Flex direction="column" w="100%" mt={-25}>
+          <Text color="darkgreen" size="3rem" align="center" mb="lg">
+            Go on a tour!
+          </Text>
+          <Flex direction="row" gap="md" w="100%">
+            <iframe
+              title="360 Tour"
+              width="100%"
+              allowFullScreen
+              style={{
+                flex: 1,
+                minHeight: '500px',
+                height: 'calc(100vh - 28rem)',
+                border: 0,
+                boxShadow:
+                  '0px 0px 5px 1px rgba(85,179,111,1), 0px 1px 4px 0px rgba(0,0,0,0.11)',
+              }}
+              src="https://cdn.pannellum.org/2.5/pannellum.htm#config=https://gist.githubusercontent.com/arepstack/d43a7bbac2285211e57acf8939ab5c7e/raw/75591c2cf166a1ed486ffcbcf8e9227bbbad1a95/tour-360.json"
+            ></iframe>
+          </Flex>
+        </Flex>
       </Flex>
 
       <Flex
