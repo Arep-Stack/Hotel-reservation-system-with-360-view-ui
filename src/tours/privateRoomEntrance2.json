@@ -1,0 +1,395 @@
+{
+  "default": {
+    "firstScene": "privateRoomEntrance2",
+    "author": "Felrey Resort",
+    "sceneFadeDuration": 1000,
+    "autoLoad": true
+  },
+  "scenes": {
+    "gate": {
+      "title": "Gate",
+      "hfov": 360,
+      "yaw": -185,
+      "type": "equirectangular",
+      "panorama": "https://res.cloudinary.com/djeaq2hyi/image/upload/v1709721770/1.1_qnnuoj.jpg",
+      "hotSpots": [
+        {
+          "yaw": 165,
+          "type": "scene",
+          "text": "Entrance",
+          "sceneId": "entrance"
+        },
+        {
+          "yaw": -240,
+          "type": "scene",
+          "text": "Pavilion 1",
+          "sceneId": "pavilion1"
+        }
+      ]
+    },
+    "entrance": {
+      "title": "Entrance",
+      "hfov": 360,
+      "yaw": 0,
+      "type": "equirectangular",
+      "panorama": "https://res.cloudinary.com/djeaq2hyi/image/upload/v1709721770/1.2_bmnvtc.jpg",
+      "hotSpots": [
+        {
+          "yaw": 155,
+          "pitch": -2,
+          "type": "scene",
+          "text": "Entrance",
+          "sceneId": "entrance"
+        },
+        {
+          "yaw": 210,
+          "pitch": -2,
+          "type": "scene",
+          "text": "Pavilion 1",
+          "sceneId": "pavilion1"
+        },
+        {
+          "yaw": -27.5,
+          "type": "scene",
+          "text": "Parking Area",
+          "sceneId": "parking"
+        },
+        {
+          "yaw": 35,
+          "type": "scene",
+          "text": "Private Rooms, Private Pool, and Pavilion 2",
+          "sceneId": "privatePool"
+        }
+      ]
+    },
+    "pavilion1": {
+      "title": "Pavilion 1",
+      "hfov": 360,
+      "yaw": 0,
+      "type": "equirectangular",
+      "panorama": "https://res.cloudinary.com/djeaq2hyi/image/upload/v1709721770/1.3.1_zzcyxl.jpg",
+      "hotSpots": [
+        {
+          "yaw": -75,
+          "pitch": -5,
+          "type": "scene",
+          "text": "Gate",
+          "sceneId": "gate"
+        },
+        {
+          "yaw": 180,
+          "pitch": -2.5,
+          "type": "scene",
+          "text": "Entrance",
+          "sceneId": "entrance"
+        }
+      ]
+    },
+    "parking": {
+      "title": "Parking Area 1",
+      "hfov": 360,
+      "yaw": 0,
+      "type": "equirectangular",
+      "panorama": "https://res.cloudinary.com/djeaq2hyi/image/upload/v1709721770/1.3_krmhia.jpg",
+      "hotSpots": [
+        {
+          "yaw": 135,
+          "pitch": -2.5,
+          "type": "scene",
+          "text": "Entrance",
+          "sceneId": "entrance"
+        },
+        {
+          "yaw": 0,
+          "pitch": -2.5,
+          "type": "scene",
+          "text": "Parking Area 2",
+          "sceneId": "parking2"
+        }
+      ]
+    },
+    "parking2": {
+      "title": "Parking Area 2",
+      "hfov": 360,
+      "yaw": 0,
+      "type": "equirectangular",
+      "panorama": "https://res.cloudinary.com/djeaq2hyi/image/upload/v1709721772/1.5_ffrlkv.jpg",
+      "hotSpots": [
+        {
+          "yaw": 188,
+          "pitch": -2.5,
+          "type": "scene",
+          "text": "Parking Area 1",
+          "sceneId": "parking"
+        },
+        {
+          "yaw": 0,
+          "pitch": -3,
+          "type": "scene",
+          "text": "Public Pools Cottage",
+          "sceneId": "publicPoolsCottage"
+        }
+      ]
+    },
+    "publicPoolsCottage": {
+      "title": "Public Pool's Cottages",
+      "hfov": 360,
+      "yaw": 0,
+      "type": "equirectangular",
+      "panorama": "https://res.cloudinary.com/djeaq2hyi/image/upload/v1709721772/1.5_ffrlkv.jpg",
+      "hotSpots": [
+        {
+          "yaw": 0,
+          "pitch": -3,
+          "type": "scene",
+          "text": "Public Pool",
+          "sceneId": "publicPool"
+        },
+        {
+          "yaw": 188,
+          "pitch": -2.5,
+          "type": "scene",
+          "text": "Parking Area 2",
+          "sceneId": "parking2"
+        }
+      ]
+    },
+    "publicPool": {
+      "title": "Public Pool's Cottages",
+      "hfov": 360,
+      "yaw": 0,
+      "type": "equirectangular",
+      "panorama": "https://res.cloudinary.com/djeaq2hyi/image/upload/v1709721771/1.6_t7jiyk.jpg",
+      "hotSpots": [
+        {
+          "yaw": 180,
+          "pitch": -2.5,
+          "type": "scene",
+          "text": "Public Pool's Cottages",
+          "sceneId": "publicPoolsCottage"
+        }
+      ]
+    },
+    "privatePool": {
+      "title": "Private Pool",
+      "hfov": 360,
+      "yaw": 0,
+      "type": "equirectangular",
+      "panorama": "https://res.cloudinary.com/djeaq2hyi/image/upload/v1709721771/D2_nrbdpp.jpg",
+      "hotSpots": [
+        {
+          "yaw": 177.5,
+          "type": "scene",
+          "text": "Entrance",
+          "sceneId": "entrance"
+        },
+        {
+          "yaw": 50,
+          "pitch": -2,
+          "type": "scene",
+          "text": "Pavilion 2",
+          "sceneId": "pavilion2"
+        },
+        {
+          "yaw": 86,
+          "type": "scene",
+          "text": "Private Rooms",
+          "sceneId": "privateRooms"
+        }
+      ]
+    },
+    "pavilion2": {
+      "title": "Pavilion 2",
+      "hfov": 360,
+      "yaw": 0,
+      "type": "equirectangular",
+      "panorama": "https://res.cloudinary.com/djeaq2hyi/image/upload/v1709721771/1.8_wtxsxx.jpg",
+      "hotSpots": [
+        {
+          "yaw": 240,
+          "pitch": -2.5,
+          "type": "scene",
+          "text": "Private Pool",
+          "sceneId": "privatePool"
+        }
+      ]
+    },
+    "privateRoomEntrance": {
+      "title": "Private Room's Entrance",
+      "hfov": 360,
+      "yaw": 0,
+      "type": "equirectangular",
+      "panorama": "https://res.cloudinary.com/djeaq2hyi/image/upload/v1709721772/B2_ipqfiq.jpg",
+      "hotSpots": [
+        {
+          "yaw": 0,
+          "pitch": -5,
+          "type": "scene",
+          "text": "Private Room",
+          "sceneId": "privateRoom"
+        },
+        {
+          "yaw": -97.5,
+          "pitch": -5,
+          "type": "scene",
+          "text": "Private Rooms",
+          "sceneId": "privateRooms"
+        }
+      ]
+    },
+    "privateRoomEntrance2": {
+      "title": "Private Room's Entrance",
+      "hfov": 360,
+      "yaw": 90,
+      "type": "equirectangular",
+      "panorama": "https://res.cloudinary.com/djeaq2hyi/image/upload/v1709721770/C1_otgwv1.jpg",
+      "hotSpots": [
+        {
+          "yaw": 80,
+          "pitch": -5,
+          "type": "scene",
+          "text": "Private Room",
+          "sceneId": "privateRoom"
+        },
+        {
+          "yaw": 0,
+          "pitch": -5,
+          "type": "scene",
+          "text": "Private Rooms",
+          "sceneId": "privateRooms"
+        }
+      ]
+    },
+    "privateRoomEntrance3": {
+      "title": "Private Room's Entrance",
+      "hfov": 360,
+      "yaw": 270,
+      "pitch": -2,
+      "type": "equirectangular",
+      "panorama": "https://res.cloudinary.com/djeaq2hyi/image/upload/v1709721770/B4_radzvp.jpg",
+      "hotSpots": [
+        {
+          "yaw": 267.5,
+          "pitch": -5,
+          "type": "scene",
+          "text": "Private Room",
+          "sceneId": "privateRoom"
+        },
+        {
+          "yaw": -180.5,
+          "pitch": -5,
+          "type": "scene",
+          "text": "Private Rooms",
+          "sceneId": "privateRooms"
+        }
+      ]
+    },
+    "privateRooms": {
+      "title": "Private Rooms",
+      "hfov": 360,
+      "yaw": 0,
+      "type": "equirectangular",
+      "panorama": "https://res.cloudinary.com/djeaq2hyi/image/upload/v1709721772/B1_lje2sb.jpg",
+      "hotSpots": [
+        {
+          "yaw": -92.5,
+          "pitch": -30,
+          "type": "scene",
+          "text": "Private Pool",
+          "sceneId": "privatePool"
+        },
+        {
+          "yaw": -40,
+          "pitch": -10,
+          "type": "scene",
+          "text": "Private Room",
+          "sceneId": "privateRoom"
+        },
+        {
+          "yaw": -5,
+          "pitch": -7.5,
+          "type": "scene",
+          "text": "Private Room 2's Entrance",
+          "sceneId": "privateRoomEntrance"
+        },
+        {
+          "yaw": -2,
+          "pitch": -3.5,
+          "type": "scene",
+          "text": "Private Room 3's Entrance",
+          "sceneId": "privateRoomEntrance2"
+        },
+        {
+          "yaw": 1,
+          "pitch": 0.5,
+          "type": "scene",
+          "text": "Private Room 4's Entrance",
+          "sceneId": "privateRoomEntrance3"
+        }
+      ]
+    },
+    "privateRoom": {
+      "title": "Private Room",
+      "hfov": 360,
+      "yaw": 0,
+      "type": "equirectangular",
+      "panorama": "https://res.cloudinary.com/djeaq2hyi/image/upload/v1709721771/AB1_vl6thk.jpg",
+      "hotSpots": [
+        {
+          "yaw": 100,
+          "pitch": -5,
+          "type": "scene",
+          "text": "Private Rooms",
+          "sceneId": "privateRooms"
+        },
+        {
+          "yaw": 45,
+          "pitch": -5,
+          "type": "scene",
+          "text": "Private Room's Bathroom",
+          "sceneId": "privateRoomBathroom"
+        },
+        {
+          "yaw": -38.5,
+          "pitch": -5,
+          "type": "scene",
+          "text": "Private Room's Balcony",
+          "sceneId": "privateRoomBalcony"
+        }
+      ]
+    },
+    "privateRoomBathroom": {
+      "title": "Private Room's Bathroom",
+      "hfov": 360,
+      "yaw": 90,
+      "pitch": -20,
+      "type": "equirectangular",
+      "panorama": "https://res.cloudinary.com/djeaq2hyi/image/upload/v1709721771/AB2_tmvw1r.jpg",
+      "hotSpots": [
+        {
+          "yaw": 160,
+          "pitch": -5,
+          "type": "scene",
+          "text": "Private Room",
+          "sceneId": "privateRoom"
+        }
+      ]
+    },
+    "privateRoomBalcony": {
+      "title": "Private Room's Balcony",
+      "hfov": 360,
+      "yaw": 0,
+      "type": "equirectangular",
+      "panorama": "https://res.cloudinary.com/djeaq2hyi/image/upload/v1709721772/AB3_ideeqt.jpg",
+      "hotSpots": [
+        {
+          "yaw": 200,
+          "pitch": -7.5,
+          "type": "scene",
+          "text": "Private Room",
+          "sceneId": "privateRoom"
+        }
+      ]
+    }
+  }
+}
