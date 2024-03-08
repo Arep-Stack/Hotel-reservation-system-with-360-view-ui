@@ -61,6 +61,7 @@ function Pools() {
           name={service?.NAME}
           persons={service?.PERSONS}
           price={service?.PRICE}
+          type={service?.TYPE}
         >
           <Button
             fullWidth

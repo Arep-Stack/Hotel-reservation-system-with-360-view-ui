@@ -1,4 +1,5 @@
 import {
+  ActionIcon,
   Box,
   Button,
   Divider,
@@ -7,6 +8,7 @@ import {
   Group,
   Image,
   Modal,
+  NumberFormatter,
   NumberInput,
   TagsInput,
   Text,
@@ -47,6 +49,8 @@ function AdminService() {
   const [image360, setImage360] = useState(null);
   const [isImage360Uploading, setIsImage360Uploading] = useState(false);
 
+  const [addons, setAddons] = useState([]);
+
   //form
   let form = useForm({
     initialValues: {
@@ -56,6 +60,9 @@ function AdminService() {
       PERSONS: 0,
       PRICE: 0,
       TYPE: '',
+      addonsName: '',
+      addonsPrice: '',
+      PRICE_EXCEED: 0,
     },
 
     validate: {
@@ -70,11 +77,15 @@ function AdminService() {
       PRICE: (value) =>
         upsertMode.includes('Delete') || (value && value > 0)
           ? null
-          : 'Price must be at least 0',
+          : 'Price must be at least 1',
       AMENITIES: (value) =>
         upsertMode.includes('Delete') || value.length > 0
           ? null
           : 'Add at least 1 amenity',
+      PRICE_EXCEED: (value) =>
+        sortingCriteria === 'Room' || upsertMode.includes('Delete') || value > 1
+          ? null
+          : 'Price must be at least 1',
     },
   });
 
@@ -89,8 +100,25 @@ function AdminService() {
   ] = useDisclosure(false);
 
   //function
+  const handlePushAddons = () => {
+    const { addonsName, addonsPrice } = form.values;
 
-  const handleSubmit = ({ AMENITIES, NAME, PERSONS, PRICE, IMAGE }) => {
+    if (addonsName && addonsPrice) {
+      setAddons((prev) => [...prev, { name: addonsName, price: addonsPrice }]);
+
+      form.values.addonsName = '';
+      form.values.addonsPrice = '';
+    }
+  };
+
+  const handleSubmit = ({
+    AMENITIES,
+    NAME,
+    PERSONS,
+    PRICE,
+    IMAGE,
+    PRICE_EXCEED,
+  }) => {
     setIsSubmitting(true);
 
     const upsert = (id) => {
@@ -109,6 +137,8 @@ function AdminService() {
           TYPE: sortingCriteria,
           IS_DELETED: upsertMode === 'Delete' ? true : false,
           MAIN360: image360 ? image360 : '',
+          ADDONS: addons,
+          PRICE_EXCEED: PRICE_EXCEED,
         },
       })
         .then(() => {
@@ -121,7 +151,7 @@ function AdminService() {
             autoClose: 1500,
           });
         })
-        .catch(() =>
+        .catch((err) =>
           toast.error('An error occurred', {
             position: toast.POSITION.TOP_RIGHT,
             autoClose: 1500,
@@ -182,6 +212,10 @@ function AdminService() {
       setImage360(null);
       form.reset();
     }
+
+    if (!!service?.ADDONS && Array.isArray(service?.ADDONS))
+      setAddons(service.ADDONS);
+    else setAddons([]);
 
     setUpsertMode(mode);
     setSelectedService(service);
@@ -272,6 +306,8 @@ function AdminService() {
           MAIN360,
           OTHER360,
           TYPE,
+          ADDONS,
+          PRICE_EXCEED,
         }) => (
           <ServiceCard
             key={ID}
@@ -281,6 +317,7 @@ function AdminService() {
             persons={PERSONS}
             price={PRICE}
             type={TYPE}
+            addons={ADDONS}
           >
             {serviceButtons({
               AMENITIES,
@@ -291,6 +328,9 @@ function AdminService() {
               PRICE,
               MAIN360,
               OTHER360,
+              ADDONS,
+              TYPE,
+              PRICE_EXCEED,
             })}
           </ServiceCard>
         ),
@@ -331,7 +371,7 @@ function AdminService() {
       );
     } else {
       return (
-        <Flex>
+        <Flex gap="sm">
           <form
             style={{ width: '440px' }}
             onSubmit={form.onSubmit((values) => {
@@ -374,16 +414,23 @@ function AdminService() {
 
             <NumberInput
               withAsterisk
-              label={
-                selectedService?.TYPE === 'Room'
-                  ? 'Price per night'
-                  : 'Price per hour'
-              }
+              label="Price"
               placeholder="0.00"
               min={0}
               leftSection={<IconCurrencyPeso />}
               {...form.getInputProps('PRICE')}
             />
+
+            {sortingCriteria !== 'Room' && (
+              <NumberInput
+                withAsterisk
+                label="Price for additional hour"
+                placeholder="0.00"
+                min={0}
+                leftSection={<IconCurrencyPeso />}
+                {...form.getInputProps('PRICE_EXCEED')}
+              />
+            )}
 
             <NumberInput
               withAsterisk
@@ -407,6 +454,55 @@ function AdminService() {
               }}
             />
 
+            <Flex direction="column">
+              <Flex gap="xs" align="center">
+                <TextInput
+                  label="Add-ons name"
+                  placeholder="Add-ons"
+                  {...form.getInputProps('addonsName')}
+                />
+                <NumberInput
+                  label="Price"
+                  placeholder="0"
+                  {...form.getInputProps('addonsPrice')}
+                />
+                <ActionIcon
+                  mt="lg"
+                  variant="light"
+                  color="#006400"
+                  disabled={!form.values.addonsName || !form.values.addonsPrice}
+                  onClick={handlePushAddons}
+                >
+                  <IconCirclePlus />
+                </ActionIcon>
+              </Flex>
+
+              <Flex direction="column">
+                {addons?.map((a, index) => (
+                  <Group
+                    fw={700}
+                    direction="row"
+                    key={index}
+                    align="center"
+                    mt="xs"
+                    gap="sm"
+                  >
+                    <ActionIcon
+                      variant="transparent"
+                      color="#FF0800"
+                      onClick={() =>
+                        setAddons(addons.filter((_, i) => i !== index))
+                      }
+                    >
+                      <IconTrash />
+                    </ActionIcon>
+                    <Text>{a?.name}</Text>
+                    <NumberFormatter prefix="₱" value={a?.price} />
+                  </Group>
+                ))}
+              </Flex>
+            </Flex>
+
             <Button
               fullWidth
               loading={isSubmitting}
@@ -420,14 +516,12 @@ function AdminService() {
             </Button>
           </form>
 
-          <Divider mr="sm" ml="sm" />
-
           <Flex
-            w="100%"
-            mih="90%"
             direction="column"
             justify="center"
             align="center"
+            w="70vw"
+            h="70vh"
           >
             {render360Iframe()}
 
@@ -494,7 +588,7 @@ function AdminService() {
           <iframe
             title={selectedService?.MAIN360}
             width="100%"
-            height="95%"
+            height="100%"
             allowFullScreen
             src={src}
           ></iframe>
@@ -564,7 +658,7 @@ function AdminService() {
       <Modal
         centered
         shadow="xl"
-        size={upsertMode === 'Delete' ? 'md' : '80%'}
+        size="auto"
         opened={isUpsertModalOpen}
         onClose={closeUpsertModal}
         title={upsertMode + ' ' + sortingCriteria}

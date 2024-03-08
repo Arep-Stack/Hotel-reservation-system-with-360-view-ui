@@ -2,6 +2,7 @@ import {
   Anchor,
   Box,
   Button,
+  Checkbox,
   Divider,
   Flex,
   Group,
@@ -11,6 +12,7 @@ import {
   Select,
   Stepper,
   Text,
+  TextInput,
 } from '@mantine/core';
 import { DateInput, DatePickerInput } from '@mantine/dates';
 import { useDisclosure } from '@mantine/hooks';
@@ -27,6 +29,7 @@ import { IconListDetails } from '@tabler/icons-react';
 import { IconAlertCircle } from '@tabler/icons-react';
 import axios from 'axios';
 import moment from 'moment';
+import { nanoid } from 'nanoid';
 import { useContext, useState } from 'react';
 
 import { GlobalContext } from '../../App';
@@ -76,6 +79,7 @@ function UserReservation() {
 
   const [selectedService, setSelectedService] = useState(null);
   const [sortingCriteria, setSortingCriteria] = useState('Room');
+  const [addons, setAddons] = useState([]);
 
   const [activeStepper, setActiveStepper] = useState(0);
   const [isBooking, setIsBooking] = useState(false);
@@ -101,11 +105,13 @@ function UserReservation() {
 
   //functions
   const handleOpenModal = (service) => {
+    setAddons([]);
     setSelectedService(service);
     openBookingModal();
   };
 
   const handleDateChange = (values) => {
+    setAddons([]);
     if (selectedService?.TYPE === 'Room') {
       setBookingDates(values);
 
@@ -117,10 +123,14 @@ function UserReservation() {
         const totalAmount = totalNights * selectedService?.PRICE;
 
         setTotalNights(totalNights);
+
         setTotalAmount(totalAmount);
       }
     } else {
       setBookingDate(values);
+      setBookingTime(null);
+      setTotalAmount(0);
+      setTotalHours(0);
 
       const selectedDate = moment(values);
       const currentTime = moment().format('HH');
@@ -162,12 +172,16 @@ function UserReservation() {
             ? moment(bookingDates[1]).format('ll')
             : moment(bookingDate)
                 .set({
-                  hour: parseInt(bookingTime, 10) + totalHours,
+                  hour:
+                    selectedService?.TYPE === 'Pavilion'
+                      ? parseInt(bookingTime, 10) + 6 + totalHours
+                      : parseInt(bookingTime, 10) + 24 + totalHours,
                 })
                 .format('MMMM D, YYYY @ h:mm a'),
         AMOUNT: totalAmount,
         BALANCE: totalAmount,
         PAYMENT_HISTORY: [],
+        // ADDONS: addons,
       },
     })
       .then(() => {
@@ -175,7 +189,7 @@ function UserReservation() {
         nextStep();
         setIsBooked(true);
       })
-      .catch(() => {
+      .catch((err) => {
         setBookingError('An error occurred. Please try again later');
       })
       .finally(() => setIsBooking(false));
@@ -198,6 +212,63 @@ function UserReservation() {
     setIsBooked(false);
   };
 
+  const handleSetStartTime = (value) => {
+    setBookingTime(value);
+    setAddons([]);
+    setTotalHours(0);
+    if (value) setTotalAmount(selectedService?.PRICE);
+    else setTotalAmount(0);
+  };
+
+  const handleAddAdditionalHours = (value) => {
+    setAddons([]);
+    setTotalHours(value);
+    if (value <= 0) {
+      setTotalAmount(selectedService?.PRICE);
+    } else {
+      setTotalAmount(
+        selectedService?.PRICE + selectedService?.PRICE_EXCEED * value,
+      );
+    }
+  };
+
+  const handleChangeAddOns = (values) => {
+    setAddons(values);
+
+    if (selectedService?.TYPE === 'Room') {
+      let addonsTotal = 0;
+
+      values.forEach((addon) => {
+        const addonIndex = selectedService?.ADDONS.findIndex(
+          (a) => a.name === addon,
+        );
+        if (addonIndex !== -1) {
+          addonsTotal += selectedService?.ADDONS[addonIndex].price;
+        }
+      });
+
+      const totals = totalNights * selectedService?.PRICE + addonsTotal;
+
+      setTotalAmount(totals);
+    } else {
+      let addonsTotal = 0;
+
+      values.forEach((addon) => {
+        const addonIndex = selectedService?.ADDONS.findIndex(
+          (a) => a.name === addon,
+        );
+        if (addonIndex !== -1) {
+          addonsTotal += selectedService?.ADDONS[addonIndex].price;
+        }
+      });
+
+      setTotalAmount(
+        selectedService?.PRICE +
+          totalHours * selectedService?.PRICE_EXCEED +
+          addonsTotal,
+      );
+    }
+  };
   //render
   const renderServices = () => {
     const services = allServices?.filter(
@@ -217,6 +288,8 @@ function UserReservation() {
             name={service.NAME}
             persons={service.PERSONS}
             price={service.PRICE}
+            type={service.TYPE}
+            addons={service.ADDONS}
           >
             <Flex align="center" gap="xs">
               <Button
@@ -278,26 +351,33 @@ function UserReservation() {
                 placeholder="Select start time"
                 data={filteredDataTimes}
                 value={bookingTime}
-                onChange={setBookingTime}
+                onChange={(value) => handleSetStartTime(value)}
               />
 
               <NumberInput
                 flex={1}
-                withAsterisk
-                min={1}
-                label="How many hour/s?"
-                placeholder="1"
+                min={0}
+                label="Additional hour/s?"
+                placeholder="0"
                 disabled={!bookingTime}
                 value={totalHours}
-                onChange={(value) => {
-                  setTotalHours(value);
-                  setTotalAmount(Math.floor(selectedService?.PRICE * value));
-                }}
+                onChange={(value) => handleAddAdditionalHours(value)}
               />
             </Flex>
           </>
         )}
 
+        {selectedService?.TYPE === 'Pavilion' && (
+          <Text mb="sm" mt="sm" fw={700} c="#006400" align="center">
+            The minimum duration for renting this service is 6 hours.
+          </Text>
+        )}
+
+        {selectedService?.TYPE === 'Pool' && (
+          <Text mb="sm" mt="sm" fw={700} c="#006400" align="center">
+            The minimum duration for renting this service is 24 hours.
+          </Text>
+        )}
         <Group mt="md" mb="xs" justify="space-between">
           <Text>Price</Text>
           <div>
@@ -306,26 +386,46 @@ function UserReservation() {
               value={selectedService?.PRICE}
               prefix="₱"
             />
-            {selectedService?.TYPE === 'Room' ? '/night' : '/hour'}
+            {selectedService?.TYPE === 'Room' && '/night'}
+            {selectedService?.TYPE === 'Pavilion' && '/6hours'}
+            {selectedService?.TYPE === 'Pool' && '/24hours'}
           </div>
         </Group>
+
+        {selectedService?.TYPE !== 'Room' && (
+          <Group mb="xs" justify="space-between">
+            <Text>Additional hour pricing</Text>
+            <div>
+              <NumberFormatter
+                thousandSeparator
+                value={selectedService?.PRICE_EXCEED}
+                prefix="₱"
+              />
+              /hour
+            </div>
+          </Group>
+        )}
 
         <Group mb="xs" justify="space-between" align="start">
           <Text>Duration</Text>
           <Flex direction="column" align="end">
             <Text mb="xs">
-              {selectedService?.TYPE === 'Room' && totalNights !== 0
-                ? `${totalNights + 1} ${
-                    totalNights + 1 > 1 ? 'days' : 'day'
-                  }, ${totalNights} ${totalNights > 1 ? 'nights' : 'night'}`
-                : selectedService?.TYPE !== 'Room' && totalHours !== null
-                ? totalHours > 1
-                  ? `${totalHours} hours`
-                  : `${totalHours} hour`
-                : '-'}
+              {selectedService?.TYPE === 'Room' &&
+                totalNights !== 0 &&
+                `${totalNights + 1} ${
+                  totalNights + 1 > 1 ? 'days' : 'day'
+                }, ${totalNights} ${totalNights > 1 ? 'nights' : 'night'}`}
+
+              {selectedService?.TYPE === 'Pavilion' &&
+                !!bookingTime &&
+                `${6 + totalHours} hours`}
+
+              {selectedService?.TYPE === 'Pool' &&
+                !!bookingTime &&
+                `${24 + totalHours} hours`}
             </Text>
 
-            {selectedService?.TYPE !== 'Room' && !!totalHours && (
+            {selectedService?.TYPE !== 'Room' && !!bookingTime && (
               <Group align="center" gap={4}>
                 <Text size="sm">{`${moment(bookingDate)
                   .set({
@@ -338,7 +438,10 @@ function UserReservation() {
                 </Text>
                 <Text size="sm">{`${moment(bookingDate)
                   .set({
-                    hour: parseInt(bookingTime, 10) + totalHours,
+                    hour:
+                      selectedService?.TYPE === 'Pavilion'
+                        ? parseInt(bookingTime, 10) + 6 + totalHours
+                        : parseInt(bookingTime, 10) + 24 + totalHours,
                   })
                   .format('MMMM D, YYYY @ h:mm a')}
                    `}</Text>
@@ -346,6 +449,35 @@ function UserReservation() {
             )}
           </Flex>
         </Group>
+
+        {selectedService?.ADDONS?.length > 0 && (
+          <Flex
+            direction="column"
+            mb="xs"
+            justify="space-between"
+            align="start"
+          >
+            <Text>Add-ons</Text>
+            <Checkbox.Group
+              value={addons}
+              onChange={(values) => handleChangeAddOns(values)}
+            >
+              {selectedService.ADDONS.map((a) => (
+                <Checkbox
+                  mb="xs"
+                  key={nanoid()}
+                  disabled={
+                    selectedService?.TYPE === 'Room'
+                      ? !bookingDates[0] && !bookingDates[1]
+                      : !bookingTime
+                  }
+                  value={a?.name}
+                  label={`${a?.name} - ₱${a?.price}`}
+                />
+              ))}
+            </Checkbox.Group>
+          </Flex>
+        )}
 
         <Divider mb="xs" />
 
@@ -394,7 +526,7 @@ function UserReservation() {
               ? moment(bookingDates[1]).format('ll')
               : moment(bookingDate)
                   .set({
-                    hour: parseInt(bookingTime, 10) + totalHours,
+                    hour: parseInt(bookingTime, 10) + 6 + totalHours,
                   })
                   .format('MMMM D, YYYY @ h:00 a')}
           </Text>
@@ -404,17 +536,46 @@ function UserReservation() {
 
         <Group mb="xs" justify="space-between">
           <Text>Duration</Text>
-          <Text>
-            {selectedService?.TYPE === 'Room' && totalNights !== 0
-              ? `${totalNights + 1} ${
+          <Flex direction="column" align="end">
+            <Text mb="xs">
+              {selectedService?.TYPE === 'Room' &&
+                totalNights !== 0 &&
+                `${totalNights + 1} ${
                   totalNights + 1 > 1 ? 'days' : 'day'
-                }, ${totalNights} ${totalNights > 1 ? 'nights' : 'night'}`
-              : selectedService?.TYPE !== 'Room' && totalHours !== null
-              ? totalHours > 1
-                ? `${totalHours} hours`
-                : `${totalHours} hour`
-              : '-'}
-          </Text>
+                }, ${totalNights} ${totalNights > 1 ? 'nights' : 'night'}`}
+
+              {selectedService?.TYPE === 'Pavilion' &&
+                !!bookingTime &&
+                `${6 + totalHours} hours`}
+
+              {selectedService?.TYPE === 'Pool' &&
+                !!bookingTime &&
+                `${24 + totalHours} hours`}
+            </Text>
+
+            {selectedService?.TYPE !== 'Room' && !!bookingTime && (
+              <Group align="center" gap={4}>
+                <Text size="sm">{`${moment(bookingDate)
+                  .set({
+                    hour: parseInt(bookingTime, 10),
+                  })
+                  .format('MMMM D, YYYY @ h:mm a')}
+                   `}</Text>
+                <Text size="xs" c="dimmed">
+                  to
+                </Text>
+                <Text size="sm">{`${moment(bookingDate)
+                  .set({
+                    hour:
+                      selectedService?.TYPE === 'Pavilion'
+                        ? parseInt(bookingTime, 10) + 6 + totalHours
+                        : parseInt(bookingTime, 10) + 24 + totalHours,
+                  })
+                  .format('MMMM D, YYYY @ h:mm a')}
+                   `}</Text>
+              </Group>
+            )}
+          </Flex>
         </Group>
 
         <Group mb="xs" justify="space-between">
@@ -425,8 +586,42 @@ function UserReservation() {
               value={selectedService?.PRICE}
               prefix="₱"
             />
-            {selectedService?.TYPE === 'Room' ? '/night' : '/hour'}
+            {selectedService?.TYPE === 'Room' && '/night'}
+            {selectedService?.TYPE === 'Pavilion' && '/6hours'}
+            {selectedService?.TYPE === 'Pool' && '/24hours'}
           </div>
+        </Group>
+
+        {selectedService?.TYPE !== 'Room' && (
+          <Group mb="xs" justify="space-between">
+            <Text>Additional hour pricing</Text>
+            <div>
+              <NumberFormatter
+                thousandSeparator
+                value={selectedService?.PRICE_EXCEED}
+                prefix="₱"
+              />
+              /hour
+            </div>
+          </Group>
+        )}
+
+        <Group mb="xs" justify="space-between" align="start">
+          <Text>Add-ons</Text>
+          <Flex direction="column" align="end">
+            {addons?.length > 0
+              ? addons.map((a) => {
+                  const add = selectedService?.ADDONS.find(
+                    (addon) => addon.name === a,
+                  );
+                  return (
+                    <Text key={nanoid()} size="sm">
+                      {add ? `${add.name} - ₱${add.price}` : ''}
+                    </Text>
+                  );
+                })
+              : '-'}
+          </Flex>
         </Group>
 
         <Group fw={700} mb="xs" justify="space-between">
@@ -622,7 +817,7 @@ function UserReservation() {
                     (selectedService?.TYPE === 'Room' &&
                       (!bookingDates[0] || !bookingDates[1])) ||
                     (selectedService?.TYPE !== 'Room' &&
-                      (!bookingDate || !bookingTime || !totalHours))
+                      (!bookingDate || !bookingTime))
                   }
                   onClick={nextStep}
                   rightSection={<IconArrowRight />}

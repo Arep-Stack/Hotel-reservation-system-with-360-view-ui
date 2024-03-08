@@ -10,6 +10,7 @@ import {
 } from '@mantine/core';
 import { IconUsers } from '@tabler/icons-react';
 import axios from 'axios';
+import { nanoid } from 'nanoid';
 import { useEffect, useState } from 'react';
 
 function ServiceCard({
@@ -20,6 +21,7 @@ function ServiceCard({
   amenities,
   children,
   type,
+  addons,
 }) {
   const [imagePath, setImagePath] = useState(null);
 
@@ -86,7 +88,9 @@ function ServiceCard({
 
             <Badge size="lg" variant="light" color="#006400" tt="lowercase">
               <NumberFormatter prefix="₱" value={price} thousandSeparator />
-              {type === 'Room' ? '/night' : '/hour'}
+              {type === 'Room' && '/night'}
+              {type === 'Pavilion' && '/6hours'}
+              {type === 'Pool' && '/24hours'}
             </Badge>
           </Flex>
 
@@ -99,6 +103,23 @@ function ServiceCard({
                 </Badge>
               ))}
             </Group>
+          </Box>
+
+          <Box py="md">
+            {addons && addons.length > 0 ? (
+              <>
+                <Text c="darkgreen">Add-ons:</Text>
+                <Group gap={7} mt={5}>
+                  {addons.map((a) => (
+                    <Badge color="dark" variant="light" key={nanoid()}>
+                      ₱{a.price} - {a.name}
+                    </Badge>
+                  ))}
+                </Group>
+              </>
+            ) : (
+              <Text c="crimson">No add-ons available</Text>
+            )}
           </Box>
         </Box>
 
