@@ -318,6 +318,7 @@ function AdminService() {
             price={PRICE}
             type={TYPE}
             addons={ADDONS}
+            price_exceed={PRICE_EXCEED}
           >
             {serviceButtons({
               AMENITIES,
@@ -414,7 +415,9 @@ function AdminService() {
 
             <NumberInput
               withAsterisk
-              label="Price"
+              label={
+                sortingCriteria === 'Pool' ? 'Price for 9am - 5pm' : 'Price'
+              }
               placeholder="0.00"
               min={0}
               leftSection={<IconCurrencyPeso />}
@@ -424,7 +427,11 @@ function AdminService() {
             {sortingCriteria !== 'Room' && (
               <NumberInput
                 withAsterisk
-                label="Price for additional hour"
+                label={
+                  sortingCriteria === 'Pool'
+                    ? 'Price for 5pm to 11pm'
+                    : 'Price for additional hour'
+                }
                 placeholder="0.00"
                 min={0}
                 leftSection={<IconCurrencyPeso />}

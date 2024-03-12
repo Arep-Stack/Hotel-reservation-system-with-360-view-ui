@@ -22,6 +22,7 @@ function ServiceCard({
   children,
   type,
   addons,
+  price_exceed,
 }) {
   const [imagePath, setImagePath] = useState(null);
 
@@ -64,6 +65,11 @@ function ServiceCard({
       </Box>
 
       <Flex justify="space-between" direction="column" px="sm" pb="sm" h="100%">
+        {type === 'Pool' && (
+          <Text c="#006400" mt="xs" align="center">
+            This service is billed per head
+          </Text>
+        )}
         <Box>
           <Flex
             justify="space-between"
@@ -86,12 +92,35 @@ function ServiceCard({
               </Flex>
             </div>
 
-            <Badge size="lg" variant="light" color="#006400" tt="lowercase">
-              <NumberFormatter prefix="₱" value={price} thousandSeparator />
-              {type === 'Room' && '/night'}
-              {type === 'Pavilion' && '/6hours'}
-              {type === 'Pool' && '/24hours'}
-            </Badge>
+            <Flex direction="column" align="center" gap={3}>
+              <Badge
+                size={type === 'Pool' ? 'md' : 'lg'}
+                variant="light"
+                color="#006400"
+                tt="lowercase"
+              >
+                <NumberFormatter prefix="₱" value={price} thousandSeparator />
+                {type === 'Room' && '/night'}
+                {type === 'Pavilion' && '/6hours'}
+                {type === 'Pool' && '/9am-5pm'}
+              </Badge>
+              {type === 'Pool' && (
+                <Badge
+                  size={type === 'Pool' ? 'md' : 'lg'}
+                  variant="light"
+                  color="#006400"
+                  tt="lowercase"
+                >
+                  {' '}
+                  <NumberFormatter
+                    prefix="₱"
+                    value={price_exceed}
+                    thousandSeparator
+                  />
+                  /5pm-11pm
+                </Badge>
+              )}
+            </Flex>
           </Flex>
 
           <Box py="md">
