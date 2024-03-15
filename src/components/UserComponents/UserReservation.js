@@ -397,7 +397,8 @@ function UserReservation() {
             />
 
             <NumberInput
-              min={0}
+              min={1}
+              max={selectedService?.PERSONS}
               label="Pax attendees"
               placeholder="1"
               disabled={!bookingDates[0] || !bookingDates[1]}
@@ -447,7 +448,8 @@ function UserReservation() {
                 </Flex>
 
                 <NumberInput
-                  min={0}
+                  min={1}
+                  max={selectedService?.PERSONS}
                   label="Pax attendees"
                   placeholder="1"
                   disabled={!bookingDate}
