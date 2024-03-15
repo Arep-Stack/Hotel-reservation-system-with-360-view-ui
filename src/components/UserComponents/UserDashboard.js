@@ -257,6 +257,8 @@ function UserDashboard() {
             )}
           </Table.Td>
 
+          <Table.Td>{reservation?.PAX}</Table.Td>
+
           <Table.Td>
             {calculateDuration(
               reservation?.START_DATE,
@@ -540,6 +542,7 @@ function UserDashboard() {
                   <Table.Th></Table.Th>
                   <Table.Th>Service</Table.Th>
                   <Table.Th>Date</Table.Th>
+                  <Table.Th>Pax</Table.Th>
                   <Table.Th>Duration</Table.Th>
                   <Table.Th>Status</Table.Th>
                   <Table.Th>Amount</Table.Th>

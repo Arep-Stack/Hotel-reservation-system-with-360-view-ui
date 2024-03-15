@@ -12,7 +12,6 @@ import {
   Select,
   Stepper,
   Text,
-  TextInput,
 } from '@mantine/core';
 import { DateInput, DatePickerInput } from '@mantine/dates';
 import { useDisclosure } from '@mantine/hooks';
@@ -104,7 +103,7 @@ function UserReservation() {
   const [filteredSwimmingTimes, setFilteredSwimmingTimes] =
     useState(swimmingTimes);
   const [swimTime, setSwimTime] = useState(null);
-  const [totalPaxForSwimming, setTotalPaxForSwimming] = useState(1);
+  const [totalPax, setTotalPax] = useState(1);
 
   //modal
   const [
@@ -140,8 +139,8 @@ function UserReservation() {
       setBookingTime(null);
       setTotalAmount(0);
       setTotalHours(0);
-      setTotalPaxForSwimming(0);
       setSwimTime(null);
+      setTotalPax(1);
 
       const selectedDate = moment(values);
       const currentTime = moment().format('HH');
@@ -208,7 +207,8 @@ function UserReservation() {
         AMOUNT: totalAmount,
         BALANCE: totalAmount,
         PAYMENT_HISTORY: [],
-        // ADDONS: addons,
+        ADDONS: [],
+        PAX: totalPax,
       },
     })
       .then(() => {
@@ -237,6 +237,8 @@ function UserReservation() {
     setBookingTime(null);
     setTotalHours(null);
     setIsBooked(false);
+    setTotalPax(1);
+    setSwimTime(null);
   };
 
   const handleSetStartTime = (value) => {
@@ -265,20 +267,17 @@ function UserReservation() {
     setSwimTime(value);
     if (!!value) {
       if (value === 'morning')
-        setTotalAmount(selectedService?.PRICE * (totalPaxForSwimming || 1));
-      else
-        setTotalAmount(
-          selectedService?.PRICE_EXCEED * (totalPaxForSwimming || 1),
-        );
+        setTotalAmount(selectedService?.PRICE * (totalPax || 1));
+      else setTotalAmount(selectedService?.PRICE_EXCEED * (totalPax || 1));
     } else {
       setTotalAmount(0);
-      setTotalPaxForSwimming(1);
+      setTotalPax(1);
     }
   };
 
   const handleCalculateTotalPaxForSwimming = (value) => {
     setAddons([]);
-    setTotalPaxForSwimming(value);
+    setTotalPax(value);
 
     if (swimTime === 'morning') {
       setTotalAmount(Math.floor(value * selectedService?.PRICE));
@@ -317,11 +316,23 @@ function UserReservation() {
         }
       });
 
-      setTotalAmount(
-        selectedService?.PRICE +
-          totalHours * selectedService?.PRICE_EXCEED +
-          addonsTotal,
-      );
+      if (selectedService?.TYPE === 'Pavilion') {
+        setTotalAmount(
+          selectedService?.PRICE +
+            totalHours * selectedService?.PRICE_EXCEED +
+            addonsTotal,
+        );
+      } else {
+        if (swimTime === 'morning') {
+          setTotalAmount(
+            Math.floor(totalPax * selectedService?.PRICE) + addonsTotal,
+          );
+        } else {
+          setTotalAmount(
+            Math.floor(totalPax * selectedService?.PRICE_EXCEED) + addonsTotal,
+          );
+        }
+      }
     }
   };
 
@@ -373,16 +384,27 @@ function UserReservation() {
     return (
       <Flex direction="column">
         {selectedService?.TYPE === 'Room' ? (
-          <DatePickerInput
-            withAsterisk
-            minDate={new Date()}
-            mb="sm"
-            type="range"
-            label="Choose dates"
-            placeholder="Please choose date range"
-            value={bookingDates}
-            onChange={(values) => handleDateChange(values)}
-          />
+          <>
+            <DatePickerInput
+              withAsterisk
+              minDate={new Date()}
+              mb="sm"
+              type="range"
+              label="Choose dates"
+              placeholder="Please choose date range"
+              value={bookingDates}
+              onChange={(values) => handleDateChange(values)}
+            />
+
+            <NumberInput
+              min={0}
+              label="Pax attendees"
+              placeholder="1"
+              disabled={!bookingDates[0] || !bookingDates[1]}
+              value={totalPax}
+              onChange={setTotalPax}
+            />
+          </>
         ) : (
           <>
             <DateInput
@@ -399,29 +421,40 @@ function UserReservation() {
             />
 
             {selectedService?.TYPE === 'Pavilion' && (
-              <Flex mt="xs" mb="xs" justify="center" gap="md">
-                <Select
-                  flex={1}
-                  withAsterisk
-                  clearable
-                  disabled={!bookingDate}
-                  label="Start time"
-                  placeholder="Select start time"
-                  data={filteredDataTimes}
-                  value={bookingTime}
-                  onChange={(value) => handleSetStartTime(value)}
-                />
+              <>
+                <Flex mt="xs" mb="xs" justify="center" gap="md">
+                  <Select
+                    flex={1}
+                    withAsterisk
+                    clearable
+                    disabled={!bookingDate}
+                    label="Start time"
+                    placeholder="Select start time"
+                    data={filteredDataTimes}
+                    value={bookingTime}
+                    onChange={(value) => handleSetStartTime(value)}
+                  />
+
+                  <NumberInput
+                    flex={1}
+                    min={0}
+                    label="Additional hour/s?"
+                    placeholder="0"
+                    disabled={!bookingTime}
+                    value={totalHours}
+                    onChange={(value) => handleAddAdditionalHours(value)}
+                  />
+                </Flex>
 
                 <NumberInput
-                  flex={1}
                   min={0}
-                  label="Additional hour/s?"
-                  placeholder="0"
-                  disabled={!bookingTime}
-                  value={totalHours}
-                  onChange={(value) => handleAddAdditionalHours(value)}
+                  label="Pax attendees"
+                  placeholder="1"
+                  disabled={!bookingDate}
+                  value={totalPax}
+                  onChange={setTotalPax}
                 />
-              </Flex>
+              </>
             )}
 
             {selectedService?.TYPE === 'Pool' && (
@@ -443,7 +476,7 @@ function UserReservation() {
                   min={1}
                   label="Total pax"
                   disabled={!swimTime}
-                  value={totalPaxForSwimming}
+                  value={totalPax}
                   onChange={(value) =>
                     handleCalculateTotalPaxForSwimming(value)
                   }
@@ -515,8 +548,7 @@ function UserReservation() {
                 `${6 + totalHours} hours`}
 
               {selectedService?.TYPE === 'Pool' &&
-                !!bookingTime &&
-                `${24 + totalHours} hours`}
+                (swimTime === 'night' ? 'up to 11pm' : '9am-5pm')}
             </Text>
 
             {selectedService?.TYPE !== 'Room' && !!bookingTime && (
@@ -563,7 +595,9 @@ function UserReservation() {
                   disabled={
                     selectedService?.TYPE === 'Room'
                       ? !bookingDates[0] && !bookingDates[1]
-                      : !bookingTime
+                      : selectedService?.TYPE === 'Pavilion'
+                      ? !bookingTime
+                      : !swimTime
                   }
                   value={a?.name}
                   label={`${a?.name} - ₱${a?.price}`}
@@ -596,8 +630,8 @@ function UserReservation() {
         </Group>
 
         <Group mb="xs" justify="space-between">
-          <Text>Capacity</Text>
-          <Text>up to {selectedService?.PERSONS} pax</Text>
+          <Text>Total Pax</Text>
+          <Text>{totalPax}</Text>
         </Group>
 
         <Group mb="xs" justify="space-between">
@@ -642,9 +676,7 @@ function UserReservation() {
                 !!bookingTime &&
                 `${6 + totalHours} hours`}
 
-              {selectedService?.TYPE === 'Pool' &&
-                !!bookingTime &&
-                `${24 + totalHours} hours`}
+              {swimTime === 'night' ? 'up to 11pm' : '9am-5pm'}
             </Text>
 
             {selectedService?.TYPE !== 'Room' && !!bookingTime && (
@@ -672,21 +704,35 @@ function UserReservation() {
           </Flex>
         </Group>
 
-        <Group mb="xs" justify="space-between">
+        <Group mb="xs" justify="space-between" align="start">
           <Text>Service Price</Text>
-          <div>
-            <NumberFormatter
-              thousandSeparator
-              value={selectedService?.PRICE}
-              prefix="₱"
-            />
-            {selectedService?.TYPE === 'Room' && '/night'}
-            {selectedService?.TYPE === 'Pavilion' && '/6hours'}
-            {selectedService?.TYPE === 'Pool' && '/24hours'}
-          </div>
+          <Flex direction="column" justify="end">
+            <div>
+              <NumberFormatter
+                thousandSeparator
+                value={selectedService?.PRICE}
+                prefix="₱"
+              />
+              {selectedService?.TYPE === 'Room' && '/night'}
+              {selectedService?.TYPE === 'Pavilion' && '/6hours'}
+              {selectedService?.TYPE === 'Pool' && '/9am-5pm'}
+            </div>
+
+            {selectedService?.TYPE === 'Pool' && (
+              <div>
+                <NumberFormatter
+                  thousandSeparator
+                  value={selectedService?.PRICE}
+                  prefix="₱"
+                />
+
+                {selectedService?.TYPE === 'Pool' && '/up to 11pm'}
+              </div>
+            )}
+          </Flex>
         </Group>
 
-        {selectedService?.TYPE !== 'Room' && (
+        {selectedService?.TYPE === 'Pavilion' && (
           <Group mb="xs" justify="space-between">
             <Text>Additional hour pricing</Text>
             <div>
@@ -910,8 +956,10 @@ function UserReservation() {
                   disabled={
                     (selectedService?.TYPE === 'Room' &&
                       (!bookingDates[0] || !bookingDates[1])) ||
-                    (selectedService?.TYPE !== 'Room' &&
-                      (!bookingDate || !bookingTime))
+                    (selectedService?.TYPE === 'Pavilion' &&
+                      (!bookingDate || !bookingTime)) ||
+                    (selectedService?.TYPE === 'Pool' &&
+                      (!bookingDate || !swimTime))
                   }
                   onClick={nextStep}
                   rightSection={<IconArrowRight />}
