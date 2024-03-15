@@ -76,6 +76,7 @@ function UserReservation() {
   const { setCurrentTab } = useContext(UserMenuTab);
   const {
     getAllReservations,
+    allReservations,
     allServices,
     allServicesError,
     allServicesLoading,
@@ -112,6 +113,76 @@ function UserReservation() {
   ] = useDisclosure(false);
 
   //functions
+
+  const getAllReservationDays = () => {
+    const reservationDays = new Set();
+
+    allReservations.forEach((reservation) => {
+      if (selectedService?.ID === reservation?.SERVICE_ID) {
+        const startDate = new Date(reservation.START_DATE);
+        const endDate = new Date(reservation.END_DATE);
+
+        const startDay = startDate.getDate();
+        const startMonth = startDate.getMonth() + 1;
+        const startYear = startDate.getFullYear();
+
+        const endDay = endDate.getDate();
+        const endMonth = endDate.getMonth() + 1;
+        const endYear = endDate.getFullYear();
+
+        reservationDays.add(`${startDay}-${startMonth}-${startYear}`);
+        reservationDays.add(`${endDay}-${endMonth}-${endYear}`);
+      }
+    });
+
+    return Array.from(reservationDays).map((formattedDate) => {
+      const [day, month, year] = formattedDate.split('-').map(Number);
+      return { day, month, year, formattedDate };
+    });
+  };
+
+  const dayRenderer = (date) => {
+    const month = date.getMonth() + 1;
+    const day = date.getDate();
+    const year = date.getFullYear();
+
+    const reservationDays = getAllReservationDays().filter(
+      (reservation) =>
+        reservation.month === month &&
+        reservation.day === day &&
+        reservation.year === year,
+    );
+
+    const shouldRenderIndicator = reservationDays.length > 0;
+
+    return (
+      <>
+        {selectedService?.TYPE !== 'Pool' && shouldRenderIndicator ? (
+          <div
+            style={{
+              zIndex: 999,
+              width: '100%',
+              height: '100%',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <p
+              style={{
+                textDecoration: 'line-through',
+              }}
+            >
+              {day}
+            </p>
+          </div>
+        ) : (
+          <div>{day}</div>
+        )}
+      </>
+    );
+  };
+
   const handleOpenModal = (service) => {
     setAddons([]);
     setSelectedService(service);
@@ -122,7 +193,6 @@ function UserReservation() {
     setAddons([]);
     if (selectedService?.TYPE === 'Room') {
       setBookingDates(values);
-
       if (values[0] && values[1]) {
         const startDate = moment(values[0]);
         const endDate = moment(values[1]);
@@ -131,11 +201,43 @@ function UserReservation() {
         const totalAmount = totalNights * selectedService?.PRICE;
 
         setTotalNights(totalNights);
-
         setTotalAmount(totalAmount);
+
+        const isOverlap = getAllReservationDays().some((day) => {
+          const reservationDate = moment(
+            `${day.year}-${day.month}-${day.day}`,
+            'YYYY-MM-DD',
+          );
+          return (
+            reservationDate.isSameOrAfter(startDate) &&
+            reservationDate.isSameOrBefore(endDate)
+          );
+        });
+
+        if (isOverlap) {
+          setBookingDates([null, null]);
+        } else {
+          setBookingDates(values);
+        }
       }
     } else {
-      setBookingDate(values);
+      const dateVal =
+        values.getDate() +
+        '-' +
+        (values.getMonth() + 1) +
+        '-' +
+        values.getFullYear();
+      const reservationDays = getAllReservationDays();
+
+      if (
+        selectedService?.TYPE === 'Pavilion' &&
+        reservationDays.some((day) => day.formattedDate === dateVal)
+      ) {
+        setBookingDate(null);
+      } else {
+        setBookingDate(values);
+      }
+
       setBookingTime(null);
       setTotalAmount(0);
       setTotalHours(0);
@@ -394,6 +496,7 @@ function UserReservation() {
               placeholder="Please choose date range"
               value={bookingDates}
               onChange={(values) => handleDateChange(values)}
+              renderDay={dayRenderer}
             />
 
             <NumberInput
@@ -419,6 +522,7 @@ function UserReservation() {
               }
               value={bookingDate}
               onChange={(value) => handleDateChange(value)}
+              renderDay={dayRenderer}
             />
 
             {selectedService?.TYPE === 'Pavilion' && (
