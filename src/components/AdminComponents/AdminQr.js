@@ -18,7 +18,7 @@ export default function AdminQr() {
 
   const handleUploadImage = (e) => {
     const admin = allUsers?.find(
-      (user) => user.IS_ADMIN && user.EMAIL === 'admin@admin.com',
+      (user) => user.IS_ADMIN && user.EMAIL === 'admin@felrey.com',
     );
 
     setIsUploading(true);
@@ -73,33 +73,19 @@ export default function AdminQr() {
     setIsRemoving(true);
 
     const admin = allUsers?.find(
-      (user) => user.IS_ADMIN && user.EMAIL === 'admin@admin.com',
+      (user) => user.IS_ADMIN && user.EMAIL === 'admin@felrey.com',
     );
 
     axios({
       method: 'PUT',
       url: `/users/${admin?.ID}`,
       data: { ...admin, QR_IMAGE: null },
-    })
-      .then(() => {
-        setImage('');
-        toast.success('Successfully uploaded', {
-          position: toast.POSITION.TOP_RIGHT,
-          autoClose: 1500,
-        });
-      })
-      .catch(() => {
-        toast.error('An error occurred', {
-          position: toast.POSITION.TOP_RIGHT,
-          autoClose: 1500,
-        });
-      })
-      .finally(() => setIsRemoving(false));
+    }).finally(() => setIsRemoving(false));
   };
 
   useEffect(() => {
     const adminWithQr = allUsers?.find(
-      (user) => user.IS_ADMIN && user.EMAIL === 'admin@admin.com',
+      (user) => user.IS_ADMIN && user.EMAIL === 'admin@felrey.com',
     )?.QR_IMAGE;
 
     setImage(adminWithQr);
@@ -116,7 +102,7 @@ export default function AdminQr() {
         pos="relative"
       >
         {image ? (
-          <Image w={400} h={400} src={image} />
+          <Image w={400} src={image} />
         ) : (
           <NoRecords message="No Gcash QR code uploaded" />
         )}

@@ -4,6 +4,7 @@ import {
   Button,
   Flex,
   Group,
+  Image,
   Modal,
   NumberFormatter,
   NumberInput,
@@ -13,7 +14,12 @@ import {
 } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import { useDisclosure } from '@mantine/hooks';
-import { IconBrandPaypal, IconCircleX, IconTrash } from '@tabler/icons-react';
+import {
+  IconBrandPaypal,
+  IconCircleX,
+  IconQrcode,
+  IconTrash,
+} from '@tabler/icons-react';
 import axios from 'axios';
 import moment from 'moment';
 import { nanoid } from 'nanoid';
@@ -44,6 +50,7 @@ function UserDashboard() {
     allReservationsError,
     allReservationsLoading,
     allServices,
+    allUsers,
   } = useContext(GlobalContext);
 
   const [selectedReservation, setSelectedReservation] = useState({});
@@ -85,6 +92,9 @@ function UserDashboard() {
     isCancellationModalOpen,
     { open: openCancelModal, close: closeCancelModal },
   ] = useDisclosure(false);
+
+  const [isGcashModalOpen, { open: openGcashModal, close: closeGcashModal }] =
+    useDisclosure(false);
 
   //form
   let form = useForm({
@@ -289,7 +299,7 @@ function UserDashboard() {
           </Table.Td>
 
           <Table.Td>
-            <Flex direction="row" gap="sm">
+            <Flex direction="row" gap="xs">
               <ActionIcon
                 variant="light"
                 loading={
@@ -315,6 +325,14 @@ function UserDashboard() {
                 onClick={() => handleOpenCancellationModal(reservation)}
               >
                 <IconCircleX />
+              </ActionIcon>
+
+              <ActionIcon
+                variant="light"
+                color="#022DB8"
+                onClick={openGcashModal}
+              >
+                <IconQrcode />
               </ActionIcon>
             </Flex>
           </Table.Td>
@@ -409,6 +427,24 @@ function UserDashboard() {
           </Group>
         )}
       </>
+    );
+  };
+
+  const renderGcashQRModalBody = () => {
+    const qr = allUsers?.find(
+      ({ EMAIL }) => EMAIL === 'admin@felrey.com',
+    )?.QR_IMAGE;
+
+    return (
+      <Flex direction="column" justify="center" align="center" gap="sm">
+        {qr && <Text size="xl">Pay using Gcash</Text>}
+
+        {qr ? (
+          <Image src={qr} w={400} />
+        ) : (
+          <NoRecords message="No Gcash QR available." />
+        )}
+      </Flex>
     );
   };
 
@@ -658,6 +694,25 @@ function UserDashboard() {
         closeOnEscape={!isCancellingReservation}
       >
         {renderCancellationModalBody()}
+      </Modal>
+
+      <Modal
+        centered
+        title="Gcash QR"
+        shadow="xl"
+        opened={isGcashModalOpen}
+        onClose={closeGcashModal}
+        closeButtonProps={{
+          bg: 'crimson',
+          radius: '50%',
+          c: 'white',
+        }}
+        styles={{
+          title: { color: '#006400', fontSize: '1.7rem' },
+          inner: { padding: 5 },
+        }}
+      >
+        {renderGcashQRModalBody()}
       </Modal>
     </Box>
   );
