@@ -8,9 +8,11 @@ import {
   Modal,
   NumberFormatter,
   NumberInput,
+  Rating,
   Table,
   Tabs,
   Text,
+  Textarea,
 } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import { useDisclosure } from '@mantine/hooks';
@@ -20,6 +22,7 @@ import {
   IconQrcode,
   IconTrash,
 } from '@tabler/icons-react';
+import { IconThumbUp } from '@tabler/icons-react';
 import axios from 'axios';
 import moment from 'moment';
 import { nanoid } from 'nanoid';
@@ -56,6 +59,11 @@ function UserDashboard() {
   const [selectedReservation, setSelectedReservation] = useState({});
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
   const [isCancellingReservation, setIsCancellingReservation] = useState(false);
+  const [isSubmittingFeedback, setIsSubmittingFeedback] = useState(false);
+
+  const [feedbackStars, setFeedbackStars] = useState(null);
+  const [feedbackMessage, setFeedbackMessage] = useState('');
+  const [feedbackDate, setFeedbackDate] = useState(null);
 
   const user = JSON.parse(getUser());
 
@@ -95,6 +103,11 @@ function UserDashboard() {
 
   const [isGcashModalOpen, { open: openGcashModal, close: closeGcashModal }] =
     useDisclosure(false);
+
+  const [
+    isFeedbackModalOpen,
+    { open: openFeedbackModal, close: closeFeedbackModal },
+  ] = useDisclosure(false);
 
   //form
   let form = useForm({
@@ -193,6 +206,24 @@ function UserDashboard() {
     openCancelModal();
   };
 
+  const handleOpenFeedbackModal = (reservation) => {
+    setSelectedReservation(reservation);
+
+    if (reservation?.FEEDBACK) {
+      const { comment, star, d } = reservation?.FEEDBACK[0];
+
+      setFeedbackMessage(comment);
+      setFeedbackStars(star);
+      setFeedbackDate(d);
+    } else {
+      setFeedbackMessage('');
+      setFeedbackStars(null);
+      setFeedbackDate(null);
+    }
+
+    openFeedbackModal();
+  };
+
   const handleCancelReservation = () => {
     setIsCancellingReservation(true);
 
@@ -221,6 +252,40 @@ function UserDashboard() {
         }),
       )
       .finally(() => setIsCancellingReservation(false));
+  };
+
+  const handleSubmitFeedback = () => {
+    setIsSubmittingFeedback(true);
+
+    const FEEDBACK = [
+      {
+        star: feedbackStars,
+        comment: feedbackMessage,
+        d: moment(),
+      },
+    ];
+
+    axios({
+      method: 'PUT',
+      url: `/reservations/${selectedReservation?.ID}`,
+      data: { FEEDBACK },
+    })
+      .then(() => {
+        closeFeedbackModal();
+        getAllReservations();
+
+        toast.success('Successfully added review', {
+          position: toast.POSITION.TOP_RIGHT,
+          autoClose: 1500,
+        });
+      })
+      .catch(() =>
+        toast.error('An error occurred', {
+          position: toast.POSITION.TOP_RIGHT,
+          autoClose: 1500,
+        }),
+      )
+      .finally(() => setIsSubmittingFeedback(false));
   };
 
   //render
@@ -301,7 +366,17 @@ function UserDashboard() {
           <Table.Td>
             <Flex direction="row" gap="xs">
               <ActionIcon
-                variant="light"
+                color="#FF0800"
+                disabled={
+                  reservation?.STATUS === 'Cancelled' ||
+                  moment().isAfter(reservation?.END_DATE)
+                }
+                onClick={() => handleOpenCancellationModal(reservation)}
+              >
+                <IconCircleX />
+              </ActionIcon>
+
+              <ActionIcon
                 loading={
                   isProcessingPayment &&
                   selectedReservation?.ID === reservation?.ID
@@ -315,24 +390,16 @@ function UserDashboard() {
                 <IconBrandPaypal />
               </ActionIcon>
 
-              <ActionIcon
-                variant="light"
-                color="#FF0800"
-                disabled={
-                  reservation?.STATUS === 'Cancelled' ||
-                  moment().isAfter(reservation?.END_DATE)
-                }
-                onClick={() => handleOpenCancellationModal(reservation)}
-              >
-                <IconCircleX />
+              <ActionIcon color="#006400" onClick={openGcashModal}>
+                <IconQrcode />
               </ActionIcon>
 
               <ActionIcon
-                variant="light"
-                color="#022DB8"
-                onClick={openGcashModal}
+                disabled={moment().isBefore(reservation?.END_DATE)}
+                color="#EF9B0F"
+                onClick={() => handleOpenFeedbackModal(reservation)}
               >
-                <IconQrcode />
+                <IconThumbUp />
               </ActionIcon>
             </Flex>
           </Table.Td>
@@ -430,24 +497,6 @@ function UserDashboard() {
     );
   };
 
-  const renderGcashQRModalBody = () => {
-    const qr = allUsers?.find(
-      ({ EMAIL }) => EMAIL === 'admin@felrey.com',
-    )?.QR_IMAGE;
-
-    return (
-      <Flex direction="column" justify="center" align="center" gap="sm">
-        {qr && <Text size="xl">Pay using Gcash</Text>}
-
-        {qr ? (
-          <Image src={qr} w={400} />
-        ) : (
-          <NoRecords message="No Gcash QR available." />
-        )}
-      </Flex>
-    );
-  };
-
   const renderPayPalModalHistoryTab = () => {
     return (
       <Box mb="sm">
@@ -515,6 +564,59 @@ function UserDashboard() {
         </>
       );
     }
+  };
+
+  const renderGcashQRModalBody = () => {
+    const qr = allUsers?.find(
+      ({ EMAIL }) => EMAIL === 'admin@felrey.com',
+    )?.QR_IMAGE;
+
+    return (
+      <Flex direction="column" justify="center" align="center" gap="sm">
+        {qr && <Text size="xl">Pay using Gcash</Text>}
+
+        {qr ? (
+          <Image src={qr} w={400} />
+        ) : (
+          <NoRecords message="No Gcash QR available." />
+        )}
+      </Flex>
+    );
+  };
+
+  const renderFeedbackModalBody = () => {
+    return (
+      <Flex justify="center" align="center" direction="column">
+        <Rating
+          size="xl"
+          mb="sm"
+          value={feedbackStars}
+          onChange={setFeedbackStars}
+        ></Rating>
+
+        <Textarea
+          w={400}
+          rows={10}
+          mb="sm"
+          label="Tell us about your experience!"
+          placeholder="Message..."
+          value={feedbackMessage}
+          onChange={(e) => setFeedbackMessage(e.currentTarget.value)}
+        />
+
+        <Text mb="md">{feedbackDate && moment(feedbackDate).format('ll')}</Text>
+
+        <Button
+          fullWidth
+          color="#006400"
+          onClick={handleSubmitFeedback}
+          loading={isSubmittingFeedback}
+          disabled={!feedbackStars || !feedbackMessage}
+        >
+          Submit
+        </Button>
+      </Flex>
+    );
   };
 
   useEffect(() => {
@@ -713,6 +815,28 @@ function UserDashboard() {
         }}
       >
         {renderGcashQRModalBody()}
+      </Modal>
+
+      <Modal
+        centered
+        title="Rate your stay"
+        shadow="xl"
+        opened={isFeedbackModalOpen}
+        onClose={closeFeedbackModal}
+        closeButtonProps={{
+          bg: 'crimson',
+          radius: '50%',
+          c: 'white',
+        }}
+        styles={{
+          title: { color: '#006400', fontSize: '1.7rem' },
+          inner: { padding: 5 },
+        }}
+        withCloseButton={!isSubmittingFeedback}
+        closeOnClickOutside={!isSubmittingFeedback}
+        closeOnEscape={!isSubmittingFeedback}
+      >
+        {renderFeedbackModalBody()}
       </Modal>
     </Box>
   );
