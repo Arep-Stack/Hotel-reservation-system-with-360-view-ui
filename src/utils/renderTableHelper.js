@@ -36,7 +36,7 @@ const renderReservationDateStatus = (reservation) => {
   if (!reservation?.IS_DOWNPAYMENT_PAID) {
     return (
       <Badge w="100%" maw={95} variant="filled" color="#960018">
-        NO DEPOSIT
+        PENDING
       </Badge>
     );
   }

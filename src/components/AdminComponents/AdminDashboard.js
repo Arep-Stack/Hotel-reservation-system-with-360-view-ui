@@ -17,7 +17,7 @@ import {
 import { DateInput } from '@mantine/dates';
 import { useForm } from '@mantine/form';
 import { useDisclosure } from '@mantine/hooks';
-import { IconWallet } from '@tabler/icons-react';
+import { IconCircleX, IconTrash, IconWallet } from '@tabler/icons-react';
 import axios from 'axios';
 import moment from 'moment';
 import { nanoid } from 'nanoid';
@@ -87,6 +87,9 @@ function AdminDashboard() {
   const [selectedReservation, setSelectedReservation] = useState(null);
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
 
+  //cancellation
+  const [isCancellingReservation, setIsCancellingReservation] = useState(false);
+
   //form
   let form = useForm({
     initialValues: {
@@ -114,6 +117,11 @@ function AdminDashboard() {
   const [
     isProcessPaymentModalOpen,
     { open: openProcessPaymentModal, close: closeProcessPaymentModal },
+  ] = useDisclosure(false);
+
+  const [
+    isCancellationModalOpen,
+    { open: openCancelModal, close: closeCancelModal },
   ] = useDisclosure(false);
 
   //functions
@@ -166,6 +174,40 @@ function AdminDashboard() {
       .finally(() => setIsProcessingPayment(false));
   };
 
+  const handleOpenCancellationModal = (reservation) => {
+    setSelectedReservation(reservation);
+    openCancelModal();
+  };
+
+  const handleCancelReservation = () => {
+    setIsCancellingReservation(true);
+
+    axios({
+      method: 'PUT',
+      url: `/reservations/${selectedReservation?.ID}`,
+      data: {
+        STATUS: 'Cancelled',
+      },
+    })
+      .then(() => {
+        getAllReservations();
+
+        closeCancelModal();
+
+        toast.info('Reservation cancelled', {
+          position: toast.POSITION.TOP_RIGHT,
+          autoClose: 1500,
+        });
+      })
+      .catch(() =>
+        toast.error('An error occurred', {
+          position: toast.POSITION.TOP_RIGHT,
+          autoClose: 1500,
+        }),
+      )
+      .finally(() => setIsCancellingReservation(false));
+  };
+
   //renders
   const renderDashboardTotals = () => {
     const dashboardTotals = [
@@ -182,6 +224,44 @@ function AdminDashboard() {
         cancelled={cancelled}
       />
     ));
+  };
+
+  const renderCancellationModalBody = () => {
+    if (selectedReservation) {
+      return (
+        <>
+          <Text align="center" my="md">
+            Are you sure you want to cancel? All payments made are
+            non-refundable.
+          </Text>
+
+          <Text size="xl" fw={900} align="center">
+            {selectedReservation?.SERVICE_NAME}
+          </Text>
+
+          <Flex justify="center">
+            {renderTableDate(
+              selectedReservation?.START_DATE,
+              selectedReservation?.END_DATE,
+              selectedReservation?.TYPE,
+            )}
+          </Flex>
+
+          <Button
+            fullWidth
+            mt="md"
+            color="#FF0800"
+            tt="uppercase"
+            fw={400}
+            leftSection={<IconTrash />}
+            loading={isCancellingReservation}
+            onClick={handleCancelReservation}
+          >
+            I understand
+          </Button>
+        </>
+      );
+    }
   };
 
   const renderTable = () => {
@@ -248,12 +328,22 @@ function AdminDashboard() {
           </Table.Td>
 
           <Table.Td>
-            <ActionIcon
-              variant="transparent"
-              onClick={() => handleOpenModal(reservation)}
-            >
-              <IconWallet color="#027802" />
-            </ActionIcon>
+            <Flex direction="row" gap="xs">
+              <ActionIcon
+                color="#027802"
+                onClick={() => handleOpenModal(reservation)}
+              >
+                <IconWallet />
+              </ActionIcon>
+
+              <ActionIcon
+                color="#FF0800"
+                disabled={reservation?.STATUS === 'Cancelled'}
+                onClick={() => handleOpenCancellationModal(reservation)}
+              >
+                <IconCircleX />
+              </ActionIcon>
+            </Flex>
           </Table.Td>
         </Table.Tr>
       ));
@@ -600,6 +690,28 @@ function AdminDashboard() {
             </Tabs.Panel>
           </Tabs>
         </Flex>
+      </Modal>
+
+      <Modal
+        centered
+        title="Cancel Reservation"
+        shadow="xl"
+        opened={isCancellationModalOpen}
+        onClose={closeCancelModal}
+        closeButtonProps={{
+          bg: 'crimson',
+          radius: '50%',
+          c: 'white',
+        }}
+        styles={{
+          title: { color: '#FF0800', fontSize: '1.7rem' },
+          inner: { padding: 5 },
+        }}
+        withCloseButton={!isCancellingReservation}
+        closeOnClickOutside={!isCancellingReservation}
+        closeOnEscape={!isCancellingReservation}
+      >
+        {renderCancellationModalBody()}
       </Modal>
     </Box>
   );
