@@ -9,6 +9,7 @@ import {
   NumberFormatter,
   NumberInput,
   Paper,
+  Rating,
   Table,
   Tabs,
   Text,
@@ -17,7 +18,12 @@ import {
 import { DateInput } from '@mantine/dates';
 import { useForm } from '@mantine/form';
 import { useDisclosure } from '@mantine/hooks';
-import { IconCircleX, IconTrash, IconWallet } from '@tabler/icons-react';
+import {
+  IconCircleX,
+  IconThumbUp,
+  IconTrash,
+  IconWallet,
+} from '@tabler/icons-react';
 import axios from 'axios';
 import moment from 'moment';
 import { nanoid } from 'nanoid';
@@ -124,6 +130,11 @@ function AdminDashboard() {
     { open: openCancelModal, close: closeCancelModal },
   ] = useDisclosure(false);
 
+  const [
+    isFeedbackModalOpen,
+    { open: openFeedbackModal, close: closeFeedbackModal },
+  ] = useDisclosure(false);
+
   //functions
   const handleOpenModal = (reservation) => {
     form.reset();
@@ -208,6 +219,10 @@ function AdminDashboard() {
       .finally(() => setIsCancellingReservation(false));
   };
 
+  const handleOpenFeedbackModal = (reservation) => {
+    setSelectedReservation(reservation);
+    openFeedbackModal();
+  };
   //renders
   const renderDashboardTotals = () => {
     const dashboardTotals = [
@@ -337,6 +352,13 @@ function AdminDashboard() {
               </ActionIcon>
 
               <ActionIcon
+                color="#EF9B0F"
+                onClick={() => handleOpenFeedbackModal(reservation)}
+              >
+                <IconThumbUp />
+              </ActionIcon>
+
+              <ActionIcon
                 color="#FF0800"
                 disabled={reservation?.STATUS === 'Cancelled'}
                 onClick={() => handleOpenCancellationModal(reservation)}
@@ -453,6 +475,24 @@ function AdminDashboard() {
     );
   };
 
+  const renderFeedbackModalBody = () => {
+    if (selectedReservation?.FEEDBACK) {
+      const { star, comment, d } = selectedReservation?.FEEDBACK[0];
+
+      return (
+        <Flex direction="column" justify="center" align="center" gap="md">
+          <Rating readOnly size="xl" value={star} />
+
+          <Text size="lg">"{comment}"</Text>
+
+          <Text>{moment(d).format('ll')}</Text>
+        </Flex>
+      );
+    } else {
+      return <NoRecords message="No Feedback" />;
+    }
+  };
+
   return (
     <Box pos="relative" mih={200}>
       {allReservationsLoading && (
@@ -517,7 +557,7 @@ function AdminDashboard() {
                     <Table.Th>Duration</Table.Th>
                     <Table.Th>Status</Table.Th>
                     <Table.Th>Balance</Table.Th>
-                    <Table.Th>Payment</Table.Th>
+                    <Table.Th>Action</Table.Th>
                   </Table.Tr>
                 </Table.Thead>
                 <Table.Tbody>{renderTable()}</Table.Tbody>
@@ -712,6 +752,25 @@ function AdminDashboard() {
         closeOnEscape={!isCancellingReservation}
       >
         {renderCancellationModalBody()}
+      </Modal>
+
+      <Modal
+        centered
+        title="Customer Feedback"
+        shadow="xl"
+        opened={isFeedbackModalOpen}
+        onClose={closeFeedbackModal}
+        closeButtonProps={{
+          bg: 'crimson',
+          radius: '50%',
+          c: 'white',
+        }}
+        styles={{
+          title: { color: '#006400', fontSize: '1.7rem' },
+          inner: { padding: 5 },
+        }}
+      >
+        {renderFeedbackModalBody()}
       </Modal>
     </Box>
   );
