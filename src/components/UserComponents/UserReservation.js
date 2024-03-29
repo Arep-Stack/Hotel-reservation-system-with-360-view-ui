@@ -191,17 +191,16 @@ function UserReservation() {
 
   const handleDateChange = (values) => {
     setAddons([]);
+
     if (selectedService?.TYPE === 'Room') {
       setBookingDates(values);
+
       if (values[0] && values[1]) {
         const startDate = moment(values[0]);
         const endDate = moment(values[1]);
 
         const totalNights = endDate.diff(startDate, 'days');
         const totalAmount = totalNights * selectedService?.PRICE;
-
-        setTotalNights(totalNights);
-        setTotalAmount(totalAmount);
 
         const isOverlap = getAllReservationDays().some((day) => {
           const reservationDate = moment(
@@ -216,8 +215,12 @@ function UserReservation() {
 
         if (isOverlap) {
           setBookingDates([null, null]);
+          setTotalNights(0);
+          setTotalAmount(0);
         } else {
           setBookingDates(values);
+          setTotalNights(totalNights);
+          setTotalAmount(totalAmount);
         }
       }
     } else {
