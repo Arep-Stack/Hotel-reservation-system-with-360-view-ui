@@ -14,11 +14,13 @@ import {
   Text,
   Textarea,
 } from '@mantine/core';
+import { DatePickerInput } from '@mantine/dates';
 import { useForm } from '@mantine/form';
 import { useDisclosure } from '@mantine/hooks';
 import {
   IconBrandPaypal,
   IconCircleX,
+  IconEdit,
   IconQrcode,
   IconTrash,
 } from '@tabler/icons-react';
@@ -60,6 +62,12 @@ function UserDashboard() {
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
   const [isCancellingReservation, setIsCancellingReservation] = useState(false);
   const [isSubmittingFeedback, setIsSubmittingFeedback] = useState(false);
+  const [isEditingReservation, setIsEditingReservation] = useState(false);
+
+  const [roomDates, setRoomDates] = useState([null, null]);
+
+  const [newBalance, setNewBalance] = useState(0);
+  const [totalAmount, setTotalAmount] = useState(0);
 
   const [feedbackStars, setFeedbackStars] = useState(null);
   const [feedbackMessage, setFeedbackMessage] = useState('');
@@ -108,6 +116,9 @@ function UserDashboard() {
     isFeedbackModalOpen,
     { open: openFeedbackModal, close: closeFeedbackModal },
   ] = useDisclosure(false);
+
+  const [isEditModalOpen, { open: openEditModal, close: closeEditModal }] =
+    useDisclosure(false);
 
   //form
   let form = useForm({
@@ -288,7 +299,83 @@ function UserDashboard() {
       .finally(() => setIsSubmittingFeedback(false));
   };
 
+  const handleOpenEditModal = (reservation) => {
+    setSelectedReservation(reservation);
+    if (reservation?.TYPE === 'Room') {
+      setRoomDates([
+        new Date(reservation?.START_DATE),
+        new Date(reservation?.END_DATE),
+      ]);
+
+      setNewBalance(reservation?.BALANCE);
+      setTotalAmount(reservation?.AMOUNT);
+    }
+
+    openEditModal();
+  };
+
+  const handleDateChange = (values) => {
+    if (selectedReservation?.TYPE === 'Room') {
+      setRoomDates(values);
+      if (values[0] && values[1]) {
+        const pricePerNight = allServices?.find(
+          (d) => d.ID === selectedReservation?.SERVICE_ID,
+        )?.PRICE;
+
+        const totalPaid =
+          selectedReservation?.AMOUNT - selectedReservation?.BALANCE;
+
+        const startDate = moment(values[0]);
+        const endDate = moment(values[1]);
+
+        const totalNights = endDate.diff(startDate, 'days');
+        const totalAmount = totalNights * pricePerNight;
+
+        setTotalAmount(totalAmount);
+        setNewBalance(totalAmount - totalPaid);
+      }
+    }
+  };
+
+  const handleReschedule = () => {
+    setIsEditingReservation(true);
+
+    if (selectedReservation?.TYPE === 'Room') {
+      const requiredDP = Math.floor(totalAmount * 0.3);
+      const totalAmountPaid = totalAmount - newBalance;
+
+      axios({
+        method: 'PUT',
+        url: `/reservations/${selectedReservation?.ID}`,
+        data: {
+          START_DATE: moment(roomDates[0]).format('ll'),
+          END_DATE: moment(roomDates[1]).format('ll'),
+          AMOUNT: totalAmount,
+          BALANCE: newBalance,
+          IS_DOWNPAYMENT_PAID: totalAmountPaid >= requiredDP,
+        },
+      })
+        .then(() => {
+          getAllReservations();
+          closeEditModal();
+
+          toast.success('Successfully rescheduled', {
+            position: toast.POSITION.TOP_RIGHT,
+            autoClose: 1500,
+          });
+        })
+        .catch((err) =>
+          toast.error('An error occurred', {
+            position: toast.POSITION.TOP_RIGHT,
+            autoClose: 1500,
+          }),
+        )
+        .finally(() => setIsEditingReservation(false));
+    }
+  };
+
   //render
+
   const renderDashboardTotals = () => {
     const dashboardTotals = [
       getCountForDashboard(syncedData, 'Room'),
@@ -390,16 +477,24 @@ function UserDashboard() {
                 <IconBrandPaypal />
               </ActionIcon>
 
-              <ActionIcon color="#006400" onClick={openGcashModal}>
+              <ActionIcon color="#800020" onClick={openGcashModal}>
                 <IconQrcode />
               </ActionIcon>
 
               <ActionIcon
                 disabled={moment().isBefore(reservation?.END_DATE)}
-                color="#EF9B0F"
+                color="#006400"
                 onClick={() => handleOpenFeedbackModal(reservation)}
               >
                 <IconThumbUp />
+              </ActionIcon>
+
+              <ActionIcon
+                disabled={moment().isAfter(reservation?.START_DATE)}
+                color="#FFBF00"
+                onClick={() => handleOpenEditModal(reservation)}
+              >
+                <IconEdit />
               </ActionIcon>
             </Flex>
           </Table.Td>
@@ -617,6 +712,69 @@ function UserDashboard() {
         </Button>
       </Flex>
     );
+  };
+
+  const renderEditModalBody = () => {
+    if (selectedReservation?.TYPE === 'Room') {
+      return (
+        <Flex direction="column" gap="md">
+          <DatePickerInput
+            withAsterisk
+            minDate={new Date()}
+            mb="sm"
+            type="range"
+            label="Choose dates"
+            placeholder="Please choose date range"
+            value={roomDates}
+            onChange={(values) => handleDateChange(values)}
+          />
+
+          <Group justify="space-between">
+            <Text>Total Amount</Text>
+            <NumberFormatter thousandSeparator value={totalAmount} prefix="₱" />
+          </Group>
+
+          <Group justify="space-between">
+            <Text>Payment History</Text>
+            <Flex>
+              {selectedReservation?.PAYMENT_HISTORY &&
+                selectedReservation?.PAYMENT_HISTORY.map((h, index) => (
+                  <NumberFormatter
+                    key={index}
+                    thousandSeparator
+                    value={h?.amount}
+                    prefix="₱"
+                  />
+                ))}
+            </Flex>
+          </Group>
+
+          <Group justify="space-between">
+            <Text>Required Downpayment</Text>
+            <NumberFormatter
+              thousandSeparator
+              value={Math.floor(totalAmount * 0.3)}
+              prefix="₱"
+            />
+          </Group>
+
+          <Group justify="space-between">
+            <Text>New Balance</Text>
+            <NumberFormatter thousandSeparator value={newBalance} prefix="₱" />
+          </Group>
+
+          <Button
+            fullWidth
+            color="#006400"
+            fw="normal"
+            loading={isEditingReservation}
+            onClick={handleReschedule}
+          >
+            Reschedule
+          </Button>
+        </Flex>
+      );
+    }
   };
 
   useEffect(() => {
@@ -837,6 +995,28 @@ function UserDashboard() {
         closeOnEscape={!isSubmittingFeedback}
       >
         {renderFeedbackModalBody()}
+      </Modal>
+
+      <Modal
+        centered
+        title="Reschedule"
+        shadow="xl"
+        opened={isEditModalOpen}
+        onClose={closeEditModal}
+        closeButtonProps={{
+          bg: 'crimson',
+          radius: '50%',
+          c: 'white',
+        }}
+        styles={{
+          title: { color: '#006400', fontSize: '1.7rem' },
+          inner: { padding: 5 },
+        }}
+        withCloseButton={!isEditingReservation}
+        closeOnClickOutside={!isEditingReservation}
+        closeOnEscape={!isEditingReservation}
+      >
+        {renderEditModalBody()}
       </Modal>
     </Box>
   );
