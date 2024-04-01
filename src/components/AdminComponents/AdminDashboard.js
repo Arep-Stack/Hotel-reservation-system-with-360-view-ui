@@ -2,9 +2,11 @@ import {
   ActionIcon,
   Box,
   Button,
+  Code,
   Divider,
   Flex,
   Group,
+  Image,
   Indicator,
   Modal,
   NumberFormatter,
@@ -93,6 +95,9 @@ function AdminDashboard() {
   //processing payment
   const [selectedReservation, setSelectedReservation] = useState(null);
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
+  const [isApprovingPayment, setIsApprovingPayment] = useState(false);
+
+  const [gcashAmount, setGcashAmount] = useState(0);
 
   //cancellation
   const [isCancellingReservation, setIsCancellingReservation] = useState(false);
@@ -136,12 +141,24 @@ function AdminDashboard() {
     { open: openFeedbackModal, close: closeFeedbackModal },
   ] = useDisclosure(false);
 
-  //functions
+  //modal open
   const handleOpenModal = (reservation) => {
     form.reset();
     setSelectedReservation(reservation);
     openProcessPaymentModal();
   };
+
+  const handleOpenCancellationModal = (reservation) => {
+    setSelectedReservation(reservation);
+    openCancelModal();
+  };
+
+  const handleOpenFeedbackModal = (reservation) => {
+    setSelectedReservation(reservation);
+    openFeedbackModal();
+  };
+
+  //functions
 
   const handleProcessPayment = ({ amount, method, dop }) => {
     setIsProcessingPayment(true);
@@ -186,11 +203,6 @@ function AdminDashboard() {
       .finally(() => setIsProcessingPayment(false));
   };
 
-  const handleOpenCancellationModal = (reservation) => {
-    setSelectedReservation(reservation);
-    openCancelModal();
-  };
-
   const handleCancelReservation = () => {
     setIsCancellingReservation(true);
 
@@ -220,10 +232,58 @@ function AdminDashboard() {
       .finally(() => setIsCancellingReservation(false));
   };
 
-  const handleOpenFeedbackModal = (reservation) => {
-    setSelectedReservation(reservation);
-    openFeedbackModal();
+  const handleApprovePayment = () => {
+    setIsApprovingPayment(true);
+
+    const BALANCE = selectedReservation?.BALANCE - gcashAmount;
+    const PAYMENT_HISTORY = selectedReservation?.PAYMENT_HISTORY;
+
+    if (PAYMENT_HISTORY) {
+      PAYMENT_HISTORY.push({
+        amount: gcashAmount,
+        dop: selectedReservation?.GCASH_PENDING_PAYMENTS[0]?.dop,
+        method: 'G-cash',
+      });
+    }
+
+    const STATUS = BALANCE === 0 ? 'Fully Paid' : 'Paid - Partial';
+
+    const requiredDP = Math.floor(selectedReservation?.AMOUNT * 0.3);
+    const totalAmountPaid = selectedReservation?.AMOUNT - BALANCE;
+    let IS_DOWNPAYMENT_PAID;
+
+    if (totalAmountPaid >= requiredDP) IS_DOWNPAYMENT_PAID = true;
+
+    axios({
+      method: 'PUT',
+      url: `/reservations/${selectedReservation?.ID}`,
+      data: {
+        GCASH_PENDING_PAYMENTS: [],
+        BALANCE,
+        PAYMENT_HISTORY,
+        STATUS,
+        IS_DOWNPAYMENT_PAID,
+      },
+    })
+      .then(() => {
+        getAllReservations();
+
+        closeProcessPaymentModal();
+
+        toast.success('Successfully approved payment', {
+          position: toast.POSITION.TOP_RIGHT,
+          autoClose: 1500,
+        });
+      })
+      .catch(() =>
+        toast.error('An error occurred', {
+          position: toast.POSITION.TOP_RIGHT,
+          autoClose: 1500,
+        }),
+      )
+      .finally(() => setIsApprovingPayment(false));
   };
+
   //renders
   const renderDashboardTotals = () => {
     const dashboardTotals = [
@@ -351,6 +411,10 @@ function AdminDashboard() {
                 size={10}
                 position="top-end"
                 color="#FF0800"
+                disabled={
+                  !reservation?.GCASH_PENDING_PAYMENTS ||
+                  reservation?.GCASH_PENDING_PAYMENTS?.length <= 0
+                }
               >
                 <ActionIcon
                   color="#027802"
@@ -472,7 +536,63 @@ function AdminDashboard() {
     return (
       <Box mb="sm">
         {selectedReservation?.GCASH_PENDING_PAYMENTS?.length > 0 ? (
-          <Text>sdsds</Text>
+          <Flex direction="column" align="center" gap="sm">
+            <Group justify="space-between" w="100%">
+              <Text>Ref. number</Text>
+              <Code style={{ fontSize: '1.25rem' }}>
+                {selectedReservation?.GCASH_PENDING_PAYMENTS[0]?.refNumber}
+              </Code>
+            </Group>
+
+            <Group justify="space-between" w="100%">
+              <Text>G-cash name</Text>
+              <Text>
+                {selectedReservation?.GCASH_PENDING_PAYMENTS[0]?.gcashName}
+              </Text>
+            </Group>
+
+            <Group justify="space-between" w="100%">
+              <Text>G-cash number</Text>
+              <Text>
+                {selectedReservation?.GCASH_PENDING_PAYMENTS[0]?.gcashNumber}
+              </Text>
+            </Group>
+
+            <Flex direction="column" justify="center" align="center" gap="sm">
+              <Text>Transaction screenshot</Text>
+              <Image
+                w={440}
+                src={
+                  selectedReservation?.GCASH_PENDING_PAYMENTS[0]
+                    ?.transaction_photo
+                }
+                alt="Gcash receipt"
+              />
+            </Flex>
+
+            <Divider />
+
+            <NumberInput
+              withAsterisk
+              w="100%"
+              label="Amount"
+              placeholder="Enter amount here"
+              min={1}
+              value={gcashAmount}
+              onChange={setGcashAmount}
+            />
+
+            <Button
+              fullWidth
+              fw="normal"
+              color="#006400"
+              disabled={!gcashAmount}
+              loading={isApprovingPayment}
+              onClick={handleApprovePayment}
+            >
+              Approve payment
+            </Button>
+          </Flex>
         ) : (
           <NoRecords message="No pending payments for this reservation" />
         )}
@@ -622,6 +742,10 @@ function AdminDashboard() {
                 offset={5}
                 position="middle-end"
                 color="#FF0800"
+                disabled={
+                  !selectedReservation?.GCASH_PENDING_PAYMENTS ||
+                  selectedReservation?.GCASH_PENDING_PAYMENTS?.length <= 0
+                }
               >
                 <Tabs.Tab value="pending">Pending Payments</Tabs.Tab>
               </Indicator>

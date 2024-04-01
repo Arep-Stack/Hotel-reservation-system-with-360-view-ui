@@ -2,6 +2,7 @@ import {
   ActionIcon,
   Box,
   Button,
+  Code,
   FileButton,
   Flex,
   Group,
@@ -150,7 +151,7 @@ function UserDashboard() {
     },
   });
 
-  //function
+  //modal opens
   const handleOpenPaypalWindow = (amount) => {
     closePayPalModal();
     setIsProcessingPayment(true);
@@ -182,6 +183,59 @@ function UserDashboard() {
     openPayPalModal();
   };
 
+  const handleOpenCancellationModal = (reservation) => {
+    setSelectedReservation(reservation);
+    openCancelModal();
+  };
+
+  const handleOpenFeedbackModal = (reservation) => {
+    setSelectedReservation(reservation);
+
+    if (reservation?.FEEDBACK) {
+      const { comment, star, d } = reservation?.FEEDBACK[0];
+
+      setFeedbackMessage(comment);
+      setFeedbackStars(star);
+      setFeedbackDate(d);
+    } else {
+      setFeedbackMessage('');
+      setFeedbackStars(null);
+      setFeedbackDate(null);
+    }
+
+    openFeedbackModal();
+  };
+
+  const handleOpenGcashModal = (reservation) => {
+    setSelectedReservation(reservation);
+    setRefNumber('');
+    setGcashName('');
+    setGcashNumber(0);
+    setUploadedFile(null);
+    openGcashModal();
+  };
+
+  const handleOpenEditModal = (reservation) => {
+    setSelectedReservation(reservation);
+    if (reservation?.TYPE === 'Room') {
+      setRoomDates([
+        new Date(reservation?.START_DATE),
+        new Date(reservation?.END_DATE),
+      ]);
+
+      setNewBalance(reservation?.BALANCE);
+      setTotalAmount(reservation?.AMOUNT);
+    }
+
+    openEditModal();
+  };
+
+  const handleOpenPaymentHistoryModal = (reservation) => {
+    setSelectedReservation(reservation);
+    openHistoryModal();
+  };
+
+  //function
   const handleProcessPayment = () => {
     selectedReservation?.PAYMENT_HISTORY.push({
       amount: form.values.amount,
@@ -224,38 +278,6 @@ function UserDashboard() {
         }),
       )
       .finally(() => setIsProcessingPayment(false));
-  };
-
-  const handleOpenCancellationModal = (reservation) => {
-    setSelectedReservation(reservation);
-    openCancelModal();
-  };
-
-  const handleOpenFeedbackModal = (reservation) => {
-    setSelectedReservation(reservation);
-
-    if (reservation?.FEEDBACK) {
-      const { comment, star, d } = reservation?.FEEDBACK[0];
-
-      setFeedbackMessage(comment);
-      setFeedbackStars(star);
-      setFeedbackDate(d);
-    } else {
-      setFeedbackMessage('');
-      setFeedbackStars(null);
-      setFeedbackDate(null);
-    }
-
-    openFeedbackModal();
-  };
-
-  const handleOpenGcashModal = (reservation) => {
-    setSelectedReservation(reservation);
-    setRefNumber('');
-    setGcashName('');
-    setGcashNumber(0);
-    setUploadedFile(null);
-    openGcashModal();
   };
 
   const handleCancelReservation = () => {
@@ -322,21 +344,6 @@ function UserDashboard() {
       .finally(() => setIsSubmittingFeedback(false));
   };
 
-  const handleOpenEditModal = (reservation) => {
-    setSelectedReservation(reservation);
-    if (reservation?.TYPE === 'Room') {
-      setRoomDates([
-        new Date(reservation?.START_DATE),
-        new Date(reservation?.END_DATE),
-      ]);
-
-      setNewBalance(reservation?.BALANCE);
-      setTotalAmount(reservation?.AMOUNT);
-    }
-
-    openEditModal();
-  };
-
   const handleDateChange = (values) => {
     if (selectedReservation?.TYPE === 'Room') {
       setRoomDates(values);
@@ -397,11 +404,6 @@ function UserDashboard() {
     }
   };
 
-  const handleOpenPaymentHistoryModal = (reservation) => {
-    setSelectedReservation(reservation);
-    openHistoryModal();
-  };
-
   const handleProcessGcashPayment = () => {
     setIsUploadingTransaction(true);
 
@@ -419,7 +421,7 @@ function UserDashboard() {
           const GCASH_PENDING_PAYMENTS = [
             {
               transaction_photo: data.PATH,
-              dop: moment(),
+              dop: moment().format('ll'),
               refNumber,
               gcashName,
               gcashNumber,
@@ -431,8 +433,14 @@ function UserDashboard() {
             url: `/reservations/${selectedReservation?.ID}`,
             data: { GCASH_PENDING_PAYMENTS },
           })
-            .then(({ data }) => {
-              console.log(data);
+            .then(() => {
+              getAllReservations();
+              closeGcashModal();
+
+              toast.success('Successfully uploaded transaction', {
+                position: toast.POSITION.TOP_RIGHT,
+                autoClose: 1500,
+              });
             })
             .catch(() =>
               toast.error('An error occurred', {
@@ -758,7 +766,36 @@ function UserDashboard() {
     )?.QR_IMAGE;
 
     if (qr) {
-      return (
+      return selectedReservation?.GCASH_PENDING_PAYMENTS?.length > 0 ? (
+        <>
+          <Text w={440} size="1.5rem" align="center" mb="lg" mt="lg">
+            You still have a pending payment
+          </Text>
+
+          <Flex direction="column" gap="md">
+            <Group justify="space-between">
+              <Text>Ref. number</Text>
+              <Code style={{ fontSize: '1.25rem' }}>
+                {selectedReservation?.GCASH_PENDING_PAYMENTS[0]?.refNumber}
+              </Code>
+            </Group>
+
+            <Group justify="space-between">
+              <Text>G-cash name</Text>
+              <Text>
+                {selectedReservation?.GCASH_PENDING_PAYMENTS[0]?.gcashName}
+              </Text>
+            </Group>
+
+            <Group justify="space-between">
+              <Text>G-cash number</Text>
+              <Text>
+                {selectedReservation?.GCASH_PENDING_PAYMENTS[0]?.gcashNumber}
+              </Text>
+            </Group>
+          </Flex>
+        </>
+      ) : (
         <Flex gap="lg" miw={440}>
           {selectedReservation?.STATUS !== 'Cancelled' &&
             selectedReservation?.BALANCE > 0 && (
