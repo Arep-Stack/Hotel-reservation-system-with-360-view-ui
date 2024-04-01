@@ -5,6 +5,7 @@ import {
   Divider,
   Flex,
   Group,
+  Indicator,
   Modal,
   NumberFormatter,
   NumberInput,
@@ -344,12 +345,20 @@ function AdminDashboard() {
 
           <Table.Td>
             <Flex direction="row" gap="xs">
-              <ActionIcon
-                color="#027802"
-                onClick={() => handleOpenModal(reservation)}
+              <Indicator
+                inline
+                processing
+                size={10}
+                position="top-end"
+                color="#FF0800"
               >
-                <IconWallet />
-              </ActionIcon>
+                <ActionIcon
+                  color="#027802"
+                  onClick={() => handleOpenModal(reservation)}
+                >
+                  <IconWallet />
+                </ActionIcon>
+              </Indicator>
 
               <ActionIcon
                 color="#EF9B0F"
@@ -454,6 +463,18 @@ function AdminDashboard() {
           ))
         ) : (
           <NoRecords message="No payment history" />
+        )}
+      </Box>
+    );
+  };
+
+  const renderGcashPendingPayment = () => {
+    return (
+      <Box mb="sm">
+        {selectedReservation?.GCASH_PENDING_PAYMENTS?.length > 0 ? (
+          <Text>sdsds</Text>
+        ) : (
+          <NoRecords message="No pending payments for this reservation" />
         )}
       </Box>
     );
@@ -573,6 +594,7 @@ function AdminDashboard() {
         centered
         title="Process Payment"
         shadow="xl"
+        size="auto"
         opened={isProcessPaymentModalOpen}
         onClose={() => closeProcessPaymentModal()}
         closeButtonProps={{
@@ -593,6 +615,16 @@ function AdminDashboard() {
             <Tabs.List grow justify="space-between">
               <Tabs.Tab value="info">Information</Tabs.Tab>
               <Tabs.Tab value="history">Payment History</Tabs.Tab>
+              <Indicator
+                inline
+                processing
+                size={10}
+                offset={5}
+                position="middle-end"
+                color="#FF0800"
+              >
+                <Tabs.Tab value="pending">Pending Payments</Tabs.Tab>
+              </Indicator>
             </Tabs.List>
 
             <Tabs.Panel value="info" pt="md">
@@ -727,6 +759,10 @@ function AdminDashboard() {
 
             <Tabs.Panel value="history" pt="md">
               {renderPaymentHistoryTab()}
+            </Tabs.Panel>
+
+            <Tabs.Panel value="pending" pt="md">
+              {renderGcashPendingPayment()}
             </Tabs.Panel>
           </Tabs>
         </Flex>

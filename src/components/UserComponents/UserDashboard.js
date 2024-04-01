@@ -2,6 +2,7 @@ import {
   ActionIcon,
   Box,
   Button,
+  FileButton,
   Flex,
   Group,
   Image,
@@ -10,8 +11,8 @@ import {
   NumberInput,
   Rating,
   Table,
-  Tabs,
   Text,
+  TextInput,
   Textarea,
 } from '@mantine/core';
 import { DatePickerInput } from '@mantine/dates';
@@ -20,9 +21,11 @@ import { useDisclosure } from '@mantine/hooks';
 import {
   IconBrandPaypal,
   IconCircleX,
+  IconCoins,
   IconEdit,
   IconQrcode,
   IconTrash,
+  IconWallet,
 } from '@tabler/icons-react';
 import { IconThumbUp } from '@tabler/icons-react';
 import axios from 'axios';
@@ -63,6 +66,12 @@ function UserDashboard() {
   const [isCancellingReservation, setIsCancellingReservation] = useState(false);
   const [isSubmittingFeedback, setIsSubmittingFeedback] = useState(false);
   const [isEditingReservation, setIsEditingReservation] = useState(false);
+
+  const [refNumber, setRefNumber] = useState('');
+  const [gcashName, setGcashName] = useState('');
+  const [gcashNumber, setGcashNumber] = useState(0);
+  const [isUploadingTransaction, setIsUploadingTransaction] = useState(false);
+  const [uploadedFile, setUploadedFile] = useState(null);
 
   const [roomDates, setRoomDates] = useState([null, null]);
 
@@ -119,6 +128,11 @@ function UserDashboard() {
 
   const [isEditModalOpen, { open: openEditModal, close: closeEditModal }] =
     useDisclosure(false);
+
+  const [
+    isHistoryModalOpen,
+    { open: openHistoryModal, close: closeHistoryModal },
+  ] = useDisclosure(false);
 
   //form
   let form = useForm({
@@ -233,6 +247,15 @@ function UserDashboard() {
     }
 
     openFeedbackModal();
+  };
+
+  const handleOpenGcashModal = (reservation) => {
+    setSelectedReservation(reservation);
+    setRefNumber('');
+    setGcashName('');
+    setGcashNumber(0);
+    setUploadedFile(null);
+    openGcashModal();
   };
 
   const handleCancelReservation = () => {
@@ -374,8 +397,62 @@ function UserDashboard() {
     }
   };
 
-  //render
+  const handleOpenPaymentHistoryModal = (reservation) => {
+    setSelectedReservation(reservation);
+    openHistoryModal();
+  };
 
+  const handleProcessGcashPayment = () => {
+    setIsUploadingTransaction(true);
+
+    const formData = new FormData();
+    formData.append('image', uploadedFile);
+
+    axios({
+      method: 'POST',
+      url: '/image/upload',
+      data: formData,
+      headers: { 'Content-Type': 'multipart/form-data' },
+    })
+      .then(({ data }) => {
+        if (!!data?.PATH) {
+          const GCASH_PENDING_PAYMENTS = [
+            {
+              transaction_photo: data.PATH,
+              dop: moment(),
+              refNumber,
+              gcashName,
+              gcashNumber,
+            },
+          ];
+
+          axios({
+            method: 'PUT',
+            url: `/reservations/${selectedReservation?.ID}`,
+            data: { GCASH_PENDING_PAYMENTS },
+          })
+            .then(({ data }) => {
+              console.log(data);
+            })
+            .catch(() =>
+              toast.error('An error occurred', {
+                position: toast.POSITION.TOP_RIGHT,
+                autoClose: 1500,
+              }),
+            )
+            .finally(() => setIsUploadingTransaction(false));
+        }
+      })
+      .catch(() => {
+        toast.error('An error occurred', {
+          position: toast.POSITION.TOP_RIGHT,
+          autoClose: 1500,
+        });
+        setIsUploadingTransaction(false);
+      });
+  };
+
+  //render
   const renderDashboardTotals = () => {
     const dashboardTotals = [
       getCountForDashboard(syncedData, 'Room'),
@@ -464,24 +541,6 @@ function UserDashboard() {
               </ActionIcon>
 
               <ActionIcon
-                loading={
-                  isProcessingPayment &&
-                  selectedReservation?.ID === reservation?.ID
-                }
-                disabled={
-                  isProcessingPayment &&
-                  selectedReservation?.ID !== reservation?.ID
-                }
-                onClick={() => handleOpenPayPalModal(reservation)}
-              >
-                <IconBrandPaypal />
-              </ActionIcon>
-
-              <ActionIcon color="#800020" onClick={openGcashModal}>
-                <IconQrcode />
-              </ActionIcon>
-
-              <ActionIcon
                 disabled={moment().isBefore(reservation?.END_DATE)}
                 color="#006400"
                 onClick={() => handleOpenFeedbackModal(reservation)}
@@ -498,12 +557,44 @@ function UserDashboard() {
               </ActionIcon>
             </Flex>
           </Table.Td>
+
+          <Table.Td>
+            <Flex direction="row" gap="xs">
+              <ActionIcon
+                loading={
+                  isProcessingPayment &&
+                  selectedReservation?.ID === reservation?.ID
+                }
+                disabled={
+                  isProcessingPayment &&
+                  selectedReservation?.ID !== reservation?.ID
+                }
+                onClick={() => handleOpenPayPalModal(reservation)}
+              >
+                <IconBrandPaypal />
+              </ActionIcon>
+
+              <ActionIcon
+                color="#800020"
+                onClick={() => handleOpenGcashModal(reservation)}
+              >
+                <IconQrcode />
+              </ActionIcon>
+
+              <ActionIcon
+                color="#72A0C1"
+                onClick={() => handleOpenPaymentHistoryModal(reservation)}
+              >
+                <IconWallet />
+              </ActionIcon>
+            </Flex>
+          </Table.Td>
         </Table.Tr>
       ));
     } else {
       return (
         <Table.Tr>
-          <Table.Td colSpan={8}>
+          <Table.Td colSpan={10}>
             <NoRecords />
           </Table.Td>
         </Table.Tr>
@@ -592,7 +683,7 @@ function UserDashboard() {
     );
   };
 
-  const renderPayPalModalHistoryTab = () => {
+  const renderPaymentHistoryModal = () => {
     return (
       <Box mb="sm">
         {selectedReservation?.PAYMENT_HISTORY?.length > 0 ? (
@@ -666,17 +757,156 @@ function UserDashboard() {
       ({ EMAIL }) => EMAIL === 'admin@felrey.com',
     )?.QR_IMAGE;
 
-    return (
-      <Flex direction="column" justify="center" align="center" gap="sm">
-        {qr && <Text size="xl">Pay using Gcash</Text>}
+    if (qr) {
+      return (
+        <Flex gap="lg" miw={440}>
+          {selectedReservation?.STATUS !== 'Cancelled' &&
+            selectedReservation?.BALANCE > 0 && (
+              <Flex direction="column" justify="center" gap="sm">
+                <Image src={qr} w={400} />
+                <Text align="center" display="inline-block" w={400} c="#006400">
+                  After paying using the QR Code, please enter the neccessary
+                  details and upload the screenshot of the transaction
+                </Text>
+              </Flex>
+            )}
 
-        {qr ? (
-          <Image src={qr} w={400} />
-        ) : (
-          <NoRecords message="No Gcash QR available." />
-        )}
-      </Flex>
-    );
+          <Flex flex={1} direction="column" miw={440}>
+            <>
+              <Group mb="xs" justify="space-between">
+                <Text>Service</Text>
+                <div style={{ fontWeight: 700 }}>
+                  {renderReservationServiceType(selectedReservation)}
+                </div>
+              </Group>
+
+              <Group fw={700} mb="xs" justify="space-between">
+                <Text>Service Price</Text>
+                <div>
+                  <NumberFormatter
+                    thousandSeparator
+                    prefix="₱"
+                    value={selectedReservation?.PRICE}
+                  />
+
+                  {selectedReservation?.TYPE === 'Room' ? '/night' : '/hour'}
+                </div>
+              </Group>
+
+              <Group fw={700} mb="xs" justify="space-between">
+                <Text>Total Amount</Text>
+                <NumberFormatter
+                  thousandSeparator
+                  prefix="₱"
+                  value={selectedReservation?.AMOUNT}
+                />
+              </Group>
+
+              <Group fw={700} mb="xs" justify="space-between">
+                <Text>Balance</Text>
+                <NumberFormatter
+                  thousandSeparator
+                  prefix="₱"
+                  value={selectedReservation?.BALANCE}
+                />
+              </Group>
+            </>
+
+            {selectedReservation?.STATUS !== 'Cancelled' &&
+              selectedReservation?.BALANCE === 0 && (
+                <Text mt="sm" c="darkgreen" align="center" fw={700}>
+                  This reservation is fully paid
+                </Text>
+              )}
+
+            {selectedReservation?.STATUS === 'Cancelled' && (
+              <Text mt="sm" c="#FF0800" align="center" fw={700}>
+                This reservation is cancelled
+              </Text>
+            )}
+
+            {selectedReservation?.STATUS !== 'Cancelled' &&
+              selectedReservation?.BALANCE > 0 && (
+                <>
+                  <Group fw={700} justify="space-between" mb="md">
+                    <Text size="1.5rem">Amount to be paid</Text>
+                    <NumberFormatter
+                      style={{ fontSize: '2rem' }}
+                      thousandSeparator
+                      value={selectedReservation?.BALANCE}
+                      prefix="₱"
+                    />
+                  </Group>
+
+                  <TextInput
+                    withAsterisk
+                    label="Reference number"
+                    placeholder="Enter reference number"
+                    mb="sm"
+                    value={refNumber}
+                    onChange={(e) => setRefNumber(e.currentTarget.value)}
+                  />
+
+                  <TextInput
+                    withAsterisk
+                    label="Name"
+                    placeholder="Enter G-cash name"
+                    mb="sm"
+                    value={gcashName}
+                    onChange={(e) => setGcashName(e.currentTarget.value)}
+                  />
+
+                  <NumberInput
+                    withAsterisk
+                    label="G-cash Number"
+                    placeholder="Enter G-cash number"
+                    mb="sm"
+                    value={gcashNumber}
+                    onChange={setGcashNumber}
+                  />
+
+                  <Flex align="center" gap="lg" direction="column">
+                    <FileButton
+                      onChange={setUploadedFile}
+                      accept="image/png,image/jpeg"
+                    >
+                      {(props) => (
+                        <Button
+                          disabled={isUploadingTransaction}
+                          {...props}
+                          mt="lg"
+                          mb="xs"
+                          color="#006400"
+                        >
+                          Upload transaction
+                        </Button>
+                      )}
+                    </FileButton>
+
+                    <Text align="center">{uploadedFile?.name}</Text>
+                  </Flex>
+
+                  <Button
+                    fullWidth
+                    mt="xl"
+                    color="#006400"
+                    leftSection={<IconCoins />}
+                    loading={isUploadingTransaction}
+                    disabled={
+                      !refNumber || !gcashName || !gcashNumber || !uploadedFile
+                    }
+                    onClick={handleProcessGcashPayment}
+                  >
+                    Pay
+                  </Button>
+                </>
+              )}
+          </Flex>
+        </Flex>
+      );
+    } else {
+      return <NoRecords message="No QR available" />;
+    }
   };
 
   const renderFeedbackModalBody = () => {
@@ -844,6 +1074,7 @@ function UserDashboard() {
                   <Table.Th>Amount</Table.Th>
                   <Table.Th>Balance</Table.Th>
                   <Table.Th>Actions</Table.Th>
+                  <Table.Th>Payments</Table.Th>
                 </Table.Tr>
               </Table.Thead>
 
@@ -857,7 +1088,7 @@ function UserDashboard() {
 
       <Modal
         centered
-        title="Payment Information"
+        title="Pay using PayPal"
         shadow="xl"
         opened={isPayPalModalOpen}
         onClose={closePayPalModal}
@@ -872,65 +1103,54 @@ function UserDashboard() {
         }}
       >
         <Flex direction="column">
-          <Tabs defaultValue="amount" color="darkgreen" variant="default">
-            <Tabs.List grow justify="space-between">
-              <Tabs.Tab value="amount">Amount</Tabs.Tab>
-              <Tabs.Tab value="history">Payment History</Tabs.Tab>
-            </Tabs.List>
+          <>
+            {renderPayPalModalAmountTab()}
 
-            <Tabs.Panel value="amount" pt="md">
-              {renderPayPalModalAmountTab()}
+            {selectedReservation?.STATUS !== 'Cancelled' &&
+              selectedReservation?.BALANCE > 0 && (
+                <form
+                  onSubmit={form.onSubmit(({ amount }) =>
+                    handleOpenPaypalWindow(amount),
+                  )}
+                >
+                  <NumberInput
+                    withAsterisk
+                    mt="sm"
+                    mb="xs"
+                    label="Amount"
+                    placeholder="0.00"
+                    min={0}
+                    styles={{
+                      label: { fontWeight: 700 },
+                    }}
+                    {...form.getInputProps('amount')}
+                  />
 
-              {selectedReservation?.STATUS !== 'Cancelled' &&
-                selectedReservation?.BALANCE > 0 && (
-                  <form
-                    onSubmit={form.onSubmit(({ amount }) =>
-                      handleOpenPaypalWindow(amount),
-                    )}
+                  <Button
+                    fullWidth
+                    type="submit"
+                    fw="normal"
+                    color="#006400"
+                    leftSection={<IconBrandPaypal />}
                   >
-                    <NumberInput
-                      withAsterisk
-                      mt="sm"
-                      mb="xs"
-                      label="Amount"
-                      placeholder="0.00"
-                      min={0}
-                      styles={{
-                        label: { fontWeight: 700 },
-                      }}
-                      {...form.getInputProps('amount')}
-                    />
+                    Pay with PayPal
+                  </Button>
+                </form>
+              )}
 
-                    <Button
-                      fullWidth
-                      type="submit"
-                      fw="normal"
-                      color="#006400"
-                      leftSection={<IconBrandPaypal />}
-                    >
-                      Pay with PayPal
-                    </Button>
-                  </form>
-                )}
-
-              {selectedReservation?.STATUS !== 'Cancelled' &&
-                selectedReservation?.BALANCE === 0 && (
-                  <Text mt="sm" c="darkgreen" align="center" fw={700}>
-                    This reservation is fully paid
-                  </Text>
-                )}
-
-              {selectedReservation?.STATUS === 'Cancelled' && (
-                <Text mt="sm" c="#FF0800" align="center" fw={700}>
-                  This reservation is cancelled
+            {selectedReservation?.STATUS !== 'Cancelled' &&
+              selectedReservation?.BALANCE === 0 && (
+                <Text mt="sm" c="darkgreen" align="center" fw={700}>
+                  This reservation is fully paid
                 </Text>
               )}
-            </Tabs.Panel>
 
-            <Tabs.Panel value="history" pt="md">
-              {renderPayPalModalHistoryTab()}
-            </Tabs.Panel>
-          </Tabs>
+            {selectedReservation?.STATUS === 'Cancelled' && (
+              <Text mt="sm" c="#FF0800" align="center" fw={700}>
+                This reservation is cancelled
+              </Text>
+            )}
+          </>
         </Flex>
       </Modal>
 
@@ -958,8 +1178,9 @@ function UserDashboard() {
 
       <Modal
         centered
-        title="Gcash QR"
+        title="Pay using G-cash"
         shadow="xl"
+        size="auto"
         opened={isGcashModalOpen}
         onClose={closeGcashModal}
         closeButtonProps={{
@@ -971,6 +1192,9 @@ function UserDashboard() {
           title: { color: '#006400', fontSize: '1.7rem' },
           inner: { padding: 5 },
         }}
+        withCloseButton={!isUploadingTransaction}
+        closeOnClickOutside={!isUploadingTransaction}
+        closeOnEscape={!isUploadingTransaction}
       >
         {renderGcashQRModalBody()}
       </Modal>
@@ -1017,6 +1241,25 @@ function UserDashboard() {
         closeOnEscape={!isEditingReservation}
       >
         {renderEditModalBody()}
+      </Modal>
+
+      <Modal
+        centered
+        title="Payment History"
+        shadow="xl"
+        opened={isHistoryModalOpen}
+        onClose={closeHistoryModal}
+        closeButtonProps={{
+          bg: 'crimson',
+          radius: '50%',
+          c: 'white',
+        }}
+        styles={{
+          title: { color: '#006400', fontSize: '1.7rem' },
+          inner: { padding: 5 },
+        }}
+      >
+        {renderPaymentHistoryModal()}
       </Modal>
     </Box>
   );
