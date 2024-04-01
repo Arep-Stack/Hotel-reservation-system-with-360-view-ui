@@ -16,7 +16,7 @@ import {
   TextInput,
   Textarea,
 } from '@mantine/core';
-import { DatePickerInput } from '@mantine/dates';
+import { DateInput, DatePickerInput } from '@mantine/dates';
 import { useForm } from '@mantine/form';
 import { useDisclosure } from '@mantine/hooks';
 import {
@@ -75,6 +75,7 @@ function UserDashboard() {
   const [uploadedFile, setUploadedFile] = useState(null);
 
   const [roomDates, setRoomDates] = useState([null, null]);
+  const [poolDate, setPoolDate] = useState(null);
 
   const [newBalance, setNewBalance] = useState(0);
   const [totalAmount, setTotalAmount] = useState(0);
@@ -374,6 +375,18 @@ function UserDashboard() {
       const requiredDP = Math.floor(totalAmount * 0.3);
       const totalAmountPaid = totalAmount - newBalance;
 
+      let STATUS;
+      if (totalAmountPaid === 0) {
+        STATUS = 'Unpaid';
+      } else if (
+        totalAmountPaid >= requiredDP &&
+        totalAmountPaid < totalAmount
+      ) {
+        STATUS = 'Paid - Partial';
+      } else if (totalAmountPaid === totalAmount) {
+        STATUS = 'Fully Paid';
+      }
+
       axios({
         method: 'PUT',
         url: `/reservations/${selectedReservation?.ID}`,
@@ -383,6 +396,7 @@ function UserDashboard() {
           AMOUNT: totalAmount,
           BALANCE: newBalance,
           IS_DOWNPAYMENT_PAID: totalAmountPaid >= requiredDP,
+          STATUS,
         },
       })
         .then(() => {
@@ -1001,9 +1015,9 @@ function UserDashboard() {
             <NumberFormatter thousandSeparator value={totalAmount} prefix="₱" />
           </Group>
 
-          <Group justify="space-between">
+          <Group justify="space-between" align="start">
             <Text>Payment History</Text>
-            <Flex>
+            <Flex direction="column">
               {selectedReservation?.PAYMENT_HISTORY &&
                 selectedReservation?.PAYMENT_HISTORY.map((h, index) => (
                   <NumberFormatter
