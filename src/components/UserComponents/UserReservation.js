@@ -283,6 +283,28 @@ function UserReservation() {
     nextStep();
     setIsBooking(true);
 
+    let START_DATE;
+    let END_DATE;
+
+    if (selectedService?.TYPE === 'Room') {
+      START_DATE = moment(bookingDates[0]).format('ll');
+      END_DATE = moment(bookingDates[1]).format('ll');
+    } else if (selectedService?.TYPE === 'Pavilion') {
+      START_DATE = moment(bookingDate)
+        .set({ hour: parseInt(bookingTime, 10) })
+        .format('MMMM D, YYYY @ h:mm a');
+      END_DATE = moment(bookingDate)
+        .set({ hour: parseInt(bookingTime, 10) + 6 + totalHours })
+        .format('MMMM D, YYYY @ h:mm a');
+    } else if (selectedService?.TYPE === 'Pool') {
+      START_DATE = moment(bookingDate)
+        .set({ hour: swimTime === 'morning' ? 9 : 17 })
+        .format('MMMM D, YYYY @ h:mm a');
+      END_DATE = moment(bookingDate)
+        .set({ hour: swimTime === 'morning' ? 17 : 23 })
+        .format('MMMM D, YYYY @ h:mm a');
+    }
+
     axios({
       method: 'POST',
       url: '/reservations',
@@ -290,25 +312,8 @@ function UserReservation() {
         USER_ID: user?.ID,
         SERVICE_ID: selectedService?.ID,
         STATUS: 'Unpaid',
-        START_DATE:
-          selectedService?.TYPE === 'Room'
-            ? moment(bookingDates[0]).format('ll')
-            : moment(bookingDate)
-                .set({
-                  hour: parseInt(bookingTime, 10),
-                })
-                .format('MMMM D, YYYY @ h:mm a'),
-        END_DATE:
-          selectedService?.TYPE === 'Room'
-            ? moment(bookingDates[1]).format('ll')
-            : moment(bookingDate)
-                .set({
-                  hour:
-                    selectedService?.TYPE === 'Pavilion'
-                      ? parseInt(bookingTime, 10) + 6 + totalHours
-                      : parseInt(bookingTime, 10) + 24 + totalHours,
-                })
-                .format('MMMM D, YYYY @ h:mm a'),
+        START_DATE,
+        END_DATE,
         AMOUNT: totalAmount,
         BALANCE: totalAmount,
         PAYMENT_HISTORY: [],

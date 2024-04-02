@@ -148,9 +148,11 @@ const calculateDuration = (start, end, type) => {
     const formattedNights = Math.max(0, durationInDays);
 
     return `${formattedDays}D, ${formattedNights}N`;
-  } else {
+  } else if (type === 'Pavilion') {
     const hourDiff = b.diff(a, 'hours');
     return `${hourDiff} ${hourDiff !== 1 ? 'hours' : 'hour'}`;
+  } else if (type === 'Pool') {
+    return parseInt(moment.utc(end).format('HH')) === 23 ? 'Night' : 'Morning';
   }
 };
 
