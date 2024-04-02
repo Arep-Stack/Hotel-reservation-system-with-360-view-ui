@@ -3,6 +3,7 @@ import {
   Box,
   Button,
   Code,
+  Divider,
   FileButton,
   Flex,
   Group,
@@ -11,6 +12,7 @@ import {
   NumberFormatter,
   NumberInput,
   Rating,
+  Select,
   Table,
   Text,
   TextInput,
@@ -51,6 +53,38 @@ import ComponentError from '../utils/ComponentError';
 import ComponentLoader from '../utils/ComponentLoader';
 import NoRecords from '../utils/NoRecords';
 
+const dataTimes = [
+  { value: '0', label: '12:00 am' },
+  { value: '1', label: '1:00 am' },
+  { value: '2', label: '2:00 am' },
+  { value: '3', label: '3:00 am' },
+  { value: '4', label: '4:00 am' },
+  { value: '5', label: '5:00 am' },
+  { value: '6', label: '6:00 am' },
+  { value: '7', label: '7:00 am' },
+  { value: '8', label: '8:00 am' },
+  { value: '9', label: '9:00 am' },
+  { value: '10', label: '10:00 am' },
+  { value: '11', label: '11:00 am' },
+  { value: '12', label: '12:00 pm' },
+  { value: '13', label: '1:00 pm' },
+  { value: '14', label: '2:00 pm' },
+  { value: '15', label: '3:00 pm' },
+  { value: '16', label: '4:00 pm' },
+  { value: '17', label: '5:00 pm' },
+  { value: '18', label: '6:00 pm' },
+  { value: '19', label: '7:00 pm' },
+  { value: '20', label: '8:00 pm' },
+  { value: '21', label: '9:00 pm' },
+  { value: '22', label: '10:00 pm' },
+  { value: '23', label: '11:00 pm' },
+];
+
+const swimmingTimes = [
+  { value: 'morning', label: 'Morning (9am-5pm)' },
+  { value: 'night', label: 'Night (up to 11pm)' },
+];
+
 function UserDashboard() {
   //context
   const {
@@ -75,7 +109,18 @@ function UserDashboard() {
   const [uploadedFile, setUploadedFile] = useState(null);
 
   const [roomDates, setRoomDates] = useState([null, null]);
+
+  const [filteredDataTimes, setFilteredDataTimes] = useState(dataTimes);
+  const [pavTime, setPavTime] = useState(null);
+  const [pavAddTime, setPavAddTime] = useState(null);
+  const [pavDate, setPavDate] = useState(null);
+  const [duration, setDuration] = useState(null);
+
+  const [filteredSwimmingTimes, setFilteredSwimmingTimes] =
+    useState(swimmingTimes);
   const [poolDate, setPoolDate] = useState(null);
+  const [poolTime, setPoolTime] = useState(null);
+  const [poolPax, setPoolPax] = useState(null);
 
   const [newBalance, setNewBalance] = useState(0);
   const [totalAmount, setTotalAmount] = useState(0);
@@ -94,6 +139,7 @@ function UserDashboard() {
         PRICE,
         TYPE,
         IS_DELETED,
+        PRICE_EXCEED,
       } = allServices?.find(
         (service) => service.ID === reservation?.SERVICE_ID,
       ) || {};
@@ -103,6 +149,7 @@ function UserDashboard() {
         SERVICE_NAME,
         PERSONS,
         PRICE,
+        PRICE_EXCEED,
         TYPE,
         IS_DELETED,
       };
@@ -218,6 +265,7 @@ function UserDashboard() {
 
   const handleOpenEditModal = (reservation) => {
     setSelectedReservation(reservation);
+
     if (reservation?.TYPE === 'Room') {
       setRoomDates([
         new Date(reservation?.START_DATE),
@@ -226,6 +274,38 @@ function UserDashboard() {
 
       setNewBalance(reservation?.BALANCE);
       setTotalAmount(reservation?.AMOUNT);
+    }
+
+    if (reservation?.TYPE === 'Pavilion') {
+      const reservationStartTime = moment.utc(reservation?.START_DATE).hour();
+
+      const startTime = dataTimes.find(
+        (d) => parseInt(d.value) === reservationStartTime,
+      )?.value;
+
+      const start = moment(reservation?.START_DATE);
+      const end = moment(reservation?.END_DATE);
+
+      const hourDifference = end.diff(start, 'hours');
+
+      setPavDate(new Date(reservation?.START_DATE));
+      setPavTime(startTime);
+      setPavAddTime(hourDifference - 6);
+      setTotalAmount(reservation?.AMOUNT);
+      setNewBalance(reservation?.BALANCE);
+      setDuration(hourDifference);
+    }
+
+    if (reservation?.TYPE === 'Pool') {
+      const end = moment.utc(reservation?.END_DATE).hour();
+
+      const poolTime = end === 17 ? 'morning' : 'night';
+
+      setPoolDate(new Date(reservation?.START_DATE));
+      setPoolTime(poolTime);
+      setPoolPax(reservation?.PAX);
+      setTotalAmount(reservation?.AMOUNT);
+      setNewBalance(reservation?.BALANCE);
     }
 
     openEditModal();
@@ -366,6 +446,109 @@ function UserDashboard() {
         setNewBalance(totalAmount - totalPaid);
       }
     }
+
+    if (selectedReservation?.TYPE === 'Pavilion') {
+      setPavDate(values);
+      setTotalAmount(0);
+      setNewBalance(0);
+      setPavTime(null);
+      const selectedDate = moment(values);
+      const currentTime = moment().format('HH');
+
+      if (selectedDate.isSame(moment(), 'day')) {
+        const filteredTimes = dataTimes.filter(
+          ({ value }) => parseInt(value) > currentTime,
+        );
+        setFilteredDataTimes(filteredTimes);
+      } else {
+        setFilteredDataTimes(dataTimes);
+      }
+    }
+
+    if (selectedReservation?.TYPE === 'Pool') {
+      setPoolDate(values);
+      setTotalAmount(0);
+      setNewBalance(0);
+      setPoolTime(null);
+
+      const selectedDate = moment(values);
+      const currentTime = moment().hour();
+
+      if (selectedDate.isSame(moment(), 'day')) {
+        if (currentTime <= 9) {
+          setFilteredSwimmingTimes(swimmingTimes);
+        } else {
+          const swimTimeFilter = swimmingTimes.filter(
+            (s) => s.value === 'night',
+          );
+          setFilteredSwimmingTimes(swimTimeFilter);
+        }
+      }
+    }
+  };
+
+  const handleSetStartTime = (value) => {
+    const totalPaid =
+      selectedReservation?.AMOUNT - selectedReservation?.BALANCE;
+
+    if (selectedReservation?.TYPE === 'Pavilion') {
+      setPavTime(value);
+      setPavAddTime(0);
+
+      setTotalAmount(selectedReservation?.PRICE);
+      setNewBalance(selectedReservation?.PRICE - totalPaid);
+      setDuration(6);
+    }
+
+    if (selectedReservation?.TYPE === 'Pool') {
+      setPoolTime(value);
+      setPoolPax(1);
+
+      if (value === 'morning') {
+        setTotalAmount(selectedReservation?.PRICE);
+        setNewBalance(selectedReservation?.PRICE - totalPaid);
+      } else {
+        setTotalAmount(selectedReservation?.PRICE_EXCEED);
+        setNewBalance(selectedReservation?.PRICE_EXCEED - totalPaid);
+      }
+    }
+  };
+
+  const handleAddAdditionalHours = (value) => {
+    const totalPaid =
+      selectedReservation?.AMOUNT - selectedReservation?.BALANCE;
+
+    const total =
+      selectedReservation?.PRICE + selectedReservation?.PRICE_EXCEED * value;
+
+    setPavAddTime(value);
+
+    if (value <= 0) {
+      setTotalAmount(selectedReservation?.PRICE);
+      setDuration(6);
+    } else {
+      setTotalAmount(total);
+      setDuration(6 + value);
+    }
+
+    setNewBalance(total - totalPaid);
+  };
+
+  const handleChangePax = (value) => {
+    const totalPaid =
+      selectedReservation?.AMOUNT - selectedReservation?.BALANCE;
+
+    let total;
+
+    if (poolTime === 'morning') {
+      total = selectedReservation?.PRICE * value;
+    } else {
+      total = selectedReservation?.PRICE_EXCEED * value;
+    }
+
+    setPoolPax(value);
+    setTotalAmount(total);
+    setNewBalance(total - totalPaid);
   };
 
   const handleReschedule = () => {
@@ -393,6 +576,127 @@ function UserDashboard() {
         data: {
           START_DATE: moment(roomDates[0]).format('ll'),
           END_DATE: moment(roomDates[1]).format('ll'),
+          AMOUNT: totalAmount,
+          BALANCE: newBalance,
+          IS_DOWNPAYMENT_PAID: totalAmountPaid >= requiredDP,
+          STATUS,
+        },
+      })
+        .then(() => {
+          getAllReservations();
+          closeEditModal();
+
+          toast.success('Successfully rescheduled', {
+            position: toast.POSITION.TOP_RIGHT,
+            autoClose: 1500,
+          });
+        })
+        .catch((err) =>
+          toast.error('An error occurred', {
+            position: toast.POSITION.TOP_RIGHT,
+            autoClose: 1500,
+          }),
+        )
+        .finally(() => setIsEditingReservation(false));
+    }
+
+    if (selectedReservation?.TYPE === 'Pavilion') {
+      const requiredDP = Math.floor(totalAmount * 0.3);
+      const totalAmountPaid = totalAmount - newBalance;
+
+      let STATUS;
+      if (totalAmountPaid === 0) {
+        STATUS = 'Unpaid';
+      } else if (
+        totalAmountPaid >= requiredDP &&
+        totalAmountPaid < totalAmount
+      ) {
+        STATUS = 'Paid - Partial';
+      } else if (totalAmountPaid === totalAmount) {
+        STATUS = 'Fully Paid';
+      }
+
+      axios({
+        method: 'PUT',
+        url: `/reservations/${selectedReservation?.ID}`,
+        data: {
+          START_DATE: moment(pavDate)
+            .set({ hour: parseInt(pavTime, 10) })
+            .format('MMMM D, YYYY @ h:mm a'),
+          END_DATE: moment(pavDate)
+            .set({ hour: parseInt(pavTime, 10) + 6 + pavAddTime })
+            .format('MMMM D, YYYY @ h:mm a'),
+          AMOUNT: totalAmount,
+          BALANCE: newBalance,
+          IS_DOWNPAYMENT_PAID: totalAmountPaid >= requiredDP,
+          STATUS,
+        },
+      })
+        .then(() => {
+          getAllReservations();
+          closeEditModal();
+
+          toast.success('Successfully rescheduled', {
+            position: toast.POSITION.TOP_RIGHT,
+            autoClose: 1500,
+          });
+        })
+        .catch((err) =>
+          toast.error('An error occurred', {
+            position: toast.POSITION.TOP_RIGHT,
+            autoClose: 1500,
+          }),
+        )
+        .finally(() => setIsEditingReservation(false));
+    }
+
+    if (selectedReservation?.TYPE === 'Pool') {
+      const requiredDP = Math.floor(totalAmount * 0.3);
+      const totalAmountPaid = totalAmount - newBalance;
+
+      let STATUS;
+      if (totalAmountPaid === 0) {
+        STATUS = 'Unpaid';
+      } else if (
+        totalAmountPaid >= requiredDP &&
+        totalAmountPaid < totalAmount
+      ) {
+        STATUS = 'Paid - Partial';
+      } else if (totalAmountPaid === totalAmount) {
+        STATUS = 'Fully Paid';
+      }
+
+      let START_DATE;
+      let END_DATE;
+
+      if (poolTime === 'morning') {
+        START_DATE = moment(poolDate)
+          .set({ hour: 9 })
+          .format('MMMM D, YYYY @ h:mm a');
+        END_DATE = moment(poolDate)
+          .set({ hour: 17 })
+          .format('MMMM D, YYYY @ h:mm a');
+      } else {
+        START_DATE = moment(poolDate)
+          .set({ hour: 17 })
+          .format('MMMM D, YYYY @ h:mm a');
+        END_DATE = moment(poolDate)
+          .set({ hour: 23 })
+          .format('MMMM D, YYYY @ h:mm a');
+      }
+
+      axios({
+        method: 'PUT',
+        url: `/reservations/${selectedReservation?.ID}`,
+        data: {
+          // START_DATE: moment(poolDate)
+          //   .set({ hour: parseInt(pavTime, 10) })
+          //   .format('MMMM D, YYYY @ h:mm a'),
+          // END_DATE: moment(pavDate)
+          //   .set({ hour: parseInt(pavTime, 10) + 6 + pavAddTime })
+          //   .format('MMMM D, YYYY @ h:mm a'),
+          START_DATE,
+          END_DATE,
           AMOUNT: totalAmount,
           BALANCE: newBalance,
           IS_DOWNPAYMENT_PAID: totalAmountPaid >= requiredDP,
@@ -571,7 +875,10 @@ function UserDashboard() {
               </ActionIcon>
 
               <ActionIcon
-                disabled={moment().isAfter(reservation?.START_DATE)}
+                disabled={
+                  reservation?.STATUS === 'Cancelled' ||
+                  moment().isAfter(reservation?.START_DATE)
+                }
                 color="#FFBF00"
                 onClick={() => handleOpenEditModal(reservation)}
               >
@@ -1009,6 +1316,241 @@ function UserDashboard() {
             value={roomDates}
             onChange={(values) => handleDateChange(values)}
           />
+
+          <Group justify="space-between">
+            <Text>Total Amount</Text>
+            <NumberFormatter thousandSeparator value={totalAmount} prefix="₱" />
+          </Group>
+
+          <Group justify="space-between" align="start">
+            <Text>Payment History</Text>
+            <Flex direction="column">
+              {selectedReservation?.PAYMENT_HISTORY &&
+                selectedReservation?.PAYMENT_HISTORY.map((h, index) => (
+                  <NumberFormatter
+                    key={index}
+                    thousandSeparator
+                    value={h?.amount}
+                    prefix="₱"
+                  />
+                ))}
+            </Flex>
+          </Group>
+
+          <Group justify="space-between">
+            <Text>Required Downpayment</Text>
+            <NumberFormatter
+              thousandSeparator
+              value={Math.floor(totalAmount * 0.3)}
+              prefix="₱"
+            />
+          </Group>
+
+          <Group justify="space-between">
+            <Text>New Balance</Text>
+            <NumberFormatter thousandSeparator value={newBalance} prefix="₱" />
+          </Group>
+
+          <Button
+            fullWidth
+            color="#006400"
+            fw="normal"
+            loading={isEditingReservation}
+            onClick={handleReschedule}
+          >
+            Reschedule
+          </Button>
+        </Flex>
+      );
+    }
+
+    if (selectedReservation?.TYPE === 'Pavilion') {
+      return (
+        <Flex direction="column" gap="md">
+          <DateInput
+            withAsterisk
+            label="Choose date"
+            placeholder="Please choose date"
+            minDate={
+              new Date().getHours() >= 23
+                ? new Date(new Date().setDate(new Date().getDate() + 1))
+                : new Date()
+            }
+            value={pavDate}
+            onChange={(value) => handleDateChange(value)}
+          />
+
+          <Flex gap="sm">
+            <Select
+              flex={1}
+              withAsterisk
+              clearable
+              disabled={!pavDate}
+              label="Start time"
+              placeholder="Select start time"
+              data={filteredDataTimes}
+              value={pavTime}
+              onChange={(value) => handleSetStartTime(value)}
+            />
+
+            <NumberInput
+              flex={1}
+              min={0}
+              label="Additional hour/s?"
+              placeholder="0"
+              disabled={!pavTime}
+              value={pavAddTime}
+              onChange={(value) => handleAddAdditionalHours(value)}
+            />
+          </Flex>
+
+          <Group justify="space-between" mt="md">
+            <Text>Duration</Text>
+            <Text>{duration}hours</Text>
+          </Group>
+
+          <Group justify="space-between">
+            <Text>Price</Text>
+            <Flex direction="row">
+              <NumberFormatter
+                thousandSeparator
+                value={selectedReservation?.PRICE}
+                prefix="₱"
+              />
+              <Text>/6hours</Text>
+            </Flex>
+          </Group>
+
+          <Group justify="space-between">
+            <Text>Additional hour pricing</Text>
+            <Flex direction="row">
+              <NumberFormatter
+                thousandSeparator
+                value={selectedReservation?.PRICE_EXCEED}
+                prefix="₱"
+              />
+              <Text>/hour</Text>
+            </Flex>
+          </Group>
+
+          <Divider />
+
+          <Group justify="space-between">
+            <Text>Total Amount</Text>
+            <NumberFormatter thousandSeparator value={totalAmount} prefix="₱" />
+          </Group>
+
+          <Group justify="space-between" align="start">
+            <Text>Payment History</Text>
+            <Flex direction="column">
+              {selectedReservation?.PAYMENT_HISTORY &&
+                selectedReservation?.PAYMENT_HISTORY.map((h, index) => (
+                  <NumberFormatter
+                    key={index}
+                    thousandSeparator
+                    value={h?.amount}
+                    prefix="₱"
+                  />
+                ))}
+            </Flex>
+          </Group>
+
+          <Group justify="space-between">
+            <Text>Required Downpayment</Text>
+            <NumberFormatter
+              thousandSeparator
+              value={Math.floor(totalAmount * 0.3)}
+              prefix="₱"
+            />
+          </Group>
+
+          <Group justify="space-between">
+            <Text>New Balance</Text>
+            <NumberFormatter thousandSeparator value={newBalance} prefix="₱" />
+          </Group>
+
+          <Button
+            fullWidth
+            color="#006400"
+            fw="normal"
+            loading={isEditingReservation}
+            onClick={handleReschedule}
+          >
+            Reschedule
+          </Button>
+        </Flex>
+      );
+    }
+
+    if (selectedReservation?.TYPE === 'Pool') {
+      return (
+        <Flex direction="column" gap="md">
+          <DateInput
+            withAsterisk
+            label="Choose date"
+            placeholder="Please choose date"
+            minDate={
+              new Date().getHours() >= 23
+                ? new Date(new Date().setDate(new Date().getDate() + 1))
+                : new Date()
+            }
+            value={poolDate}
+            onChange={(value) => handleDateChange(value)}
+          />
+
+          <Flex gap="sm">
+            <Select
+              flex={1}
+              withAsterisk
+              clearable
+              disabled={!poolDate}
+              label="Start time"
+              placeholder="Select start time"
+              data={filteredSwimmingTimes}
+              value={poolTime}
+              onChange={(value) => handleSetStartTime(value)}
+            />
+
+            <NumberInput
+              flex={1}
+              min={0}
+              label="PAX"
+              placeholder="1"
+              disabled={!poolTime}
+              value={poolPax}
+              onChange={(value) => handleChangePax(value)}
+            />
+          </Flex>
+
+          <Text c="#006400" mb="sm" mt="sm" align="center" fw={700}>
+            This service is billed per pax
+          </Text>
+
+          <Group justify="space-between">
+            <Text>Price for morning swim</Text>
+            <Flex direction="row">
+              <NumberFormatter
+                thousandSeparator
+                value={selectedReservation?.PRICE}
+                prefix="₱"
+              />
+              <Text>/pax</Text>
+            </Flex>
+          </Group>
+
+          <Group justify="space-between">
+            <Text>Price for night swim</Text>
+            <Flex direction="row">
+              <NumberFormatter
+                thousandSeparator
+                value={selectedReservation?.PRICE_EXCEED}
+                prefix="₱"
+              />
+              <Text>/pax</Text>
+            </Flex>
+          </Group>
+
+          <Divider />
 
           <Group justify="space-between">
             <Text>Total Amount</Text>
